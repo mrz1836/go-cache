@@ -102,8 +102,8 @@ func main() {
 
 	// Kill keys by dependency
 	keys, _ := cache.KillByDependency("dependent-key-1")
-    log.Println("Keys Removed:", keys)
-    //Output: Keys Removed: 2
+	log.Println("Keys Removed:", keys)
+	//Output: Keys Removed: 2
 }
 ```
 

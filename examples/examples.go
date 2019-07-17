@@ -17,25 +17,34 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	// Set a key
-	err = cache.Set("key-name", "the-value", "dependent-key-1", "dependent-key-2")
+	// Set a key that is dependent to other keys
+	// Example: this key has data that is related to "user-23" and "user-profile-23" keys
+	// If those keys are removed/changed, this "user-michael" key should be removed
+	err = cache.Set("user-michael", "my name is Michael and my ID is 23", "user-23", "user-profile-23")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	// Get a key
-	value, err := cache.Get("key-name")
+	// Get the value for the key we set that has a value
+	value, err := cache.Get("user-michael")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
 	log.Println("Got value:", value)
 
-	// Kill keys by dependency
-	keys, err := cache.KillByDependency("dependent-key-1")
+	// Remove all keys based on a dependent key getting busted
+	// Example: the user updates their profile or record, hence the key "user-23" would get busted
+	keys, err := cache.KillByDependency("user-23")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
 	log.Println("Keys Removed:", keys)
+
+	// Attempting to try and get the value now will not work, as the key has been removed
+	value, _ = cache.Get("user-michael")
+	if value == "" {
+		log.Println("No value found for key:", "user-michael")
+	}
 }

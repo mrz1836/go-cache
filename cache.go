@@ -1,3 +1,6 @@
+/*
+Package cache is a cache dependency management on-top of the famous redigo package
+*/
 package cache
 
 import (

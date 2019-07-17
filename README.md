@@ -1,5 +1,5 @@
 # go-cache
-**go-cache** is a simple cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
+**go-cache** is a simple redis cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
 
 | | | | | | | |
 |-|-|-|-|-|-|-|
@@ -30,8 +30,8 @@ $ dep ensure -update -v
 ```
 
 ### Package Dependencies
-- [Redis](https://redis.io/download)
 - Gary Burd's [Redigo](https://github.com/gomodule/redigo)
+- Knowledge of [Redis](https://redis.io/download)
 
 ## Documentation
 You can view the generated [documentation here](https://godoc.org/github.com/mrz1836/go-cache).
@@ -82,13 +82,29 @@ Basic implementation:
 package main
 
 import (
+	"log"
 
+	"github.com/mrz1836/go-cache"
 )
 
 func main() {
 
-}
+	// Create the pool and first connection
+	_ = cache.Connect("redis://localhost:6379", 0, 10, 0, 240)
 
+	// Set a key
+	_ = cache.Set("key-name", "the-value", "dependent-key-1", "dependent-key-2")
+
+	// Get a key
+	value, _ := cache.Get("key-name")
+	log.Println("Got value:", value)
+	//Output: Got Value: the-value
+
+	// Kill keys by dependency
+	keys, _ := cache.KillByDependency("dependent-key-1")
+    log.Println("Keys Removed:", keys)
+    //Output: Keys Removed: 2
+}
 ```
 
 ## Maintainers

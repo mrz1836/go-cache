@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gomodule/redigo/redis"
@@ -69,6 +70,27 @@ func TestConnect(t *testing.T) {
 	}
 }
 
+// ExampleConnect is an example of Connect() method
+func ExampleConnect() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Connected
+	fmt.Print("connected")
+	//Output: connected
+}
+
+// BenchmarkConnect benchmarks the Connect() method
+func BenchmarkConnect(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = startTest()
+		Disconnect()
+	}
+}
+
 // TestGetPool test getting a pool
 func TestGetPool(t *testing.T) {
 
@@ -86,6 +108,29 @@ func TestGetPool(t *testing.T) {
 	}
 }
 
+// ExampleGetPool is an example of GetPool() method
+func ExampleGetPool() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Get pool
+	_ = GetPool()
+	fmt.Print("got pool")
+	//Output: got pool
+}
+
+// BenchmarkGetPool benchmarks the GetPool() method
+func BenchmarkGetPool(b *testing.B) {
+	_ = startTest()
+	defer Disconnect()
+	for i := 0; i < b.N; i++ {
+		_ = GetPool()
+	}
+}
+
 // TestDisconnect test disconnecting the pool
 func TestDisconnect(t *testing.T) {
 	// Create a local connection
@@ -100,4 +145,16 @@ func TestDisconnect(t *testing.T) {
 	if p := GetPool(); p != nil {
 		t.Fatal("pool expected to be nil")
 	}
+}
+
+// ExampleDisconnect is an example of Disconnect() method
+func ExampleDisconnect() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	Disconnect()
+
+	fmt.Print("disconnected")
+	//Output: disconnected
 }

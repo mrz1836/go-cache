@@ -164,6 +164,11 @@ func Expire(key string, duration time.Duration) (err error) {
 	return
 }
 
+// Delete is an alias for KillByDependency()
+func Delete(keys ...string) (total int, err error) {
+	return KillByDependency(keys...)
+}
+
 // HashSet will set the hashKey to the value in the specified hashName and link a
 // reference to each dependency for the entire hash
 func HashSet(hashName, hashKey string, value interface{}, dependencies ...string) (err error) {
@@ -385,6 +390,7 @@ func DestroyCache() (err error) {
 }
 
 // KillByDependency removes all keys which are listed as depending on the key(s)
+// Also: Delete()
 func KillByDependency(keys ...string) (total int, err error) {
 
 	// Create a new connection and defer closing

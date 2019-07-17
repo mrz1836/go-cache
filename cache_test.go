@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+// Testing variables
+var (
+	connectionURL        = "redis://localhost:6379"
+	idleTimeout          = 240
+	killDependencyHash   = "a648f768f57e73e2497ccaa113d5ad9e731c5cd8"
+	maxActiveConnections = 0
+	maxConnLifetime      = 0
+	maxIdleConnections   = 10
+)
+
 // startTest start all tests the same way
 func startTest() error {
 	if GetPool() == nil {
@@ -390,6 +400,7 @@ func TestDestroyCache(t *testing.T) {
 }
 
 // TestDependencyManagement tests basic dependency functionality
+// Tests a myriad of methods
 func TestDependencyManagement(t *testing.T) {
 
 	// Create a local connection
@@ -429,7 +440,7 @@ func TestDependencyManagement(t *testing.T) {
 	}
 
 	// Kill a dependent key
-	total, err := KillByDependency("dependent-1")
+	total, err := Delete("dependent-1")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if total != 2 {
@@ -485,7 +496,78 @@ func TestDependencyManagement(t *testing.T) {
 	}
 }
 
-// TestHashDependencyManagement tests HASH dependency functionality
-func TestHashDependencyManagement(t *testing.T) {
+// TestHashMapDependencyManagement tests HASH map dependency functionality
+// Tests a myriad of methods
+func TestHashMapDependencyManagement(t *testing.T) {
 
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	// Create pairs
+	pairs := [][2]interface{}{
+		{"pair-1", "pair-1-value"},
+		{"pair-2", "pair-2-value"},
+		{"pair-3", "pair-3-value"},
+	}
+
+	// Set the hash map
+	err := HashMapSet("test-hash-map-dependency", pairs, "test-hash-map-depend-1", "test-hash-map-depend-2")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	val, err := HashGet("test-hash-map-dependency", "pair-1")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if val != "pair-1-value" {
+		t.Fatal("expected value was wrong")
+	}
+
+	// Get a key in the map
+	values, err := HashMapGet("test-hash-map-dependency", "pair-1", "pair-2")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Got two values?
+	if len(values) != 2 {
+		t.Fatal("expected 2 values", values, len(values))
+	}
+
+	// Test for dependent key 1
+	ok, err := SetIsMember("depend:test-hash-map-depend-1", "test-hash-map-dependency")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if !ok {
+		t.Fatal("expected to be true")
+	}
+
+	// Test for dependent key 2
+	ok, err = SetIsMember("depend:test-hash-map-depend-2", "test-hash-map-dependency")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if !ok {
+		t.Fatal("expected to be true")
+	}
+
+	// Kill a dependent key
+	total, err := Delete("test-hash-map-depend-2")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if total != 2 {
+		t.Fatal("expected 2 keys to be removed", total)
+	}
+
+	// Test for main key
+	found, err := Exists("test-hash-map-dependency")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if found {
+		t.Fatal("expected found to be false")
+	}
 }

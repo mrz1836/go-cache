@@ -4,16 +4,6 @@ import (
 	"testing"
 )
 
-// Testing variables
-var (
-	connectionURL        = "redis://localhost:6379"
-	idleTimeout          = 240
-	killDependencyHash   = "a648f768f57e73e2497ccaa113d5ad9e731c5cd8"
-	maxActiveConnections = 0
-	maxConnLifetime      = 0
-	maxIdleConnections   = 10
-)
-
 // TestRegisterScript tests registering a script
 func TestRegisterScript(t *testing.T) {
 

@@ -159,9 +159,9 @@ func Expire(key string, duration time.Duration) (err error) {
 	return
 }
 
-// HSet will set the hashKey to the value in the specified hashName and link a
+// HashSet will set the hashKey to the value in the specified hashName and link a
 // reference to each dependency for the entire hash
-func HSet(hashName, hashKey string, value interface{}, dependencies ...string) (err error) {
+func HashSet(hashName, hashKey string, value interface{}, dependencies ...string) (err error) {
 
 	// Create a new connection and defer closing
 	conn := GetConnection()
@@ -178,9 +178,9 @@ func HSet(hashName, hashKey string, value interface{}, dependencies ...string) (
 	return linkDependencies(conn, hashName, dependencies...)
 }
 
-// HMSet will set the hashKey to the value in the specified hashName and link a
+// HashMapSet will set the hashKey to the value in the specified hashName and link a
 // reference to each dependency for the entire hash
-func HMSet(hashName string, pairs [][2]interface{}, dependencies ...string) (err error) {
+func HashMapSet(hashName string, pairs [][2]interface{}, dependencies ...string) (err error) {
 
 	// Create a new connection and defer closing
 	conn := GetConnection()
@@ -205,9 +205,9 @@ func HMSet(hashName string, pairs [][2]interface{}, dependencies ...string) (err
 	return linkDependencies(conn, hashName, dependencies...)
 }
 
-// HMSetExp will set the hashKey to the value in the specified hashName and link a
+// HashMapSetExp will set the hashKey to the value in the specified hashName and link a
 // reference to each dependency for the entire hash
-func HMSetExp(hashName string, pairs [][2]interface{}, ttl time.Duration, dependencies ...string) (err error) {
+func HashMapSetExp(hashName string, pairs [][2]interface{}, ttl time.Duration, dependencies ...string) (err error) {
 
 	// Create a new connection and defer closing
 	conn := GetConnection()
@@ -237,9 +237,9 @@ func HMSetExp(hashName string, pairs [][2]interface{}, ttl time.Duration, depend
 	return linkDependencies(conn, hashName, dependencies...)
 }
 
-// SAdd will add the member to the Set and link a reference to each dependency
+// SetAdd will add the member to the Set and link a reference to each dependency
 // for the entire Set
-func SAdd(setName, member interface{}, dependencies ...string) (err error) {
+func SetAdd(setName, member interface{}, dependencies ...string) (err error) {
 
 	// Create a new connection and defer closing
 	conn := GetConnection()
@@ -256,8 +256,8 @@ func SAdd(setName, member interface{}, dependencies ...string) (err error) {
 	return linkDependencies(conn, setName, dependencies...)
 }
 
-// SIsMember returns if the member is part of the set
-func SIsMember(set, member interface{}) (bool, error) {
+// SetIsMember returns if the member is part of the set
+func SetIsMember(set, member interface{}) (bool, error) {
 
 	// Create a new connection and defer closing
 	conn := GetConnection()
@@ -269,8 +269,8 @@ func SIsMember(set, member interface{}) (bool, error) {
 	return redis.Bool(conn.Do(isMemberCommand, set, member))
 }
 
-// SRem removes the member from the set
-func SRem(set, member interface{}) (err error) {
+// SetRem removes the member from the set
+func SetRem(set, member interface{}) (err error) {
 
 	// Create a new connection and defer closing
 	conn := GetConnection()

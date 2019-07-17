@@ -252,3 +252,101 @@ func TestDestroyCache(t *testing.T) {
 		t.Fatalf("expected value: %s, got: %s", "", val)
 	}
 }
+
+// TestDependencyManagement tests basic dependency functionality
+func TestDependencyManagement(t *testing.T) {
+	// Create a local connection
+	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer func() {
+		Disconnect()
+	}()
+
+	// Start with a flush
+	err = DestroyCache()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Set a key with two dependent keys
+	err = Set("test-set-dep", "my-value", "dependent-1", "dependent-2")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Test for dependent key 1
+	ok, err := SetIsMember("depend:dependent-1", "test-set-dep")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if !ok {
+		t.Fatal("expected to be true")
+	}
+
+	// Test for dependent key 2
+	ok, err = SetIsMember("depend:dependent-2", "test-set-dep")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if !ok {
+		t.Fatal("expected to be true")
+	}
+
+	// Kill a dependent key
+	total, err := KillByDependency("dependent-1")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if total != 2 {
+		t.Fatal("expected 2 keys to be removed", total)
+	}
+
+	// Test for main key
+	found, err := Exists("test-set-dep")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if found {
+		t.Fatal("expected found to be false")
+	}
+
+	// Test for dependency relation
+	found, err = Exists("depend:dependent-1")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if found {
+		t.Fatal("expected found to be false")
+	}
+
+	// Test for dependent key 2
+	ok, err = SetIsMember("depend:dependent-2", "test-set-dep")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if !ok {
+		t.Fatal("expected to be true")
+	}
+
+	// Kill all dependent keys
+	total, err = KillByDependency("dependent-1", "dependent-2")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if total != 1 {
+		t.Fatal("expected 1 key to be removed", total)
+	}
+
+	// Test for dependency relation
+	found, err = Exists("depend:dependent-2")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if found {
+		t.Fatal("expected found to be false")
+	}
+
+	// Test for main key
+	found, err = Exists("test-set-dep")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if found {
+		t.Fatal("expected found to be false")
+	}
+}

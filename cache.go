@@ -7,19 +7,22 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-// Package constants
+// Package constants (commands)
 const (
 	addToSetCommand      string = "SADD"
 	deleteCommand        string = "DEL"
 	dependencyPrefix     string = "depend:"
 	evalCommand          string = "EVALSHA"
 	executeCommand       string = "EXEC"
+	existsCommand        string = "EXISTS"
 	expireCommand        string = "EXPIRE"
 	flushAllCommand      string = "FLUSHALL"
 	getCommand           string = "GET"
 	hashKeySetCommand    string = "HSET"
 	hashMapSetCommand    string = "HMSET"
 	isMemberCommand      string = "SISMEMBER"
+	keysCommand          string = "KEYS"
+	listRangeCommand     string = "LRANGE"
 	multiCommand         string = "MULTI"
 	pingCommand          string = "PING"
 	removeMemberCommand  string = "SREM"
@@ -32,7 +35,67 @@ const (
 //returned
 type GobCacheCreator func() ([]byte, error)
 
+// Get gets a key from redis
+func Get(key string) (string, error) {
+
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// Fire the command
+	return redis.String(conn.Do(getCommand, key))
+}
+
+// GetBytes gets a key from redis in bytes
+func GetBytes(key string) ([]byte, error) {
+
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// Fire the command
+	return redis.Bytes(conn.Do(getCommand, key))
+}
+
+// GetStringSlice returns a []string stored in redis
+func GetStringSlice(key string) (destination []string, err error) {
+
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// This command takes two parameters specifying the range: 0 start, -1 is the end of the list
+	var values []interface{}
+	values, err = redis.Values(conn.Do(listRangeCommand, key, 0, -1))
+	if err != nil {
+		return
+	}
+
+	// Scan slice by value, return with destination
+	err = redis.ScanSlice(values, &destination)
+	return
+}
+
+// GetAllKeys returns a []string of keys
+func GetAllKeys() (keys []string, err error) {
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// Get all the keys
+	return redis.Strings(conn.Do(keysCommand, "*"))
+}
+
 // Set will set the key in redis and keep a reference to each dependency
+// value can be both a string or []byte
 func Set(key string, value interface{}, dependencies ...string) (err error) {
 
 	// Create a new connection and defer closing
@@ -51,6 +114,7 @@ func Set(key string, value interface{}, dependencies ...string) (err error) {
 }
 
 // SetExp will set the key in redis and keep a reference to each dependency
+// value can be both a string or []byte
 func SetExp(key string, value interface{}, ttl time.Duration, dependencies ...string) (err error) {
 
 	// Create a new connection and defer closing
@@ -67,6 +131,32 @@ func SetExp(key string, value interface{}, ttl time.Duration, dependencies ...st
 
 	// Link and return the error
 	return linkDependencies(conn, key, dependencies...)
+}
+
+// Exists checks if a key is present or not
+func Exists(key string) (bool, error) {
+
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// Fire the command
+	return redis.Bool(conn.Do(existsCommand, key))
+}
+
+// Expire sets the expiration for a given key
+func Expire(key string, duration time.Duration) (err error) {
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// Fire the expire command
+	_, err = conn.Do(expireCommand, key, int64(duration.Seconds()))
+	return
 }
 
 // HSet will set the hashKey to the value in the specified hashName and link a

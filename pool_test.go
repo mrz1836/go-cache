@@ -37,6 +37,11 @@ func TestConnectToURL(t *testing.T) {
 // TestConnect tests the connect method
 func TestConnect(t *testing.T) {
 
+	// Test if pool is nil
+	if GetPool() != nil {
+		t.Fatal("pool should be nil")
+	}
+
 	// Create a local connection
 	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
 	if err != nil {
@@ -59,6 +64,11 @@ func TestConnect(t *testing.T) {
 	// Test our only script
 	if !DidRegisterKillByDependencyScript() {
 		t.Fatal("Did not register the script")
+	}
+
+	// Test if pool exists
+	if GetPool() == nil {
+		t.Fatal("expected pool to not be nil")
 	}
 }
 

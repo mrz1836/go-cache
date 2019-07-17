@@ -2,6 +2,7 @@
 exclude_paths:
   - ".idea/**/*"
   - ".git/**/*"
+  - "vendor/**/*"
   - "**.md"
   - "**.mod"
   - "**.toml"

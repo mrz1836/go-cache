@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -51,6 +52,66 @@ func TestSet(t *testing.T) {
 	}
 }
 
+// TestSetExp is testing the SetExp() method
+func TestSetExp(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	// Set
+	err := SetExp("test-set-exp", "my-value", 2*time.Second, "another-key")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Check the set
+	val, err := Get("test-set-exp")
+	if val != "my-value" {
+		t.Fatalf("expected value: %s, got: %s", "my-value", val)
+	}
+
+	// Wait 2 seconds and test
+	time.Sleep(time.Second * 3)
+
+	// Check the set expire
+	val, err = Get("test-set-exp")
+	if val == "my-value" {
+		t.Fatalf("expected value: %s, got: %s", "", val)
+	}
+}
+
+// ExampleSet is an example of Set() method
+func ExampleSet() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = Set("example-set", "my-value", "another-key")
+	fmt.Print("set complete")
+	//Output: set complete
+}
+
+// ExampleSetExp is an example of SetExp() method
+func ExampleSetExp() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = SetExp("example-set-exp", "my-value", 2*time.Minute, "another-key")
+	fmt.Print("set complete")
+	//Output: set complete
+}
+
 // TestHashSet is testing the HashSet() method
 func TestHashSet(t *testing.T) {
 
@@ -77,6 +138,20 @@ func TestHashSet(t *testing.T) {
 	}
 }
 
+// ExampleHashSet is an example of HashSet() method
+func ExampleHashSet() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = HashSet("example-hash-set", "test-hash-key", "my-cache-value")
+	fmt.Print("set complete")
+	//Output: set complete
+}
+
 // TestHashGet is testing the HashGet() method
 func TestHashGet(t *testing.T) {
 
@@ -101,6 +176,23 @@ func TestHashGet(t *testing.T) {
 	} else if val != "my-cache-value" {
 		t.Fatal("value returned was wrong", val)
 	}
+}
+
+// ExampleHashGet is an example of HashGet() method
+func ExampleHashGet() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = HashSet("example-hash-get", "test-hash-key", "my-cache-value")
+
+	// Get the value
+	val, _ := HashGet("example-hash-get", "test-hash-key")
+	fmt.Print(val)
+	//Output: my-cache-value
 }
 
 // TestHashMapSet is testing the HashMapSet() method
@@ -156,6 +248,27 @@ func TestHashMapSet(t *testing.T) {
 	}
 }
 
+// ExampleHashMapSet is an example of HashMapSet() method
+func ExampleHashMapSet() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Create pairs
+	pairs := [][2]interface{}{
+		{"pair-1", "pair-1-value"},
+		{"pair-2", "pair-2-value"},
+		{"pair-3", "pair-3-value"},
+	}
+
+	// Set the hash map
+	_ = HashMapSet("example-hash-map-set", pairs, "test-hash-map-1", "test-hash-map-2")
+	fmt.Print("set complete")
+	//Output: set complete
+}
+
 // TestHashMapSetExp is testing the HashMapSetExp() method
 func TestHashMapSetExp(t *testing.T) {
 
@@ -198,6 +311,27 @@ func TestHashMapSetExp(t *testing.T) {
 	}
 }
 
+// ExampleHashMapSetExp is an example of HashMapSetExp() method
+func ExampleHashMapSetExp() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Create pairs
+	pairs := [][2]interface{}{
+		{"pair-1", "pair-1-value"},
+		{"pair-2", "pair-2-value"},
+		{"pair-3", "pair-3-value"},
+	}
+
+	// Set the hash map
+	_ = HashMapSetExp("example-hash-map-set-exp", pairs, 2*time.Minute, "test-hash-map-1", "test-hash-map-2")
+	fmt.Print("set complete")
+	//Output: set complete
+}
+
 // TestGet is testing the Get() method
 func TestGet(t *testing.T) {
 	// Create a local connection
@@ -221,6 +355,23 @@ func TestGet(t *testing.T) {
 	}
 }
 
+// ExampleGet is an example of Get() method
+func ExampleGet() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = Set("example-get", "my-value", "another-key")
+
+	// Get the value
+	value, _ := Get("example-get")
+	fmt.Print(value)
+	//Output: my-value
+}
+
 // TestGetBytes is testing the GetBytes() method
 func TestGetBytes(t *testing.T) {
 	// Create a local connection
@@ -242,6 +393,23 @@ func TestGetBytes(t *testing.T) {
 	if string(val) != "my-value" {
 		t.Fatalf("expected value: %s, got: %s", "my-value", val)
 	}
+}
+
+// ExampleGetBytes is an example of GetBytes() method
+func ExampleGetBytes() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = Set("example-get-bytes", "my-value", "another-key")
+
+	// Get the value
+	value, _ := GetBytes("example-get-bytes")
+	fmt.Print(string(value))
+	//Output: my-value
 }
 
 // TestGetAllKeys is testing the GetAllKeys() method
@@ -270,6 +438,23 @@ func TestGetAllKeys(t *testing.T) {
 	}
 }
 
+// ExampleGetAllKeys is an example of GetAllKeys() method
+func ExampleGetAllKeys() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = Set("example-get-all-keys", "my-value", "another-key")
+
+	// Get the value
+	_, _ = GetAllKeys()
+	fmt.Print("found keys")
+	//Output: found keys
+}
+
 // TestExists is testing the Exists() method
 func TestExists(t *testing.T) {
 	// Create a local connection
@@ -293,36 +478,21 @@ func TestExists(t *testing.T) {
 	}
 }
 
-// TestSetExp is testing the SetExp() method
-func TestSetExp(t *testing.T) {
+// ExampleExists is an example of Exists() method
+func ExampleExists() {
 	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
 
 	// Disconnect at end
-	defer endTest()
+	defer Disconnect()
 
-	// Set
-	err := SetExp("test-set-exp", "my-value", 2*time.Second, "another-key")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+	// Set the key/value
+	_ = Set("example-exists", "my-value", "another-key")
 
-	// Check the set
-	val, err := Get("test-set-exp")
-	if val != "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "my-value", val)
-	}
-
-	// Wait 2 seconds and test
-	time.Sleep(time.Second * 3)
-
-	// Check the set expire
-	val, err = Get("test-set-exp")
-	if val == "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "", val)
-	}
+	// Get the value
+	_, _ = Exists("example-exists")
+	fmt.Print("key exists")
+	//Output: key exists
 }
 
 // TestExpire is testing the Expire() method
@@ -363,6 +533,23 @@ func TestExpire(t *testing.T) {
 	}
 }
 
+// ExampleExpire is an example of Expire() method
+func ExampleExpire() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = Set("example-expire", "my-value", "another-key")
+
+	// Set the expire
+	_ = Expire("example-expire", 1*time.Minute)
+	fmt.Print("expiration set")
+	//Output: expiration set
+}
+
 // TestDestroyCache is testing the DestroyCache() method
 func TestDestroyCache(t *testing.T) {
 
@@ -397,6 +584,23 @@ func TestDestroyCache(t *testing.T) {
 	if val == "my-value" {
 		t.Fatalf("expected value: %s, got: %s", "", val)
 	}
+}
+
+// ExampleDestroyCache is an example of DestroyCache() method
+func ExampleDestroyCache() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = Set("example-destroy-cache", "my-value", "another-key")
+
+	// Set the expire
+	_ = DestroyCache()
+	fmt.Print("cache destroyed")
+	//Output: cache destroyed
 }
 
 // TestDependencyManagement tests basic dependency functionality

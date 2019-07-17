@@ -17,8 +17,8 @@ const (
 	expireCommand        string = "EXPIRE"
 	flushAllCommand      string = "FLUSHALL"
 	getCommand           string = "GET"
-	hashKeySet           string = "HSET"
-	hashMapSet           string = "HMSET"
+	hashKeySetCommand    string = "HSET"
+	hashMapSetCommand    string = "HMSET"
 	isMemberCommand      string = "SISMEMBER"
 	multiCommand         string = "MULTI"
 	pingCommand          string = "PING"
@@ -80,7 +80,7 @@ func HSet(hashName, hashKey string, value interface{}, dependencies ...string) (
 	}()
 
 	// Set the hash key
-	if _, err = conn.Do(hashKeySet, hashName, hashKey, value); err != nil {
+	if _, err = conn.Do(hashKeySetCommand, hashName, hashKey, value); err != nil {
 		return
 	}
 
@@ -107,7 +107,7 @@ func HMSet(hashName string, pairs [][2]interface{}, dependencies ...string) (err
 	}
 
 	// Set the hash map
-	if _, err = conn.Do(hashMapSet, args...); err != nil {
+	if _, err = conn.Do(hashMapSetCommand, args...); err != nil {
 		return
 	}
 
@@ -134,7 +134,7 @@ func HMSetExp(hashName string, pairs [][2]interface{}, ttl time.Duration, depend
 	}
 
 	// Set the hash map
-	if _, err = conn.Do(hashMapSet, args...); err != nil {
+	if _, err = conn.Do(hashMapSetCommand, args...); err != nil {
 		return
 	}
 

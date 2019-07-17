@@ -33,3 +33,67 @@ func TestConnectToURL(t *testing.T) {
 		t.Errorf("Wanted PONG, got %v\n", pong)
 	}
 }
+
+// TestConnect tests the connect method
+func TestConnect(t *testing.T) {
+
+	// Create a local connection
+	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer func() {
+		Disconnect()
+	}()
+
+	// Get a connection
+	c := GetConnection()
+
+	// Close
+	defer func() {
+		_ = c.Close()
+	}()
+
+	// Test our only script
+	if !DidRegisterKillByDependencyScript() {
+		t.Fatal("Did not register the script")
+	}
+}
+
+// TestGetPool test getting a pool
+func TestGetPool(t *testing.T) {
+	// Create a local connection
+	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer func() {
+		Disconnect()
+	}()
+
+	// Get the pool
+	if p := GetPool(); p == nil {
+		t.Fatal("expected to get pool")
+	}
+}
+
+// TestDisconnect test disconnecting the pool
+func TestDisconnect(t *testing.T) {
+	// Create a local connection
+	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect
+	Disconnect()
+
+	// Test pool
+	if p := GetPool(); p != nil {
+		t.Fatal("pool expected to be nil")
+	}
+}

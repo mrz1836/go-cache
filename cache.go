@@ -18,6 +18,8 @@ const (
 	expireCommand        string = "EXPIRE"
 	flushAllCommand      string = "FLUSHALL"
 	getCommand           string = "GET"
+	hashGetCommand       string = "HGET"
+	hashMapGetCommand    string = "HMGET"
 	hashKeySetCommand    string = "HSET"
 	hashMapSetCommand    string = "HMSET"
 	isMemberCommand      string = "SISMEMBER"
@@ -178,6 +180,35 @@ func HashSet(hashName, hashKey string, value interface{}, dependencies ...string
 	return linkDependencies(conn, hashName, dependencies...)
 }
 
+// HashGet gets a key from redis via hash
+func HashGet(hash, key string) (string, error) {
+
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// Fire the command
+	return redis.String(conn.Do(hashGetCommand, hash, key))
+}
+
+// HashMapGet gets values from a hash map for corresponding keys
+func HashMapGet(hashName string, keys ...interface{}) ([]string, error) {
+
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// Build up the arguments
+	keys = append([]interface{}{hashName}, keys...)
+
+	// Fire the command with all keys
+	return redis.Strings(conn.Do(hashMapGetCommand, keys...))
+}
+
 // HashMapSet will set the hashKey to the value in the specified hashName and link a
 // reference to each dependency for the entire hash
 func HashMapSet(hashName string, pairs [][2]interface{}, dependencies ...string) (err error) {
@@ -269,8 +300,8 @@ func SetIsMember(set, member interface{}) (bool, error) {
 	return redis.Bool(conn.Do(isMemberCommand, set, member))
 }
 
-// SetRem removes the member from the set
-func SetRem(set, member interface{}) (err error) {
+// SetRemoveMember removes the member from the set
+func SetRemoveMember(set, member interface{}) (err error) {
 
 	// Create a new connection and defer closing
 	conn := GetConnection()

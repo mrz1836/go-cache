@@ -43,15 +43,12 @@ func TestConnect(t *testing.T) {
 	}
 
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Get a connection
 	c := GetConnection()
@@ -74,16 +71,14 @@ func TestConnect(t *testing.T) {
 
 // TestGetPool test getting a pool
 func TestGetPool(t *testing.T) {
+
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Get the pool
 	if p := GetPool(); p == nil {
@@ -94,8 +89,7 @@ func TestGetPool(t *testing.T) {
 // TestDisconnect test disconnecting the pool
 func TestDisconnect(t *testing.T) {
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 

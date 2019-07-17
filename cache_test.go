@@ -5,47 +5,201 @@ import (
 	"time"
 )
 
+// startTest start all tests the same way
+func startTest() error {
+	if GetPool() == nil {
+		return Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	}
+	return nil
+}
+
+// endTest end tests the same way
+func endTest() {
+	Disconnect()
+}
+
 // TestSet is testing the Set() method
 func TestSet(t *testing.T) {
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
-	// Set
-	err = Set("test-set", "my-value", "another-key")
+	// Set the key/value
+	err := Set("test-set", "my-value", "another-key")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	// Check the set
+	// Check the set via a Get
 	val, err := Get("test-set")
 	if val != "my-value" {
 		t.Fatalf("expected value: %s, got: %s", "my-value", val)
 	}
 }
 
-// TestGet is testing the Get() method
-func TestGet(t *testing.T) {
+// TestHashSet is testing the HashSet() method
+func TestHashSet(t *testing.T) {
+
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
+
+	// Set the hash
+	err := HashSet("test-hash-name", "test-hash-key", "my-cache-value")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Get the value
+	val, err := HashGet("test-hash-name", "test-hash-key")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if val != "my-cache-value" {
+		t.Fatal("value returned was wrong", val)
+	}
+}
+
+// TestHashGet is testing the HashGet() method
+func TestHashGet(t *testing.T) {
+
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	// Set the hash
+	err := HashSet("test-hash-name", "test-hash-key", "my-cache-value")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Get the value
+	val, err := HashGet("test-hash-name", "test-hash-key")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if val != "my-cache-value" {
+		t.Fatal("value returned was wrong", val)
+	}
+}
+
+// TestHashMapSet is testing the HashMapSet() method
+func TestHashMapSet(t *testing.T) {
+
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	// Create pairs
+	pairs := [][2]interface{}{
+		{"pair-1", "pair-1-value"},
+		{"pair-2", "pair-2-value"},
+		{"pair-3", "pair-3-value"},
+	}
+
+	// Set the hash map
+	err := HashMapSet("test-hash-map-set", pairs, "test-hash-map-1", "test-hash-map-2")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	val, err := HashGet("test-hash-map-set", "pair-1")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if val != "pair-1-value" {
+		t.Fatal("expected value was wrong")
+	}
+
+	// Get a key in the map
+	values, err := HashMapGet("test-hash-map-set", "pair-1", "pair-2")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Got two values?
+	if len(values) != 2 {
+		t.Fatal("expected 2 values", values, len(values))
+	}
+
+	// Test value 1
+	if values[0] != "pair-1-value" {
+		t.Fatal("expected value", values[0])
+	}
+
+	// Test value 2
+	if values[1] != "pair-2-value" {
+		t.Fatal("expected value", values[1])
+	}
+}
+
+// TestHashMapSetExp is testing the HashMapSetExp() method
+func TestHashMapSetExp(t *testing.T) {
+
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	// Create pairs
+	pairs := [][2]interface{}{
+		{"pair-1", "pair-1-value"},
+		{"pair-2", "pair-2-value"},
+		{"pair-3", "pair-3-value"},
+	}
+
+	// Set the hash map
+	err := HashMapSetExp("test-hash-map-set-expire", pairs, 2*time.Second, "test-hash-map-2")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	val, err := HashGet("test-hash-map-set-expire", "pair-1")
+	if err != nil {
+		t.Fatal(err.Error())
+	} else if val != "pair-1-value" {
+		t.Fatal("expected value was wrong")
+	}
+
+	// Wait 2 seconds and test
+	time.Sleep(time.Second * 2)
+
+	val, err = HashGet("test-hash-map-set-expire", "pair-1")
+	if err == nil {
+		t.Fatal("expected: redigo: nil returned")
+	} else if val != "" {
+		t.Fatal("expected value to be empty")
+	}
+}
+
+// TestGet is testing the Get() method
+func TestGet(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
 
 	// Set
-	err = Set("test-get", "my-value")
+	err := Set("test-get", "my-value")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -57,21 +211,18 @@ func TestGet(t *testing.T) {
 	}
 }
 
-// TestGetBytes is testing the Get() method
+// TestGetBytes is testing the GetBytes() method
 func TestGetBytes(t *testing.T) {
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Set
-	err = Set("test-get-bytes", "my-value")
+	err := Set("test-get-bytes", "my-value")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -86,18 +237,15 @@ func TestGetBytes(t *testing.T) {
 // TestGetAllKeys is testing the GetAllKeys() method
 func TestGetAllKeys(t *testing.T) {
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Set
-	err = Set("test-get", "my-value")
+	err := Set("test-get", "my-value")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -115,18 +263,15 @@ func TestGetAllKeys(t *testing.T) {
 // TestExists is testing the Exists() method
 func TestExists(t *testing.T) {
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Set
-	err = Set("test-exists", "my-value")
+	err := Set("test-exists", "my-value")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -141,18 +286,15 @@ func TestExists(t *testing.T) {
 // TestSetExp is testing the SetExp() method
 func TestSetExp(t *testing.T) {
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Set
-	err = SetExp("test-set-exp", "my-value", 2*time.Second, "another-key")
+	err := SetExp("test-set-exp", "my-value", 2*time.Second, "another-key")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -176,18 +318,15 @@ func TestSetExp(t *testing.T) {
 // TestExpire is testing the Expire() method
 func TestExpire(t *testing.T) {
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Set
-	err = SetExp("test-set-expire", "my-value", 1*time.Minute, "another-key")
+	err := SetExp("test-set-expire", "my-value", 1*time.Minute, "another-key")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -218,18 +357,15 @@ func TestExpire(t *testing.T) {
 func TestDestroyCache(t *testing.T) {
 
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Set
-	err = Set("test-destroy", "my-value", "another-key")
+	err := Set("test-destroy", "my-value", "another-key")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -255,19 +391,17 @@ func TestDestroyCache(t *testing.T) {
 
 // TestDependencyManagement tests basic dependency functionality
 func TestDependencyManagement(t *testing.T) {
+
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Start with a flush
-	err = DestroyCache()
+	err := DestroyCache()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -349,4 +483,9 @@ func TestDependencyManagement(t *testing.T) {
 	} else if found {
 		t.Fatal("expected found to be false")
 	}
+}
+
+// TestHashDependencyManagement tests HASH dependency functionality
+func TestHashDependencyManagement(t *testing.T) {
+
 }

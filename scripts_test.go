@@ -18,15 +18,12 @@ var (
 func TestRegisterScript(t *testing.T) {
 
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Register the script
 	sha, err := RegisterScript(killByDependencyLua)
@@ -47,19 +44,17 @@ func TestRegisterScript(t *testing.T) {
 
 // TestRegisterScripts tests registering all scripts
 func TestRegisterScripts(t *testing.T) {
+
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Register the script
-	err = RegisterScripts()
+	err := RegisterScripts()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -72,16 +67,14 @@ func TestRegisterScripts(t *testing.T) {
 
 // TestDidRegisterKillByDependencyScript tests the check method
 func TestDidRegisterKillByDependencyScript(t *testing.T) {
+
 	// Create a local connection
-	err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
-	if err != nil {
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Disconnect at end
-	defer func() {
-		Disconnect()
-	}()
+	defer endTest()
 
 	// Test our only script
 	if !DidRegisterKillByDependencyScript() {

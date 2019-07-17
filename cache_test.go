@@ -603,6 +603,40 @@ func ExampleDestroyCache() {
 	//Output: cache destroyed
 }
 
+// ExampleDelete is an example of Delete() method
+func ExampleDelete() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = Set("example-destroy-cache", "my-value", "another-key")
+
+	// Delete keys
+	_, _ = Delete("another-key", "another-key-2")
+	fmt.Print("deleted keys")
+	//Output: deleted keys
+}
+
+// ExampleKillByDependency is an example of KillByDependency() method
+func ExampleKillByDependency() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = Set("example-destroy-cache", "my-value", "another-key")
+
+	// Delete keys
+	_, _ = KillByDependency("another-key", "another-key-2")
+	fmt.Print("deleted keys")
+	//Output: deleted keys
+}
+
 // TestDependencyManagement tests basic dependency functionality
 // Tests a myriad of methods
 func TestDependencyManagement(t *testing.T) {

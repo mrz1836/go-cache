@@ -35,6 +35,19 @@ func TestConnectToURL(t *testing.T) {
 	}
 }
 
+// ExampleConnectToURL is an example of ConnectToURL() method
+func ExampleConnectToURL() {
+	// Create a local connection
+	_, _ = ConnectToURL(connectionURL)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Connected
+	fmt.Print("connected")
+	//Output: connected
+}
+
 // TestConnect tests the connect method
 func TestConnect(t *testing.T) {
 
@@ -157,4 +170,18 @@ func ExampleDisconnect() {
 
 	fmt.Print("disconnected")
 	//Output: disconnected
+}
+
+// ExampleGetConnection is an example of GetConnection() method
+func ExampleGetConnection() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Connected
+	_ = GetConnection()
+	fmt.Print("got connection")
+	//Output: got connection
 }

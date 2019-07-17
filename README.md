@@ -1,5 +1,5 @@
 # go-cache
-**go-cache** is a lightweight wrapper for [Redigo](https://github.com/gomodule/redigo)
+**go-cache** is a simple cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
 
 | | | | | | | |
 |-|-|-|-|-|-|-|
@@ -37,7 +37,9 @@ $ dep ensure -update -v
 You can view the generated [documentation here](https://godoc.org/github.com/mrz1836/go-cache).
 
 ### Features
--
+- Cache Dependencies Between Keys
+- Connect via URL
+- Better Pool Management & Creation
 
 ## Examples & Tests
 All unit tests and [examples](examples/examples.go) run via [Travis CI](https://travis-ci.com/mrz1836/go-cache) and uses [Go version 1.12.x](https://golang.org/doc/go1.12). View the [deployment configuration file](.travis.yml).

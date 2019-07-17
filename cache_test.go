@@ -178,11 +178,11 @@ func TestHashMapSetExp(t *testing.T) {
 	}
 
 	// Wait 2 seconds and test
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 
 	val, err = HashGet("test-hash-map-set-expire", "pair-1")
 	if err == nil {
-		t.Fatal("expected: redigo: nil returned")
+		t.Fatal("expected error: redigo: nil returned", err)
 	} else if val != "" {
 		t.Fatal("expected value to be empty")
 	}
@@ -306,7 +306,7 @@ func TestSetExp(t *testing.T) {
 	}
 
 	// Wait 2 seconds and test
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 
 	// Check the set expire
 	val, err = Get("test-set-exp")

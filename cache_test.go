@@ -19,7 +19,7 @@ var (
 // startTest start all tests the same way
 func startTest() error {
 	if GetPool() == nil {
-		return Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+		return Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 	}
 	return nil
 }
@@ -87,7 +87,7 @@ func TestSetExp(t *testing.T) {
 // ExampleSet is an example of Set() method
 func ExampleSet() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -101,7 +101,7 @@ func ExampleSet() {
 // ExampleSetExp is an example of SetExp() method
 func ExampleSetExp() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -141,7 +141,7 @@ func TestHashSet(t *testing.T) {
 // ExampleHashSet is an example of HashSet() method
 func ExampleHashSet() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -181,7 +181,7 @@ func TestHashGet(t *testing.T) {
 // ExampleHashGet is an example of HashGet() method
 func ExampleHashGet() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -251,7 +251,7 @@ func TestHashMapSet(t *testing.T) {
 // ExampleHashMapSet is an example of HashMapSet() method
 func ExampleHashMapSet() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -314,7 +314,7 @@ func TestHashMapSetExp(t *testing.T) {
 // ExampleHashMapSetExp is an example of HashMapSetExp() method
 func ExampleHashMapSetExp() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -358,7 +358,7 @@ func TestGet(t *testing.T) {
 // ExampleGet is an example of Get() method
 func ExampleGet() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -398,7 +398,7 @@ func TestGetBytes(t *testing.T) {
 // ExampleGetBytes is an example of GetBytes() method
 func ExampleGetBytes() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -441,7 +441,7 @@ func TestGetAllKeys(t *testing.T) {
 // ExampleGetAllKeys is an example of GetAllKeys() method
 func ExampleGetAllKeys() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -481,7 +481,7 @@ func TestExists(t *testing.T) {
 // ExampleExists is an example of Exists() method
 func ExampleExists() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -536,7 +536,7 @@ func TestExpire(t *testing.T) {
 // ExampleExpire is an example of Expire() method
 func ExampleExpire() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -589,7 +589,7 @@ func TestDestroyCache(t *testing.T) {
 // ExampleDestroyCache is an example of DestroyCache() method
 func ExampleDestroyCache() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -606,7 +606,7 @@ func ExampleDestroyCache() {
 // ExampleDelete is an example of Delete() method
 func ExampleDelete() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -623,7 +623,7 @@ func ExampleDelete() {
 // ExampleKillByDependency is an example of KillByDependency() method
 func ExampleKillByDependency() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()

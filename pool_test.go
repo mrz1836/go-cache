@@ -86,7 +86,7 @@ func TestConnect(t *testing.T) {
 // ExampleConnect is an example of Connect() method
 func ExampleConnect() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -124,7 +124,7 @@ func TestGetPool(t *testing.T) {
 // ExampleGetPool is an example of GetPool() method
 func ExampleGetPool() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -163,7 +163,7 @@ func TestDisconnect(t *testing.T) {
 // ExampleDisconnect is an example of Disconnect() method
 func ExampleDisconnect() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	Disconnect()
@@ -175,7 +175,7 @@ func ExampleDisconnect() {
 // ExampleGetConnection is an example of GetConnection() method
 func ExampleGetConnection() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()

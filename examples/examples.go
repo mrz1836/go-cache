@@ -12,7 +12,7 @@ import (
 func main() {
 
 	// Create the pool and first connection
-	err := cache.Connect("redis://localhost:6379", 0, 10, 0, 240)
+	err := cache.Connect("redis://localhost:6379", 0, 10, 0, 240, true)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

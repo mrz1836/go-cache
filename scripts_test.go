@@ -36,7 +36,7 @@ func TestRegisterScript(t *testing.T) {
 // ExampleRegisterScript is an example of RegisterScript() method
 func ExampleRegisterScript() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -81,7 +81,7 @@ func TestRegisterScripts(t *testing.T) {
 // ExampleRegisterScripts is an example of RegisterScripts() method
 func ExampleRegisterScripts() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()
@@ -120,7 +120,7 @@ func TestDidRegisterKillByDependencyScript(t *testing.T) {
 // ExampleRegisterScripts is an example of RegisterScripts() method
 func ExampleDidRegisterKillByDependencyScript() {
 	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout)
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
 	// Disconnect at end
 	defer Disconnect()

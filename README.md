@@ -44,7 +44,7 @@ You can view the generated [documentation here](https://godoc.org/github.com/mrz
 - Helper Methods (Get, Set, HashGet, etc)
 
 ## Examples & Tests
-All unit tests and [examples](examples/examples.go) run via [Travis CI](https://travis-ci.com/mrz1836/go-cache) and uses [Go version 1.12.x](https://golang.org/doc/go1.12). View the [deployment configuration file](.travis.yml).
+All unit tests and [examples](examples/examples.go) run via [Travis CI](https://travis-ci.com/mrz1836/go-cache) and uses [Go version 1.13.x](https://golang.org/doc/go1.13). View the [deployment configuration file](.travis.yml).
 
 Run all tests (including integration tests)
 ```bash
@@ -109,7 +109,7 @@ func main() {
 
 ## Maintainers
 
-[@MrZ1836](https://github.com/mrz1836) | [@kayleg](https://github.com/kayleg)
+[@MrZ](https://github.com/mrz1836) | [@kayleg](https://github.com/kayleg)
 
 ## Contributing
 

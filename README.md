@@ -90,7 +90,7 @@ import (
 func main() {
 
 	// Create the pool and first connection
-	_ = cache.Connect("redis://localhost:6379", 0, 10, 0, 240)
+	_ = cache.Connect("redis://localhost:6379", 0, 10, 0, 240, true)
 
 	// Set a key
 	_ = cache.Set("key-name", "the-value", "dependent-key-1", "dependent-key-2")

@@ -15,14 +15,14 @@ import (
 var pool *redis.Pool
 
 // buildDialer will build a redis connection from URL
-func buildDialer(url string) func() (redis.Conn, error) {
+func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, error) {
 	return func() (redis.Conn, error) {
-		return ConnectToURL(url)
+		return ConnectToURL(url, options...)
 	}
 }
 
 // Connect creates a new connection pool connected to the specified url
-func Connect(url string, maxActiveConnections, idleConnections, maxConnLifetime, idleTimeout int, dependencyMode bool) (err error) {
+func Connect(url string, maxActiveConnections, idleConnections, maxConnLifetime, idleTimeout int, dependencyMode bool, options ...redis.DialOption) (err error) {
 
 	// Create a new pool
 	pool = &redis.Pool{
@@ -30,7 +30,7 @@ func Connect(url string, maxActiveConnections, idleConnections, maxConnLifetime,
 		MaxActive:       maxActiveConnections,
 		MaxConnLifetime: time.Duration(maxConnLifetime) * time.Second,
 		MaxIdle:         idleConnections,
-		Dial:            buildDialer(url),
+		Dial:            buildDialer(url, options...),
 		TestOnBorrow: func(c redis.Conn, t time.Time) (err error) {
 			if time.Since(t) < time.Minute {
 				return nil

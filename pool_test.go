@@ -3,6 +3,7 @@ package cache
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -12,6 +13,34 @@ func TestConnectToURL(t *testing.T) {
 
 	// Connect to url string
 	c, err := ConnectToURL(connectionURL)
+	if err != nil {
+		t.Errorf("Error returned")
+	} else if c == nil {
+		t.Errorf("Client was nil")
+	}
+
+	// Close the connection
+	defer func() {
+		_ = c.Close()
+	}()
+
+	// Try to ping
+	pong, err := redis.String(c.Do(pingCommand))
+	if err != nil {
+		t.Errorf("Call to %s returned an error: %v", pingCommand, err)
+	}
+
+	// Got a pong?
+	if pong != "PONG" {
+		t.Errorf("Wanted PONG, got %v\n", pong)
+	}
+}
+
+// TestConnectToURL_DialOptions test the ConnectToURL() method
+func TestConnectToURL_DialOptions(t *testing.T) {
+
+	// Connect to url string
+	c, err := ConnectToURL(connectionURL, redis.DialUseTLS(false), redis.DialKeepAlive(3*time.Second))
 	if err != nil {
 		t.Errorf("Error returned")
 	} else if c == nil {

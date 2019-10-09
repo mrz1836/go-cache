@@ -112,6 +112,41 @@ func TestConnect(t *testing.T) {
 	}
 }
 
+// TestConnect_CustomOptions tests the connect method
+func TestConnect_CustomOptions(t *testing.T) {
+
+	// Test if pool is nil
+	if GetPool() != nil {
+		t.Fatal("pool should be nil")
+	}
+
+	// Create a local connection
+	if err := startTestCustom(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	// Get a connection
+	c := GetConnection()
+
+	// Close
+	defer func() {
+		_ = c.Close()
+	}()
+
+	// Test our only script
+	if !DidRegisterKillByDependencyScript() {
+		t.Fatal("Did not register the script")
+	}
+
+	// Test if pool exists
+	if GetPool() == nil {
+		t.Fatal("expected pool to not be nil")
+	}
+}
+
 // ExampleConnect is an example of Connect() method
 func ExampleConnect() {
 	// Create a local connection

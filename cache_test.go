@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/gomodule/redigo/redis"
 )
 
 // Testing variables
@@ -20,6 +22,14 @@ var (
 func startTest() error {
 	if GetPool() == nil {
 		return Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+	}
+	return nil
+}
+
+// startTest start all tests the same way
+func startTestCustom() error {
+	if GetPool() == nil {
+		return Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true, redis.DialKeepAlive(10*time.Second))
 	}
 	return nil
 }

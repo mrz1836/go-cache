@@ -73,7 +73,7 @@ func GetConnection() redis.Conn {
 // ConnectToURL connects via REDIS_URL
 // Source: github.com/soveran/redisurl
 // URL Format: redis://localhost:6379
-func ConnectToURL(urlString string) (c redis.Conn, err error) {
+func ConnectToURL(urlString string, options ...redis.DialOption) (c redis.Conn, err error) {
 
 	// Parse the URL
 	var redisURL *url.URL
@@ -82,7 +82,7 @@ func ConnectToURL(urlString string) (c redis.Conn, err error) {
 	}
 
 	// Create the connection
-	c, err = redis.Dial("tcp", redisURL.Host)
+	c, err = redis.Dial("tcp", redisURL.Host, options...)
 	if err != nil {
 		return
 	}

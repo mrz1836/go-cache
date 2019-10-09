@@ -5,14 +5,16 @@ package main
 
 import (
 	"log"
+	"time"
 
+	"github.com/gomodule/redigo/redis"
 	"github.com/mrz1836/go-cache"
 )
 
 func main() {
 
 	// Create the pool and first connection
-	err := cache.Connect("redis://localhost:6379", 0, 10, 0, 240, true)
+	err := cache.Connect("redis://localhost:6379", 0, 10, 0, 240, true, redis.DialKeepAlive(10*time.Second))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

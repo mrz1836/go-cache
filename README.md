@@ -1,9 +1,12 @@
 # go-cache
 **go-cache** is a simple redis cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
 
-| | | | | | | |
-|-|-|-|-|-|-|-|
-| ![License](https://img.shields.io/github/license/mrz1836/go-cache.svg?style=flat) | [![Report](https://goreportcard.com/badge/github.com/mrz1836/go-cache?style=flat)](https://goreportcard.com/report/github.com/mrz1836/go-cache)  | [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b6c2832dee5442c7a79b482114100814)](https://www.codacy.com/app/mrz1818/go-cache?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mrz1836/go-cache&amp;utm_campaign=Badge_Grade) |  [![Build Status](https://travis-ci.org/mrz1836/go-cache.svg?branch=master)](https://travis-ci.org/mrz1836/go-cache)   |  [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat)](https://github.com/RichardLitt/standard-readme) | [![Release](https://img.shields.io/github/release-pre/mrz1836/go-cache.svg?style=flat)](https://github.com/mrz1836/go-cache/releases) | [![GoDoc](https://godoc.org/github.com/mrz1836/go-cache?status.svg&style=flat)](https://godoc.org/github.com/mrz1836/go-cache) |
+[![Build Status](https://travis-ci.org/mrz1836/go-cache.svg?branch=master)](https://travis-ci.org/mrz1836/go-cache)
+[![Report](https://goreportcard.com/badge/github.com/mrz1836/go-cache?style=flat)](https://goreportcard.com/report/github.com/mrz1836/go-cache)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b6c2832dee5442c7a79b482114100814)](https://www.codacy.com/app/mrz1818/go-cache?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mrz1836/go-cache&amp;utm_campaign=Badge_Grade)
+[![Release](https://img.shields.io/github/release-pre/mrz1836/go-cache.svg?style=flat)](https://github.com/mrz1836/go-cache/releases)
+[![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat)](https://github.com/RichardLitt/standard-readme)
+[![GoDoc](https://godoc.org/github.com/mrz1836/go-cache?status.svg&style=flat)](https://godoc.org/github.com/mrz1836/go-cache)
 
 ## Table of Contents
 - [Installation](#installation)

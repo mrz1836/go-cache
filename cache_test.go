@@ -625,9 +625,27 @@ func ExampleDelete() {
 	_ = Set("example-destroy-cache", "my-value", "another-key")
 
 	// Delete keys
-	_, _ = Delete("another-key", "another-key-2")
-	fmt.Print("deleted keys")
-	//Output: deleted keys
+	total, _ := Delete("another-key", "another-key-2")
+	fmt.Print(total, " deleted keys")
+	//Output: 2 deleted keys
+}
+
+// ExampleDeleteWithoutDependency is an example of DeleteWithoutDependency() method
+func ExampleDeleteWithoutDependency() {
+	// Create a local connection
+	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+
+	// Disconnect at end
+	defer Disconnect()
+
+	// Set the key/value
+	_ = Set("example-destroy-cache-1", "my-value")
+	_ = Set("example-destroy-cache-2", "my-value")
+
+	// Delete keys
+	total, _ := DeleteWithoutDependency("example-destroy-cache-1", "example-destroy-cache-2")
+	fmt.Print(total, " deleted keys")
+	//Output: 2 deleted keys
 }
 
 // ExampleKillByDependency is an example of KillByDependency() method

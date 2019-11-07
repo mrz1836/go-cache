@@ -56,7 +56,8 @@ func TestSet(t *testing.T) {
 	}
 
 	// Check the set via a Get
-	val, err := Get("test-set")
+	var val string
+	val, err = Get("test-set")
 	if val != "my-value" {
 		t.Fatalf("expected value: %s, got: %s", "my-value", val)
 	}
@@ -79,7 +80,8 @@ func TestSetExp(t *testing.T) {
 	}
 
 	// Check the set
-	val, err := Get("test-set-exp")
+	var val string
+	val, err = Get("test-set-exp")
 	if val != "my-value" {
 		t.Fatalf("expected value: %s, got: %s", "my-value", val)
 	}
@@ -140,7 +142,8 @@ func TestHashSet(t *testing.T) {
 	}
 
 	// Get the value
-	val, err := HashGet("test-hash-name", "test-hash-key")
+	var val string
+	val, err = HashGet("test-hash-name", "test-hash-key")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if val != "my-cache-value" {
@@ -180,7 +183,8 @@ func TestHashGet(t *testing.T) {
 	}
 
 	// Get the value
-	val, err := HashGet("test-hash-name", "test-hash-key")
+	var val string
+	val, err = HashGet("test-hash-name", "test-hash-key")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if val != "my-cache-value" {
@@ -229,7 +233,8 @@ func TestHashMapSet(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	val, err := HashGet("test-hash-map-set", "pair-1")
+	var val string
+	val, err = HashGet("test-hash-map-set", "pair-1")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if val != "pair-1-value" {
@@ -237,7 +242,8 @@ func TestHashMapSet(t *testing.T) {
 	}
 
 	// Get a key in the map
-	values, err := HashMapGet("test-hash-map-set", "pair-1", "pair-2")
+	var values []string
+	values, err = HashMapGet("test-hash-map-set", "pair-1", "pair-2")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -303,7 +309,8 @@ func TestHashMapSetExp(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	val, err := HashGet("test-hash-map-set-expire", "pair-1")
+	var val string
+	val, err = HashGet("test-hash-map-set-expire", "pair-1")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if val != "pair-1-value" {
@@ -359,7 +366,8 @@ func TestGet(t *testing.T) {
 	}
 
 	// Get the value
-	val, err := Get("test-get")
+	var val string
+	val, err = Get("test-get")
 	if val != "my-value" {
 		t.Fatalf("expected value: %s, got: %s", "my-value", val)
 	}
@@ -399,7 +407,8 @@ func TestGetBytes(t *testing.T) {
 	}
 
 	// Get the value
-	val, err := GetBytes("test-get-bytes")
+	var val []byte
+	val, err = GetBytes("test-get-bytes")
 	if string(val) != "my-value" {
 		t.Fatalf("expected value: %s, got: %s", "my-value", val)
 	}
@@ -439,7 +448,8 @@ func TestGetAllKeys(t *testing.T) {
 	}
 
 	// Get the value
-	keys, err := GetAllKeys()
+	var keys []string
+	keys, err = GetAllKeys()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -482,7 +492,8 @@ func TestExists(t *testing.T) {
 	}
 
 	// Check the set / exists
-	exists, err := Exists("test-exists")
+	var exists bool
+	exists, err = Exists("test-exists")
 	if !exists {
 		t.Fatal("expected key to exist")
 	}
@@ -522,7 +533,8 @@ func TestExpire(t *testing.T) {
 	}
 
 	// Check the set
-	val, err := Get("test-set-expire")
+	var val string
+	val, err = Get("test-set-expire")
 	if val != "my-value" {
 		t.Fatalf("expected value: %s, got: %s", "my-value", val)
 	}
@@ -578,7 +590,8 @@ func TestDestroyCache(t *testing.T) {
 	}
 
 	// Check the set
-	val, err := Get("test-destroy")
+	var val string
+	val, err = Get("test-destroy")
 	if val != "my-value" {
 		t.Fatalf("expected value: %s, got: %s", "my-value", val)
 	}
@@ -690,7 +703,8 @@ func TestDependencyManagement(t *testing.T) {
 	}
 
 	// Test for dependent key 1
-	ok, err := SetIsMember("depend:dependent-1", "test-set-dep")
+	var ok bool
+	ok, err = SetIsMember("depend:dependent-1", "test-set-dep")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if !ok {
@@ -706,7 +720,8 @@ func TestDependencyManagement(t *testing.T) {
 	}
 
 	// Kill a dependent key
-	total, err := Delete("dependent-1")
+	var total int
+	total, err = Delete("dependent-1")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if total != 2 {
@@ -714,7 +729,8 @@ func TestDependencyManagement(t *testing.T) {
 	}
 
 	// Test for main key
-	found, err := Exists("test-set-dep")
+	var found bool
+	found, err = Exists("test-set-dep")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if found {
@@ -787,7 +803,8 @@ func TestHashMapDependencyManagement(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	val, err := HashGet("test-hash-map-dependency", "pair-1")
+	var val string
+	val, err = HashGet("test-hash-map-dependency", "pair-1")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if val != "pair-1-value" {
@@ -795,7 +812,8 @@ func TestHashMapDependencyManagement(t *testing.T) {
 	}
 
 	// Get a key in the map
-	values, err := HashMapGet("test-hash-map-dependency", "pair-1", "pair-2")
+	var values []string
+	values, err = HashMapGet("test-hash-map-dependency", "pair-1", "pair-2")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -806,7 +824,8 @@ func TestHashMapDependencyManagement(t *testing.T) {
 	}
 
 	// Test for dependent key 1
-	ok, err := SetIsMember("depend:test-hash-map-depend-1", "test-hash-map-dependency")
+	var ok bool
+	ok, err = SetIsMember("depend:test-hash-map-depend-1", "test-hash-map-dependency")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if !ok {
@@ -822,7 +841,8 @@ func TestHashMapDependencyManagement(t *testing.T) {
 	}
 
 	// Kill a dependent key
-	total, err := Delete("test-hash-map-depend-2")
+	var total int
+	total, err = Delete("test-hash-map-depend-2")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if total != 2 {
@@ -830,10 +850,81 @@ func TestHashMapDependencyManagement(t *testing.T) {
 	}
 
 	// Test for main key
-	found, err := Exists("test-hash-map-dependency")
+	var found bool
+	found, err = Exists("test-hash-map-dependency")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if found {
 		t.Fatal("expected found to be false")
+	}
+}
+
+// TestSetAddMany test the SetAddMany() method
+func TestSetAddMany(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	var empty []interface{}
+	empty = append(empty, "one", "two", "three")
+
+	err := SetAddMany("test-set", empty...)
+	if err != nil {
+		t.Fatal("error setting members", err.Error())
+	}
+
+	// Test the set
+	var found bool
+	found, err = SetIsMember("test-set", "two")
+	if err != nil {
+		t.Fatal("error in SetIsMember", err.Error())
+	} else if !found {
+		t.Fatal("failed to find a member that should exist")
+	}
+
+	// Test for not finding a value
+	found, err = SetIsMember("test-set", "not-here")
+	if err != nil {
+		t.Fatal("error in SetIsMember", err.Error())
+	} else if found {
+		t.Fatal("found a member that should NOT exist")
+	}
+}
+
+// TestSetRemoveMember test the SetRemoveMember() method
+func TestSetRemoveMember(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	var empty []interface{}
+	empty = append(empty, "one", "two", "three")
+
+	err := SetAddMany("test-set", empty...)
+	if err != nil {
+		t.Fatal("error setting members", err.Error())
+	}
+
+	// Try to delete
+	err = SetRemoveMember("test-set", "two")
+	if err != nil {
+		t.Fatal("error SetRemoveMember", err.Error())
+	}
+
+	// Test for not finding a value
+	var found bool
+	found, err = SetIsMember("test-set", "two")
+	if err != nil {
+		t.Fatal("error in SetIsMember", err.Error())
+	} else if found {
+		t.Fatal("found a member that should NOT exist")
 	}
 }

@@ -297,8 +297,7 @@ func HashMapSetExp(hashName string, pairs [][2]interface{}, ttl time.Duration, d
 	return linkDependencies(conn, hashName, dependencies...)
 }
 
-// SetAdd will add the member to the Set and link a reference to each dependency
-// for the entire Set
+// SetAdd will add the member to the Set and link a reference to each dependency for the entire Set
 func SetAdd(setName, member interface{}, dependencies ...string) (err error) {
 
 	// Create a new connection and defer closing
@@ -314,6 +313,32 @@ func SetAdd(setName, member interface{}, dependencies ...string) (err error) {
 
 	// Link and return the error
 	return linkDependencies(conn, setName, dependencies...)
+}
+
+// SetAddMany will add many values to an existing set
+func SetAddMany(setName string, members ...interface{}) (err error) {
+
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// Create the arguments
+	args := make([]interface{}, len(members)+1)
+	args[0] = setName
+
+	// Loop members
+	for i, key := range members {
+		args[i+1] = key
+	}
+
+	// Fire the delete
+	_, err = conn.Do(addToSetCommand, args...)
+	return
+
+	// Link and return the error //todo: add dependencies back?
+	//return linkDependencies(conn, setName, dependencies...)
 }
 
 // SetIsMember returns if the member is part of the set

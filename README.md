@@ -21,26 +21,19 @@
 
 ## Installation
 
-**go-cache** requires a [supported release of Go](https://golang.org/doc/devel/release.html#policy) and [dep](https://github.com/golang/dep).
+**go-cache** requires a [supported release of Go](https://golang.org/doc/devel/release.html#policy).
 ```bash
 $ go get -u github.com/mrz1836/go-cache
 ```
 
-Updating dependencies in **go-cache**:
-```bash
-$ cd ../go-cache
-$ dep ensure -update -v
-```
-
 ### Package Dependencies
 - Gary Burd's [Redigo](https://github.com/gomodule/redigo)
-- Knowledge of [Redis](https://redis.io/download)
 
 ## Documentation
 You can view the generated [documentation here](https://godoc.org/github.com/mrz1836/go-cache).
 
 ### Features
-- Cache Dependencies Between Keys
+- Cache Dependencies Between Keys (toggle functionality)
 - Connect via URL
 - Better Pool Management & Creation
 - Register Scripts

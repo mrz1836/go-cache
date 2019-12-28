@@ -86,7 +86,7 @@ import (
 func main() {
 
 	// Create the pool and first connection
-	_ = cache.Connect("redis://localhost:6379", 0, 10, 0, 240, true)
+	_ = cache.Connect("redis://localhost:6379", 0, 10, 0, 240, true, redis.DialKeepAlive(10*time.Second))
 
 	// Set a key
 	_ = cache.Set("key-name", "the-value", "dependent-key-1", "dependent-key-2")

@@ -13,6 +13,7 @@ import (
 // Package constants (commands)
 const (
 	addToSetCommand      string = "SADD"
+	authCommand          string = "AUTH"
 	deleteCommand        string = "DEL"
 	dependencyPrefix     string = "depend:"
 	evalCommand          string = "EVALSHA"
@@ -22,8 +23,8 @@ const (
 	flushAllCommand      string = "FLUSHALL"
 	getCommand           string = "GET"
 	hashGetCommand       string = "HGET"
-	hashMapGetCommand    string = "HMGET"
 	hashKeySetCommand    string = "HSET"
+	hashMapGetCommand    string = "HMGET"
 	hashMapSetCommand    string = "HMSET"
 	isMemberCommand      string = "SISMEMBER"
 	keysCommand          string = "KEYS"
@@ -31,6 +32,8 @@ const (
 	multiCommand         string = "MULTI"
 	pingCommand          string = "PING"
 	removeMemberCommand  string = "SREM"
+	scriptCommand        string = "SCRIPT"
+	selectCommand        string = "SELECT"
 	setCommand           string = "SET"
 	setExpirationCommand string = "SETEX"
 )
@@ -77,8 +80,7 @@ func GetStringSlice(key string) (destination []string, err error) {
 
 	// This command takes two parameters specifying the range: 0 start, -1 is the end of the list
 	var values []interface{}
-	values, err = redis.Values(conn.Do(listRangeCommand, key, 0, -1))
-	if err != nil {
+	if values, err = redis.Values(conn.Do(listRangeCommand, key, 0, -1)); err != nil {
 		return
 	}
 
@@ -89,6 +91,7 @@ func GetStringSlice(key string) (destination []string, err error) {
 
 // GetAllKeys returns a []string of keys
 func GetAllKeys() (keys []string, err error) {
+
 	// Create a new connection and defer closing
 	conn := GetConnection()
 	defer func() {
@@ -129,8 +132,7 @@ func SetExp(key string, value interface{}, ttl time.Duration, dependencies ...st
 	}()
 
 	// Fire the set expiration
-	_, err = conn.Do(setExpirationCommand, key, int64(ttl.Seconds()), value)
-	if err != nil {
+	if _, err = conn.Do(setExpirationCommand, key, int64(ttl.Seconds()), value); err != nil {
 		return
 	}
 
@@ -153,6 +155,7 @@ func Exists(key string) (bool, error) {
 
 // Expire sets the expiration for a given key
 func Expire(key string, duration time.Duration) (err error) {
+
 	// Create a new connection and defer closing
 	conn := GetConnection()
 	defer func() {
@@ -180,8 +183,7 @@ func DeleteWithoutDependency(keys ...string) (total int, err error) {
 
 	// Loop all keys and delete
 	for _, key := range keys {
-		_, err = conn.Do("DEL", key)
-		if err != nil {
+		if _, err = conn.Do(deleteCommand, key); err != nil {
 			return
 		}
 		total++
@@ -387,8 +389,7 @@ func GetOrSetWithExpirationGob(key string, fn GobCacheCreator, duration time.Dur
 	if err != nil {
 
 		//Set the value
-		data, err = fn()
-		if err != nil {
+		if data, err = fn(); err != nil {
 			return
 		}
 
@@ -402,10 +403,10 @@ func GetOrSetWithExpirationGob(key string, fn GobCacheCreator, duration time.Dur
 		go func(key string, data []byte, duration time.Duration, dependencies []string) {
 
 			// Create a new connection and defer closing
-			conn := GetConnection()
+			/*connection := GetConnection()
 			defer func() {
-				_ = conn.Close()
-			}()
+				_ = connection.Close()
+			}()*/
 
 			//Set an expiration time if found
 			if duration > 0 {
@@ -420,8 +421,7 @@ func GetOrSetWithExpirationGob(key string, fn GobCacheCreator, duration time.Dur
 	return
 }
 
-// DestroyCache will flush the entire redis server. It only removes keys, not
-// scripts
+// DestroyCache will flush the entire redis server. It only removes keys, not scripts
 func DestroyCache() (err error) {
 
 	// Create a new connection and defer closing
@@ -464,8 +464,7 @@ func KillByDependency(keys ...string) (total int, err error) {
 	}
 
 	// Create the script
-	total, err = redis.Int(conn.Do(evalCommand, args...))
-	if err != nil {
+	if total, err = redis.Int(conn.Do(evalCommand, args...)); err != nil {
 		return
 	}
 

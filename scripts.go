@@ -24,7 +24,7 @@ func RegisterScript(script string) (sha string, err error) {
 	}()
 
 	// Set the script for killByDependency and return sha/error
-	return redis.String(c.Do("SCRIPT", "LOAD", script))
+	return redis.String(c.Do(scriptCommand, "LOAD", script))
 }
 
 // DidRegisterKillByDependencyScript returns true if the script has a sha from redis

@@ -82,15 +82,14 @@ func ConnectToURL(urlString string, options ...redis.DialOption) (c redis.Conn, 
 	}
 
 	// Create the connection
-	c, err = redis.Dial("tcp", redisURL.Host, options...)
-	if err != nil {
+	if c, err = redis.Dial("tcp", redisURL.Host, options...); err != nil {
 		return
 	}
 
 	// Attempt authentication if needed
 	if redisURL.User != nil {
 		if password, ok := redisURL.User.Password(); ok {
-			if _, err = c.Do("AUTH", password); err != nil {
+			if _, err = c.Do(authCommand, password); err != nil {
 				return
 			}
 		}
@@ -98,8 +97,7 @@ func ConnectToURL(urlString string, options ...redis.DialOption) (c redis.Conn, 
 
 	// Fire a select on DB
 	if len(redisURL.Path) > 1 {
-		db := strings.TrimPrefix(redisURL.Path, "/")
-		_, err = c.Do("SELECT", db)
+		_, err = c.Do(selectCommand, strings.TrimPrefix(redisURL.Path, "/"))
 	}
 
 	return

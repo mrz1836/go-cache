@@ -1,6 +1,7 @@
 # go-cache
 **go-cache** is a simple redis cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
 
+[![Go](https://img.shields.io/github/go-mod/go-version/mrz1836/go-cache)](https://golang.org/)
 [![Build Status](https://travis-ci.org/mrz1836/go-cache.svg?branch=master)](https://travis-ci.org/mrz1836/go-cache)
 [![Report](https://goreportcard.com/badge/github.com/mrz1836/go-cache?style=flat)](https://goreportcard.com/report/github.com/mrz1836/go-cache)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b6c2832dee5442c7a79b482114100814)](https://www.codacy.com/app/mrz1818/go-cache?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mrz1836/go-cache&amp;utm_campaign=Badge_Grade)

@@ -28,7 +28,8 @@ func main() {
 	}
 
 	// Get the value for the key we set that has a value
-	value, err := cache.Get("user-michael")
+	var value string
+	value, err = cache.Get("user-michael")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -37,7 +38,8 @@ func main() {
 
 	// Remove all keys based on a dependent key getting busted
 	// Example: the user updates their profile or record, hence the key "user-23" would get busted
-	keys, err := cache.KillByDependency("user-23")
+	var keys int
+	keys, err = cache.KillByDependency("user-23")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -48,5 +50,14 @@ func main() {
 	value, _ = cache.Get("user-michael")
 	if value == "" {
 		log.Println("No value found for key:", "user-michael")
+	}
+
+	// Set a redis lock
+	var locked bool
+	locked, err = cache.WriteLock("my-lock-key", "the-lock-secret", int64(10))
+	if err != nil {
+		log.Fatal(err.Error())
+	} else if locked {
+		log.Println("lock succeeded")
 	}
 }

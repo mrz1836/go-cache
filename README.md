@@ -39,6 +39,7 @@ You can view the generated [documentation here](https://godoc.org/github.com/mrz
 - Better Pool Management & Creation
 - Register Scripts
 - Helper Methods (Get, Set, HashGet, etc)
+- Basic Lock/Release (from [bgentry lock.go](https://gist.github.com/bgentry/6105288))
 
 ## Examples & Tests
 All unit tests and [examples](examples/examples.go) run via [Travis CI](https://travis-ci.org/mrz1836/go-cache) and uses [Go version 1.13.x](https://golang.org/doc/go1.13). View the [deployment configuration file](.travis.yml).

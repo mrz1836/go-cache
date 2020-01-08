@@ -15,16 +15,14 @@ func RegisterScripts() (err error) {
 // RegisterScript register a script
 func RegisterScript(script string) (sha string, err error) {
 
-	// Get the connection
-	c := GetConnection()
-
-	// Defer close, skip error
+	// Create a new connection and defer closing
+	conn := GetConnection()
 	defer func() {
-		_ = c.Close()
+		_ = conn.Close()
 	}()
 
 	// Set the script for killByDependency and return sha/error
-	return redis.String(c.Do(scriptCommand, "LOAD", script))
+	return redis.String(conn.Do(scriptCommand, "LOAD", script))
 }
 
 // DidRegisterKillByDependencyScript returns true if the script has a sha from redis

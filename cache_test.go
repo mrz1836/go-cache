@@ -107,7 +107,7 @@ func ExampleSet() {
 	// Set the key/value
 	_ = Set("example-set", "my-value", "another-key")
 	fmt.Print("set complete")
-	//Output: set complete
+	// Output: set complete
 }
 
 // ExampleSetExp is an example of SetExp() method
@@ -121,7 +121,7 @@ func ExampleSetExp() {
 	// Set the key/value
 	_ = SetExp("example-set-exp", "my-value", 2*time.Minute, "another-key")
 	fmt.Print("set complete")
-	//Output: set complete
+	// Output: set complete
 }
 
 // TestHashSet is testing the HashSet() method
@@ -162,7 +162,7 @@ func ExampleHashSet() {
 	// Set the key/value
 	_ = HashSet("example-hash-set", "test-hash-key", "my-cache-value")
 	fmt.Print("set complete")
-	//Output: set complete
+	// Output: set complete
 }
 
 // TestHashGet is testing the HashGet() method
@@ -206,7 +206,7 @@ func ExampleHashGet() {
 	// Get the value
 	val, _ := HashGet("example-hash-get", "test-hash-key")
 	fmt.Print(val)
-	//Output: my-cache-value
+	// Output: my-cache-value
 }
 
 // TestHashMapSet is testing the HashMapSet() method
@@ -282,7 +282,7 @@ func ExampleHashMapSet() {
 	// Set the hash map
 	_ = HashMapSet("example-hash-map-set", pairs, "test-hash-map-1", "test-hash-map-2")
 	fmt.Print("set complete")
-	//Output: set complete
+	// Output: set complete
 }
 
 // TestHashMapSetExp is testing the HashMapSetExp() method
@@ -346,7 +346,7 @@ func ExampleHashMapSetExp() {
 	// Set the hash map
 	_ = HashMapSetExp("example-hash-map-set-exp", pairs, 2*time.Minute, "test-hash-map-1", "test-hash-map-2")
 	fmt.Print("set complete")
-	//Output: set complete
+	// Output: set complete
 }
 
 // TestGet is testing the Get() method
@@ -387,7 +387,7 @@ func ExampleGet() {
 	// Get the value
 	value, _ := Get("example-get")
 	fmt.Print(value)
-	//Output: my-value
+	// Output: my-value
 }
 
 // TestGetBytes is testing the GetBytes() method
@@ -428,7 +428,7 @@ func ExampleGetBytes() {
 	// Get the value
 	value, _ := GetBytes("example-get-bytes")
 	fmt.Print(string(value))
-	//Output: my-value
+	// Output: my-value
 }
 
 // TestGetAllKeys is testing the GetAllKeys() method
@@ -472,7 +472,7 @@ func ExampleGetAllKeys() {
 	// Get the value
 	_, _ = GetAllKeys()
 	fmt.Print("found keys")
-	//Output: found keys
+	// Output: found keys
 }
 
 // TestExists is testing the Exists() method
@@ -513,7 +513,7 @@ func ExampleExists() {
 	// Get the value
 	_, _ = Exists("example-exists")
 	fmt.Print("key exists")
-	//Output: key exists
+	// Output: key exists
 }
 
 // TestExpire is testing the Expire() method
@@ -569,7 +569,7 @@ func ExampleExpire() {
 	// Set the expire
 	_ = Expire("example-expire", 1*time.Minute)
 	fmt.Print("expiration set")
-	//Output: expiration set
+	// Output: expiration set
 }
 
 // TestDestroyCache is testing the DestroyCache() method
@@ -623,7 +623,7 @@ func ExampleDestroyCache() {
 	// Set the expire
 	_ = DestroyCache()
 	fmt.Print("cache destroyed")
-	//Output: cache destroyed
+	// Output: cache destroyed
 }
 
 // ExampleDelete is an example of Delete() method
@@ -640,7 +640,7 @@ func ExampleDelete() {
 	// Delete keys
 	total, _ := Delete("another-key", "another-key-2")
 	fmt.Print(total, " deleted keys")
-	//Output: 2 deleted keys
+	// Output: 2 deleted keys
 }
 
 // ExampleDeleteWithoutDependency is an example of DeleteWithoutDependency() method
@@ -658,7 +658,7 @@ func ExampleDeleteWithoutDependency() {
 	// Delete keys
 	total, _ := DeleteWithoutDependency("example-destroy-cache-1", "example-destroy-cache-2")
 	fmt.Print(total, " deleted keys")
-	//Output: 2 deleted keys
+	// Output: 2 deleted keys
 }
 
 // ExampleKillByDependency is an example of KillByDependency() method
@@ -675,7 +675,7 @@ func ExampleKillByDependency() {
 	// Delete keys
 	_, _ = KillByDependency("another-key", "another-key-2")
 	fmt.Print("deleted keys")
-	//Output: deleted keys
+	// Output: deleted keys
 }
 
 // TestDependencyManagement tests basic dependency functionality

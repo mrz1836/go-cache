@@ -38,9 +38,9 @@ const (
 	setExpirationCommand string = "SETEX"
 )
 
-//GobCacheCreator can be used to generate the content to store. If the content
-//is not found, the creator will be invoked and the result will be stored and
-//returned
+// GobCacheCreator can be used to generate the content to store. If the content
+// is not found, the creator will be invoked and the result will be stored and
+// returned
 type GobCacheCreator func() ([]byte, error)
 
 // Get gets a key from redis
@@ -340,7 +340,7 @@ func SetAddMany(setName string, members ...interface{}) (err error) {
 	return
 
 	// Link and return the error //todo: add dependencies back?
-	//return linkDependencies(conn, setName, dependencies...)
+	// return linkDependencies(conn, setName, dependencies...)
 }
 
 // SetIsMember returns if the member is part of the set
@@ -382,24 +382,24 @@ func GetOrSetWithExpirationGob(key string, fn GobCacheCreator, duration time.Dur
 		_ = conn.Close()
 	}()
 
-	//Get from redis
+	// Get from redis
 	data, err = redis.Bytes(conn.Do(getCommand, key))
 
-	//Set the string in redis
+	// Set the string in redis
 	if err != nil {
 
-		//Set the value
+		// Set the value
 		if data, err = fn(); err != nil {
 			return
 		}
 
-		//No data?!
+		// No data?!
 		if len(data) == 0 {
 			err = fmt.Errorf("value is empty for key: %s", key)
 			return
 		}
 
-		//Go routine to set the key and expiration
+		// Go routine to set the key and expiration
 		go func(key string, data []byte, duration time.Duration, dependencies []string) {
 
 			// Create a new connection and defer closing
@@ -408,16 +408,16 @@ func GetOrSetWithExpirationGob(key string, fn GobCacheCreator, duration time.Dur
 				_ = connection.Close()
 			}()*/
 
-			//Set an expiration time if found
+			// Set an expiration time if found
 			if duration > 0 {
-				_ = SetExp(key, data, duration, dependencies...) //todo: handle the error?
+				_ = SetExp(key, data, duration, dependencies...) // todo: handle the error?
 			} else {
-				_ = Set(key, data, dependencies...) //todo: handle the error?
+				_ = Set(key, data, dependencies...) // todo: handle the error?
 			}
 		}(key, data, duration, dependencies)
 	}
 
-	//Return the value
+	// Return the value
 	return
 }
 

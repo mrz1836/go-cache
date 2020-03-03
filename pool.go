@@ -54,7 +54,7 @@ func Connect(url string, maxActiveConnections, idleConnections, maxConnLifetime,
 // Disconnect closes the connection pool
 func Disconnect() {
 	if pool != nil {
-		_ = pool.Close() //todo: handle this error?
+		_ = pool.Close() // todo: handle this error?
 	}
 	pool = nil
 }

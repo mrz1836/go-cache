@@ -74,7 +74,7 @@ func ExampleConnectToURL() {
 
 	// Connected
 	fmt.Print("connected")
-	//Output: connected
+	// Output: connected
 }
 
 // TestConnect tests the connect method
@@ -157,7 +157,7 @@ func ExampleConnect() {
 
 	// Connected
 	fmt.Print("connected")
-	//Output: connected
+	// Output: connected
 }
 
 // BenchmarkConnect benchmarks the Connect() method
@@ -196,7 +196,7 @@ func ExampleGetPool() {
 	// Get pool
 	_ = GetPool()
 	fmt.Print("got pool")
-	//Output: got pool
+	// Output: got pool
 }
 
 // BenchmarkGetPool benchmarks the GetPool() method
@@ -233,7 +233,7 @@ func ExampleDisconnect() {
 	Disconnect()
 
 	fmt.Print("disconnected")
-	//Output: disconnected
+	// Output: disconnected
 }
 
 // ExampleGetConnection is an example of GetConnection() method
@@ -247,5 +247,5 @@ func ExampleGetConnection() {
 	// Connected
 	_ = GetConnection()
 	fmt.Print("got connection")
-	//Output: got connection
+	// Output: got connection
 }

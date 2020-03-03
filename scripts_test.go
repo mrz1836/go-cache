@@ -44,7 +44,7 @@ func ExampleRegisterScript() {
 	// Fire the method
 	sha, _ := RegisterScript(killByDependencyLua)
 	fmt.Print(sha)
-	//Output: a648f768f57e73e2497ccaa113d5ad9e731c5cd8
+	// Output: a648f768f57e73e2497ccaa113d5ad9e731c5cd8
 }
 
 // BenchmarkRegisterScript benchmarks the RegisterScript() method
@@ -89,7 +89,7 @@ func ExampleRegisterScripts() {
 	// Fire
 	_ = RegisterScripts()
 	fmt.Print("registered")
-	//Output: registered
+	// Output: registered
 }
 
 // BenchmarkRegisterScripts benchmarks the RegisterScripts() method
@@ -128,7 +128,7 @@ func ExampleDidRegisterKillByDependencyScript() {
 	// Fire
 	_ = DidRegisterKillByDependencyScript()
 	fmt.Print("registered")
-	//Output: registered
+	// Output: registered
 }
 
 // BenchmarkDidRegisterKillByDependencyScript benchmarks the DidRegisterKillByDependencyScript() method

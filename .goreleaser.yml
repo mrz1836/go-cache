@@ -24,5 +24,5 @@ build:
 # Github Release
 # ---------------------------
 release:
-  prerelease: false
+  prerelease: true
   name_template: "Release v{{.Version}}"

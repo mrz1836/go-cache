@@ -34,7 +34,7 @@ $ go get -u github.com/mrz1836/go-cache
 - Basic Lock/Release (from [bgentry lock.go](https://gist.github.com/bgentry/6105288))
 
 ## Documentation
-You can view the generated [documentation here](https://pkg.go.dev/github.com/mrz1836/go-sanitize?tab=doc).
+You can view the generated [documentation here](https://pkg.go.dev/github.com/mrz1836/go-cache?tab=doc).
 
 <details>
 <summary><strong><code>Library Deployment</code></strong></summary>

@@ -25,6 +25,9 @@
 $ go get -u github.com/mrz1836/go-cache
 ```
 
+## Documentation
+You can view the generated [documentation here](https://pkg.go.dev/github.com/mrz1836/go-cache?tab=doc).
+
 ### Features
 - Cache Dependencies Between Keys (toggle functionality)
 - Connect via URL
@@ -32,9 +35,6 @@ $ go get -u github.com/mrz1836/go-cache
 - Register Scripts
 - Helper Methods (Get, Set, HashGet, etc)
 - Basic Lock/Release (from [bgentry lock.go](https://gist.github.com/bgentry/6105288))
-
-## Documentation
-You can view the generated [documentation here](https://pkg.go.dev/github.com/mrz1836/go-cache?tab=doc).
 
 <details>
 <summary><strong><code>Library Deployment</code></strong></summary>

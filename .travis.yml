@@ -28,8 +28,12 @@ services:
 before_script:
  - go get -u golang.org/x/lint/golint
 
-# Run scripts in parallel
+# Run all scripts
 script:
  - golint
  - go vet
- - go test -short -v ./...
+ - go test -race -coverprofile=coverage.txt -covermode=atomic
+
+# After build success
+after_success:
+ - bash <(curl -s https://codecov.io/bash)

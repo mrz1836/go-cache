@@ -1095,3 +1095,14 @@ func TestGetList(t *testing.T) {
 		}
 	}
 }
+
+func TestGetOrSetWithExpirationGob(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+}

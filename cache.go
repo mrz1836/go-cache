@@ -4,7 +4,6 @@ Package cache is a cache dependency management on-top of the famous redigo packa
 package cache
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -38,11 +37,6 @@ const (
 	setCommand           string = "SET"
 	setExpirationCommand string = "SETEX"
 )
-
-// GobCacheCreator can be used to generate the content to store. If the content
-// is not found, the creator will be invoked and the result will be stored and
-// returned
-type GobCacheCreator func() ([]byte, error)
 
 // Get gets a key from redis
 func Get(key string) (string, error) {
@@ -391,57 +385,6 @@ func SetRemoveMember(set, member interface{}) (err error) {
 
 	// Remove and return
 	_, err = conn.Do(removeMemberCommand, set, member)
-	return
-}
-
-// GetOrSetWithExpirationGob will return the cached value for the key or use the
-// GobCacheCreator to create and insert the value into the cache. If the expiration
-// time is set to a value greater than zero, the key will be set to expire in
-// the provided duration
-func GetOrSetWithExpirationGob(key string, fn GobCacheCreator, duration time.Duration, dependencies ...string) (data []byte, err error) {
-
-	// Create a new connection and defer closing
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Get from redis
-	data, err = redis.Bytes(conn.Do(getCommand, key))
-
-	// Set the string in redis
-	if err != nil {
-
-		// Set the value
-		if data, err = fn(); err != nil {
-			return
-		}
-
-		// No data?!
-		if len(data) == 0 {
-			err = fmt.Errorf("value is empty for key: %s", key)
-			return
-		}
-
-		// Go routine to set the key and expiration
-		go func(key string, data []byte, duration time.Duration, dependencies []string) {
-
-			// Create a new connection and defer closing
-			/*connection := GetConnection()
-			defer func() {
-				_ = connection.Close()
-			}()*/
-
-			// Set an expiration time if found
-			if duration > 0 {
-				_ = SetExp(key, data, duration, dependencies...) // todo: handle the error?
-			} else {
-				_ = Set(key, data, dependencies...) // todo: handle the error?
-			}
-		}(key, data, duration, dependencies)
-	}
-
-	// Return the value
 	return
 }
 

@@ -172,15 +172,43 @@ func TestHashSet(t *testing.T) {
 	// Disconnect at end
 	defer endTest()
 
-	// Set the hash
-	err := HashSet("test-hash-name", "test-hash-key", "my-cache-value")
-	if err != nil {
+	// Create a local connection
+	if err := startTest(); err != nil {
 		t.Fatal(err.Error())
 	}
 
+	// Disconnect at end
+	defer endTest()
+
+	var tests = []struct {
+		name          string
+		key           string
+		value         interface{}
+		dependencies  string
+		expectedError bool
+	}{
+		{"test-hash-name", "test-hash-key", "my-cache-value", "another-key", false},
+		{"test-hash-name1", "test-hash-key", "my-cache-value", "another-key", false},
+		{"test-hash-name2", "test-hash-key", "my-cache-value", "", false},
+		{"test-hash-name3", "test-hash-key", "", "", false},
+		{"test-hash-name4", "", "", "", false},
+		{"", "", "", "", false},
+		{"", "", []string{""}, "", false},
+		{"-", "-", []string{""}, "-", false},
+		{"-", "-", map[string]string{}, "-", false},
+	}
+
+	// Test all
+	for _, test := range tests {
+		if err := HashSet(test.name, test.key, test.value, test.dependencies); err != nil && !test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%s] and [%v], error [%s]", t.Name(), test.name, test.key, test.value, err.Error())
+		} else if err == nil && test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%s] and [%v], error was expected but did not occur", t.Name(), test.name, test.key, test.value)
+		}
+	}
+
 	// Get the value
-	var val string
-	val, err = HashGet("test-hash-name", "test-hash-key")
+	val, err := HashGet("test-hash-name", "test-hash-key")
 	if err != nil {
 		t.Fatal(err.Error())
 	} else if val != "my-cache-value" {

@@ -11,8 +11,26 @@ import (
 // TestConnectToURL test the ConnectToURL() method
 func TestConnectToURL(t *testing.T) {
 
+	// Bad url
+	c, err := ConnectToURL("bad-url")
+	if err == nil {
+		t.Errorf("expected an error, bad url")
+	}
+
+	// Cannot connect
+	c, err = ConnectToURL("redis://doesnotexist.com")
+	if err == nil {
+		t.Errorf("expected an error, bad url")
+	}
+
+	// Cannot connect (port)
+	c, err = ConnectToURL("redis://doesnotexist.com:6379", redis.DialConnectTimeout(3*time.Second))
+	if err == nil {
+		t.Errorf("expected an error, bad url")
+	}
+
 	// Connect to url string
-	c, err := ConnectToURL(connectionURL)
+	c, err = ConnectToURL(connectionURL)
 	if err != nil {
 		t.Errorf("Error returned")
 	} else if c == nil {
@@ -53,8 +71,8 @@ func TestConnectToURL_DialOptions(t *testing.T) {
 	}()
 
 	// Try to ping
-	pong, err := redis.String(c.Do(pingCommand))
-	if err != nil {
+	var pong string
+	if pong, err = redis.String(c.Do(pingCommand)); err != nil {
 		t.Errorf("Call to %s returned an error: %v", pingCommand, err)
 	}
 

@@ -43,8 +43,7 @@ func WriteLock(name, secret string, ttl int64) (locked bool, err error) {
 
 	script := redis.NewScript(1, lockScript)
 	var resp int
-	resp, err = redis.Int(script.Do(conn, name, secret, ttl))
-	if err != nil {
+	if resp, err = redis.Int(script.Do(conn, name, secret, ttl)); err != nil {
 		return
 	} else if resp != 0 {
 		locked = true
@@ -65,8 +64,7 @@ func ReleaseLock(name, secret string) (released bool, err error) {
 
 	script := redis.NewScript(1, unlockScript)
 	var resp int
-	resp, err = redis.Int(script.Do(conn, name, secret))
-	if err != nil {
+	if resp, err = redis.Int(script.Do(conn, name, secret)); err != nil {
 		return
 	} else if resp != 0 {
 		released = true

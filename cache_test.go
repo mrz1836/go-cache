@@ -726,6 +726,33 @@ func ExampleDeleteWithoutDependency() {
 	// Output: 2 deleted keys
 }
 
+// TestKillByDependency will test KillByDependency()
+func TestKillByDependency(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	// Test no keys
+	_, err := KillByDependency()
+	if err != nil {
+		t.Errorf("error occurred %s", err.Error())
+	}
+
+	// Test  keys
+	if _, err = KillByDependency("key1"); err != nil {
+		t.Errorf("error occurred %s", err.Error())
+	}
+
+	// Test  keys
+	if _, err = KillByDependency("key1", "key two; another"); err != nil {
+		t.Errorf("error occurred %s", err.Error())
+	}
+}
+
 // ExampleKillByDependency is an example of KillByDependency() method
 func ExampleKillByDependency() {
 	// Create a local connection
@@ -755,30 +782,22 @@ func TestDependencyManagement(t *testing.T) {
 	// Disconnect at end
 	defer endTest()
 
-	// Start with a flush
-	err := DestroyCache()
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
 	// Set a key with two dependent keys
-	err = Set("test-set-dep", "my-value", "dependent-1", "dependent-2")
+	err := Set("test-set-dep", "my-value", "dependent-1", "dependent-2")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Test for dependent key 1
 	var ok bool
-	ok, err = SetIsMember("depend:dependent-1", "test-set-dep")
-	if err != nil {
+	if ok, err = SetIsMember("depend:dependent-1", "test-set-dep"); err != nil {
 		t.Fatal(err.Error())
 	} else if !ok {
 		t.Fatal("expected to be true")
 	}
 
 	// Test for dependent key 2
-	ok, err = SetIsMember("depend:dependent-2", "test-set-dep")
-	if err != nil {
+	if ok, err = SetIsMember("depend:dependent-2", "test-set-dep"); err != nil {
 		t.Fatal(err.Error())
 	} else if !ok {
 		t.Fatal("expected to be true")
@@ -786,8 +805,7 @@ func TestDependencyManagement(t *testing.T) {
 
 	// Kill a dependent key
 	var total int
-	total, err = Delete("dependent-1")
-	if err != nil {
+	if total, err = Delete("dependent-1"); err != nil {
 		t.Fatal(err.Error())
 	} else if total != 2 {
 		t.Fatal("expected 2 keys to be removed", total)
@@ -795,48 +813,42 @@ func TestDependencyManagement(t *testing.T) {
 
 	// Test for main key
 	var found bool
-	found, err = Exists("test-set-dep")
-	if err != nil {
+	if found, err = Exists("test-set-dep"); err != nil {
 		t.Fatal(err.Error())
 	} else if found {
 		t.Fatal("expected found to be false")
 	}
 
 	// Test for dependency relation
-	found, err = Exists("depend:dependent-1")
-	if err != nil {
+	if found, err = Exists("depend:dependent-1"); err != nil {
 		t.Fatal(err.Error())
 	} else if found {
 		t.Fatal("expected found to be false")
 	}
 
 	// Test for dependent key 2
-	ok, err = SetIsMember("depend:dependent-2", "test-set-dep")
-	if err != nil {
+	if ok, err = SetIsMember("depend:dependent-2", "test-set-dep"); err != nil {
 		t.Fatal(err.Error())
 	} else if !ok {
 		t.Fatal("expected to be true")
 	}
 
 	// Kill all dependent keys
-	total, err = KillByDependency("dependent-1", "dependent-2")
-	if err != nil {
+	if total, err = KillByDependency("dependent-1", "dependent-2"); err != nil {
 		t.Fatal(err.Error())
 	} else if total != 1 {
 		t.Fatal("expected 1 key to be removed", total)
 	}
 
 	// Test for dependency relation
-	found, err = Exists("depend:dependent-2")
-	if err != nil {
+	if found, err = Exists("depend:dependent-2"); err != nil {
 		t.Fatal(err.Error())
 	} else if found {
 		t.Fatal("expected found to be false")
 	}
 
 	// Test for main key
-	found, err = Exists("test-set-dep")
-	if err != nil {
+	if found, err = Exists("test-set-dep"); err != nil {
 		t.Fatal(err.Error())
 	} else if found {
 		t.Fatal("expected found to be false")

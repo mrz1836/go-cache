@@ -7,8 +7,6 @@ func RegisterScripts() (err error) {
 
 	// Register the kill dependency script
 	killByDependencySha, err = RegisterScript(killByDependencyLua)
-
-	// Return any error if found
 	return
 }
 

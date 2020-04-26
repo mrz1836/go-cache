@@ -25,8 +25,8 @@ func TestConnectToURL(t *testing.T) {
 	}()
 
 	// Try to ping
-	pong, err := redis.String(c.Do(pingCommand))
-	if err != nil {
+	var pong string
+	if pong, err = redis.String(c.Do(pingCommand)); err != nil {
 		t.Errorf("Call to %s returned an error: %v", pingCommand, err)
 	}
 

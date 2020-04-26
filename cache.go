@@ -28,6 +28,7 @@ const (
 	hashMapSetCommand    string = "HMSET"
 	isMemberCommand      string = "SISMEMBER"
 	keysCommand          string = "KEYS"
+	listPushCommand      string = "RPUSH"
 	listRangeCommand     string = "LRANGE"
 	multiCommand         string = "MULTI"
 	pingCommand          string = "PING"
@@ -69,8 +70,8 @@ func GetBytes(key string) ([]byte, error) {
 	return redis.Bytes(conn.Do(getCommand, key))
 }
 
-// GetStringSlice returns a []string stored in redis
-func GetStringSlice(key string) (destination []string, err error) {
+// GetList returns a []string stored in redis list
+func GetList(key string) (list []string, err error) {
 
 	// Create a new connection and defer closing
 	conn := GetConnection()
@@ -85,7 +86,30 @@ func GetStringSlice(key string) (destination []string, err error) {
 	}
 
 	// Scan slice by value, return with destination
-	err = redis.ScanSlice(values, &destination)
+	err = redis.ScanSlice(values, &list)
+	return
+}
+
+// SetList saves a slice as a redis list (appends)
+func SetList(key string, slice []string) (err error) {
+
+	// Create a new connection and defer closing
+	conn := GetConnection()
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	// Create the arguments
+	args := make([]interface{}, len(slice)+1)
+	args[0] = key
+
+	// Loop members
+	for i, param := range slice {
+		args[i+1] = param
+	}
+
+	// Fire the set command
+	_, err = conn.Do(listPushCommand, args...)
 	return
 }
 

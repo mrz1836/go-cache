@@ -21,7 +21,10 @@ var (
 // startTest start all tests the same way
 func startTest() error {
 	if GetPool() == nil {
-		return Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+		if err := Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true); err != nil {
+			return err
+		}
+		return DestroyCache()
 	}
 	return nil
 }
@@ -49,50 +52,28 @@ func TestSet(t *testing.T) {
 	// Disconnect at end
 	defer endTest()
 
-	// Set the key/value
-	err := Set("test-set", "my-value", "another-key")
-	if err != nil {
-		t.Fatal(err.Error())
+	var tests = []struct {
+		key           string
+		value         string
+		dependencies  string
+		expectedError bool
+	}{
+		{"test-set", "my-value", "another-key", false},
+		{"test-set", "my-value", "", false},
+		{"test-set", "", "", false},
+		{"key name", "", "", false},
+		{"key name", "the value", "", false},
+		{".key name;!()\\", "", "", false},
+		{".key name;!()\\", `\ / ; [ ] { }!`, "", false},
 	}
 
-	// Check the set via a Get
-	var val string
-	val, err = Get("test-set")
-	if val != "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "my-value", val)
-	}
-}
-
-// TestSetExp is testing the SetExp() method
-func TestSetExp(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Set
-	err := SetExp("test-set-exp", "my-value", 2*time.Second, "another-key")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Check the set
-	var val string
-	val, err = Get("test-set-exp")
-	if val != "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "my-value", val)
-	}
-
-	// Wait 2 seconds and test
-	time.Sleep(time.Second * 3)
-
-	// Check the set expire
-	val, err = Get("test-set-exp")
-	if val == "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "", val)
+	// Test all
+	for _, test := range tests {
+		if err := Set(test.key, test.value, test.dependencies); err != nil && !test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%s], error [%s]", t.Name(), test.key, test.value, err.Error())
+		} else if err == nil && test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%s], error was expected but did not occur", t.Name(), test.key, test.value)
+		}
 	}
 }
 
@@ -108,6 +89,62 @@ func ExampleSet() {
 	_ = Set("example-set", "my-value", "another-key")
 	fmt.Print("set complete")
 	// Output: set complete
+}
+
+// TestSetExp is testing the SetExp() method
+func TestSetExp(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	var tests = []struct {
+		key           string
+		value         string
+		expiration    time.Duration
+		dependencies  string
+		expectedError bool
+	}{
+		{"test-set-exp", "my-value", 2 * time.Second, "another-key", false},
+		{"test-set2", "my-value", 2 * time.Second, "", false},
+		{"test-set3", "", 2 * time.Second, "", false},
+		{"key name1", "", 2 * time.Second, "", false},
+		{"key name2", "the value", 2 * time.Second, "", false},
+		{"key name ttl 0", "the value", 0, "", true},
+		{"key name  ttl -1", "the value", -1, "", true},
+		{".key name;!()\\", "", 2 * time.Second, "", false},
+		{".key name;!()\\", `\ / ; [ ] { }!`, 2 * time.Second, "", false},
+	}
+
+	// Test all
+	for _, test := range tests {
+		if err := SetExp(test.key, test.value, test.expiration, test.dependencies); err != nil && !test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%s] and [%v], error [%s]", t.Name(), test.key, test.value, test.expiration, err.Error())
+		} else if err == nil && test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%s] and [%v], error was expected but did not occur", t.Name(), test.key, test.value, test.expiration)
+		}
+	}
+
+	// Check the set
+	if val, err := Get("test-set-exp"); err != nil {
+		t.Fatal("error", err.Error())
+	} else if val != "my-value" {
+		t.Fatalf("expected value: %s, got: %s", "my-value", val)
+	}
+
+	// Wait 2 seconds and test
+	t.Log("sleeping for 3 seconds...")
+	time.Sleep(time.Second * 3)
+
+	// Check the set expire
+	if val, err := Get("test-set-exp"); err != nil && err.Error() != "redigo: nil returned" {
+		t.Fatal("error", err.Error())
+	} else if val == "my-value" {
+		t.Fatalf("expected value: %s, got: %s", "", val)
+	}
 }
 
 // ExampleSetExp is an example of SetExp() method
@@ -926,5 +963,107 @@ func TestSetRemoveMember(t *testing.T) {
 		t.Fatal("error in SetIsMember", err.Error())
 	} else if found {
 		t.Fatal("found a member that should NOT exist")
+	}
+}
+
+// TestSetAdd test the SetAdd() method
+func TestSetAdd(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	var tests = []struct {
+		name          string
+		member        interface{}
+		dependencies  string
+		expectedError bool
+	}{
+		{"test-set", "my-value", "another-key", false},
+		{"test-set", []string{"one", "two", "three"}, "another-key", false},
+		{"test-set", []int{1, 2, 3}, "another-key", false},
+		{"test-set", "", "another-key", false},
+		{"test-set", "", "", false},
+		{"", "", "", false},
+	}
+
+	// Test all
+	for _, test := range tests {
+		if err := SetAdd(test.name, test.member, test.dependencies); err != nil && !test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%v], error [%s]", t.Name(), test.name, test.member, err.Error())
+		} else if err == nil && test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%v], error was expected but did not occur", t.Name(), test.name, test.member)
+		}
+	}
+}
+
+// TestSetList test the SetList() method
+func TestSetList(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	var tests = []struct {
+		key           string
+		list          []string
+		expectedError bool
+	}{
+		{"test-set", []string{"val1", "val2"}, false},
+		{"test-set-bad-empty", []string{""}, false},
+		{"test-set-bad-no-list", []string{}, true},
+	}
+
+	// Test all
+	for _, test := range tests {
+		if err := SetList(test.key, test.list); err != nil && !test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%v], error [%s]", t.Name(), test.key, test.list, err.Error())
+		} else if err == nil && test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and [%v], error was expected but did not occur", t.Name(), test.key, test.list)
+		}
+	}
+}
+
+// TestGetList test the GetList() method
+func TestGetList(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	var tests = []struct {
+		key           string
+		input         []string
+		expected      []string
+		expectedError bool
+	}{
+		{"test-set", []string{}, []string{}, false},
+		{"test-set", []string{"1"}, []string{"1"}, false},
+		{"test-set", []string{"1", "1"}, []string{"1", "1", "1"}, false},
+		{"test-set", []string{}, []string{"1", "1", "1"}, false},
+		{"test-set", []string{""}, []string{"1", "1", "1", ""}, false},
+	}
+
+	// Test all
+	for _, test := range tests {
+
+		_ = SetList(test.key, test.input)
+
+		if list, err := GetList(test.key); err != nil && !test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and expected [%v], result [%s] error [%s]", t.Name(), test.input, test.expected, list, err.Error())
+		} else if err == nil && test.expectedError {
+			t.Errorf("%s Failed: [%s] inputted and expected  [%v], result [%s], error was expected but did not occur", t.Name(), test.input, test.expected, list)
+		} else if len(list) != len(test.expected) {
+			t.Errorf("%s Failed: [%s] inputted and expected [%v], result [%s]", t.Name(), test.input, test.expected, list)
+		}
 	}
 }

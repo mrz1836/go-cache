@@ -1,5 +1,5 @@
 /*
-Package cache is a cache dependency management on-top of the famous redigo package
+Package cache is a simple redis cache dependency system on-top of the famous redigo package
 */
 package cache
 

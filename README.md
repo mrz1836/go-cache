@@ -1,5 +1,5 @@
 # go-cache
-**go-cache** is a simple redis cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
+> Simple redis cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
 
 [![Go](https://img.shields.io/github/go-mod/go-version/mrz1836/go-cache)](https://golang.org/)
 [![Build Status](https://travis-ci.org/mrz1836/go-cache.svg?branch=master)](https://travis-ci.org/mrz1836/go-cache)
@@ -22,8 +22,8 @@
 ## Installation
 
 **go-cache** requires a [supported release of Go](https://golang.org/doc/devel/release.html#policy).
-```bash
-$ go get -u github.com/mrz1836/go-cache
+```shell script
+go get -u github.com/mrz1836/go-cache
 ```
 
 ## Documentation
@@ -51,8 +51,8 @@ Use `make release-snap` to create a snapshot version of the release, and finally
 <summary><strong><code>Makefile Commands</code></strong></summary>
 
 View all `makefile` commands
-```bash
-$ make help
+```shell script
+make help
 ```
 
 List of all current commands:
@@ -89,24 +89,24 @@ vet                            Run the Go vet application
 All unit tests and [examples](examples/examples.go) run via [Travis CI](https://travis-ci.org/mrz1836/go-cache) and uses [Go version 1.14.x](https://golang.org/doc/go1.14). View the [deployment configuration file](.travis.yml).
 
 Run all tests (including integration tests)
-```bash
-$ make test
+```shell script
+make test
 ```
 
 Run tests (excluding integration tests)
-```bash
-$ make test-short
+```shell script
+make test-short
 ```
 
 Run the [examples](examples/examples.go):
-```bash
-$ make run-examples
+```shell script
+make run-examples
 ```
 
 ## Benchmarks
 Run the Go benchmarks:
-```bash
-$ make bench
+```shell script
+make bench
 ```
 
 ## Code Standards
@@ -120,9 +120,11 @@ Basic implementation:
 package main
 
 import (
-	"log"
-
-	"github.com/mrz1836/go-cache"
+    "log"
+    "time"
+    
+    "github.com/gomodule/redigo/redis"
+    "github.com/mrz1836/go-cache"
 )
 
 func main() {

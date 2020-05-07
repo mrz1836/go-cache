@@ -2,7 +2,7 @@
 > Simple cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
 
 [![Go](https://img.shields.io/github/go-mod/go-version/mrz1836/go-cache)](https://golang.org/)
-[![Build Status](https://travis-ci.org/mrz1836/go-cache.svg?branch=master)](https://travis-ci.org/mrz1836/go-cache)
+[![Build Status](https://travis-ci.com/mrz1836/go-cache.svg?branch=master)](https://travis-ci.com/mrz1836/go-cache)
 [![Report](https://goreportcard.com/badge/github.com/mrz1836/go-cache?style=flat)](https://goreportcard.com/report/github.com/mrz1836/go-cache)
 [![codecov](https://codecov.io/gh/mrz1836/go-cache/branch/master/graph/badge.svg)](https://codecov.io/gh/mrz1836/go-cache)
 [![Release](https://img.shields.io/github/release-pre/mrz1836/go-cache.svg?style=flat)](https://github.com/mrz1836/go-cache/releases)

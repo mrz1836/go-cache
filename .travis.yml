@@ -24,15 +24,9 @@ notifications:
 services:
  - redis-server
 
-# Before we run scripts
-before_script:
- - go get -u golang.org/x/lint/golint
-
 # Run all scripts
 script:
- - golint
- - go vet
- - go test -race -coverprofile=coverage.txt -covermode=atomic
+ - make test-travis
 
 # After build success
 after_success:

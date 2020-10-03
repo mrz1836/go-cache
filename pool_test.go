@@ -12,7 +12,7 @@ import (
 func TestConnectToURL(t *testing.T) {
 
 	// Bad url
-	c, err := ConnectToURL("bad-url")
+	c, err := ConnectToURL("redis://user:pass{DEf1=ghi@domain.com")
 	if err == nil {
 		t.Errorf("expected an error, bad url")
 	}
@@ -32,19 +32,19 @@ func TestConnectToURL(t *testing.T) {
 	// Cannot connect (port)
 	c, err = ConnectToURL("redis://doesnotexist.com:6379", redis.DialConnectTimeout(3*time.Second))
 	if err == nil {
-		t.Errorf("expected an error, bad url")
+		t.Errorf("expected an error, bad port")
 	}
 
-	// Bad user/pass - Cannot connect
-	c, err = ConnectToURL("redis://user:pass@doesnotexist.com:6789", redis.DialConnectTimeout(3*time.Second))
+	// Bad user/pass - Cannot Auth
+	c, err = ConnectToURL("redis://user:pass@localhost:6379", redis.DialConnectTimeout(3*time.Second))
 	if err == nil {
-		t.Errorf("expected an error, bad url")
+		t.Errorf("expected an error, bad user/pass")
 	}
 
 	// Bad path
-	c, err = ConnectToURL("redis://doesnotexist.com:6379/pathDb", redis.DialConnectTimeout(3*time.Second))
+	c, err = ConnectToURL("redis://localhost:6379/pathDb", redis.DialConnectTimeout(3*time.Second))
 	if err == nil {
-		t.Errorf("expected an error, bad url")
+		t.Errorf("expected an error, bad path")
 	}
 
 	// Connect to url string

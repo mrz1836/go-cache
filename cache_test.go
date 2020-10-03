@@ -18,6 +18,10 @@ var (
 	maxIdleConnections   = 10
 )
 
+// testStringValue is used for string value testing
+const testStringValue = "test-string-value"
+const testPairValue = "pair-1-value"
+
 // startTest start all tests the same way
 func startTest() error {
 	if GetPool() == nil {
@@ -58,8 +62,8 @@ func TestSet(t *testing.T) {
 		dependencies  string
 		expectedError bool
 	}{
-		{"test-set", "my-value", "another-key", false},
-		{"test-set", "my-value", "", false},
+		{"test-set", testStringValue, "another-key", false},
+		{"test-set", testStringValue, "", false},
 		{"test-set", "", "", false},
 		{"key name", "", "", false},
 		{"key name", "the value", "", false},
@@ -86,7 +90,7 @@ func ExampleSet() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-set", "my-value", "another-key")
+	_ = Set("example-set", testStringValue, "another-key")
 	fmt.Print("set complete")
 	// Output: set complete
 }
@@ -108,8 +112,8 @@ func TestSetExp(t *testing.T) {
 		dependencies  string
 		expectedError bool
 	}{
-		{"test-set-exp", "my-value", 2 * time.Second, "another-key", false},
-		{"test-set2", "my-value", 2 * time.Second, "", false},
+		{"test-set-exp", testStringValue, 2 * time.Second, "another-key", false},
+		{"test-set2", testStringValue, 2 * time.Second, "", false},
 		{"test-set3", "", 2 * time.Second, "", false},
 		{"key name1", "", 2 * time.Second, "", false},
 		{"key name2", "the value", 2 * time.Second, "", false},
@@ -131,8 +135,8 @@ func TestSetExp(t *testing.T) {
 	// Check the set
 	if val, err := Get("test-set-exp"); err != nil {
 		t.Fatal("error", err.Error())
-	} else if val != "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "my-value", val)
+	} else if val != testStringValue {
+		t.Fatalf("expected value: %s, got: %s", testStringValue, val)
 	}
 
 	// Wait 2 seconds and test
@@ -142,7 +146,7 @@ func TestSetExp(t *testing.T) {
 	// Check the set expire
 	if val, err := Get("test-set-exp"); err != nil && err.Error() != "redigo: nil returned" {
 		t.Fatal("error", err.Error())
-	} else if val == "my-value" {
+	} else if val == testStringValue {
 		t.Fatalf("expected value: %s, got: %s", "", val)
 	}
 }
@@ -156,7 +160,7 @@ func ExampleSetExp() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = SetExp("example-set-exp", "my-value", 2*time.Minute, "another-key")
+	_ = SetExp("example-set-exp", testStringValue, 2*time.Minute, "another-key")
 	fmt.Print("set complete")
 	// Output: set complete
 }
@@ -287,7 +291,7 @@ func TestHashMapSet(t *testing.T) {
 
 	// Create pairs
 	pairs := [][2]interface{}{
-		{"pair-1", "pair-1-value"},
+		{"pair-1", testPairValue},
 		{"pair-2", "pair-2-value"},
 		{"pair-3", "pair-3-value"},
 	}
@@ -302,7 +306,7 @@ func TestHashMapSet(t *testing.T) {
 	val, err = HashGet("test-hash-map-set", "pair-1")
 	if err != nil {
 		t.Fatal(err.Error())
-	} else if val != "pair-1-value" {
+	} else if val != testPairValue {
 		t.Fatal("expected value was wrong")
 	}
 
@@ -319,7 +323,7 @@ func TestHashMapSet(t *testing.T) {
 	}
 
 	// Test value 1
-	if values[0] != "pair-1-value" {
+	if values[0] != testPairValue {
 		t.Fatal("expected value", values[0])
 	}
 
@@ -339,7 +343,7 @@ func ExampleHashMapSet() {
 
 	// Create pairs
 	pairs := [][2]interface{}{
-		{"pair-1", "pair-1-value"},
+		{"pair-1", testPairValue},
 		{"pair-2", "pair-2-value"},
 		{"pair-3", "pair-3-value"},
 	}
@@ -363,7 +367,7 @@ func TestHashMapSetExp(t *testing.T) {
 
 	// Create pairs
 	pairs := [][2]interface{}{
-		{"pair-1", "pair-1-value"},
+		{"pair-1", testPairValue},
 		{"pair-2", "pair-2-value"},
 		{"pair-3", "pair-3-value"},
 	}
@@ -378,7 +382,7 @@ func TestHashMapSetExp(t *testing.T) {
 	val, err = HashGet("test-hash-map-set-expire", "pair-1")
 	if err != nil {
 		t.Fatal(err.Error())
-	} else if val != "pair-1-value" {
+	} else if val != testPairValue {
 		t.Fatal("expected value was wrong")
 	}
 
@@ -403,7 +407,7 @@ func ExampleHashMapSetExp() {
 
 	// Create pairs
 	pairs := [][2]interface{}{
-		{"pair-1", "pair-1-value"},
+		{"pair-1", testPairValue},
 		{"pair-2", "pair-2-value"},
 		{"pair-3", "pair-3-value"},
 	}
@@ -425,16 +429,15 @@ func TestGet(t *testing.T) {
 	defer endTest()
 
 	// Set
-	err := Set("test-get", "my-value")
+	err := Set("test-get", testStringValue)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Get the value
-	var val string
-	val, err = Get("test-get")
-	if val != "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "my-value", val)
+	val, _ := Get("test-get")
+	if val != testStringValue {
+		t.Fatalf("expected value: %s, got: %s", testStringValue, val)
 	}
 }
 
@@ -447,12 +450,12 @@ func ExampleGet() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-get", "my-value", "another-key")
+	_ = Set("example-get", testStringValue, "another-key")
 
 	// Get the value
 	value, _ := Get("example-get")
 	fmt.Print(value)
-	// Output: my-value
+	// Output: test-string-value
 }
 
 // TestGetBytes is testing the GetBytes() method
@@ -466,16 +469,15 @@ func TestGetBytes(t *testing.T) {
 	defer endTest()
 
 	// Set
-	err := Set("test-get-bytes", "my-value")
+	err := Set("test-get-bytes", testStringValue)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Get the value
-	var val []byte
-	val, err = GetBytes("test-get-bytes")
-	if string(val) != "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "my-value", val)
+	val, _ := GetBytes("test-get-bytes")
+	if string(val) != testStringValue {
+		t.Fatalf("expected value: %s, got: %s", testStringValue, val)
 	}
 }
 
@@ -488,12 +490,12 @@ func ExampleGetBytes() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-get-bytes", "my-value", "another-key")
+	_ = Set("example-get-bytes", testStringValue, "another-key")
 
 	// Get the value
 	value, _ := GetBytes("example-get-bytes")
 	fmt.Print(string(value))
-	// Output: my-value
+	// Output: test-string-value
 }
 
 // TestGetAllKeys is testing the GetAllKeys() method
@@ -507,7 +509,7 @@ func TestGetAllKeys(t *testing.T) {
 	defer endTest()
 
 	// Set
-	err := Set("test-get", "my-value")
+	err := Set("test-get", testStringValue)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -532,7 +534,7 @@ func ExampleGetAllKeys() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-get-all-keys", "my-value", "another-key")
+	_ = Set("example-get-all-keys", testStringValue, "another-key")
 
 	// Get the value
 	_, _ = GetAllKeys()
@@ -551,14 +553,13 @@ func TestExists(t *testing.T) {
 	defer endTest()
 
 	// Set
-	err := Set("test-exists", "my-value")
+	err := Set("test-exists", testStringValue)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Check the set / exists
-	var exists bool
-	exists, err = Exists("test-exists")
+	exists, _ := Exists("test-exists")
 	if !exists {
 		t.Fatal("expected key to exist")
 	}
@@ -573,7 +574,7 @@ func ExampleExists() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-exists", "my-value", "another-key")
+	_ = Set("example-exists", testStringValue, "another-key")
 
 	// Get the value
 	_, _ = Exists("example-exists")
@@ -592,16 +593,15 @@ func TestExpire(t *testing.T) {
 	defer endTest()
 
 	// Set
-	err := SetExp("test-set-expire", "my-value", 1*time.Minute, "another-key")
+	err := SetExp("test-set-expire", testStringValue, 1*time.Minute, "another-key")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Check the set
-	var val string
-	val, err = Get("test-set-expire")
-	if val != "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "my-value", val)
+	val, _ := Get("test-set-expire")
+	if val != testStringValue {
+		t.Fatalf("expected value: %s, got: %s", testStringValue, val)
 	}
 
 	// Fire the expire
@@ -614,8 +614,8 @@ func TestExpire(t *testing.T) {
 	time.Sleep(time.Second * 2)
 
 	// Check the expire
-	val, err = Get("test-set-expire")
-	if val == "my-value" {
+	val, _ = Get("test-set-expire")
+	if val == testStringValue {
 		t.Fatalf("expected value: %s, got: %s", "", val)
 	}
 }
@@ -629,7 +629,7 @@ func ExampleExpire() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-expire", "my-value", "another-key")
+	_ = Set("example-expire", testStringValue, "another-key")
 
 	// Set the expire
 	_ = Expire("example-expire", 1*time.Minute)
@@ -649,27 +649,24 @@ func TestDestroyCache(t *testing.T) {
 	defer endTest()
 
 	// Set
-	err := Set("test-destroy", "my-value", "another-key")
+	err := Set("test-destroy", testStringValue, "another-key")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Check the set
-	var val string
-	val, err = Get("test-destroy")
-	if val != "my-value" {
-		t.Fatalf("expected value: %s, got: %s", "my-value", val)
+	val, _ := Get("test-destroy")
+	if val != testStringValue {
+		t.Fatalf("expected value: %s, got: %s", testStringValue, val)
 	}
 
 	// Fire destroy
-	err = DestroyCache()
-	if err != nil {
+	if err = DestroyCache(); err != nil {
 		t.Fatal(err.Error())
 	}
 
 	// Check the destroy
-	val, err = Get("test-destroy")
-	if val == "my-value" {
+	if val, _ = Get("test-destroy"); val == testStringValue {
 		t.Fatalf("expected value: %s, got: %s", "", val)
 	}
 }
@@ -683,7 +680,7 @@ func ExampleDestroyCache() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-destroy-cache", "my-value", "another-key")
+	_ = Set("example-destroy-cache", testStringValue, "another-key")
 
 	// Set the expire
 	_ = DestroyCache()
@@ -700,7 +697,7 @@ func ExampleDelete() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-destroy-cache", "my-value", "another-key")
+	_ = Set("example-destroy-cache", testStringValue, "another-key")
 
 	// Delete keys
 	total, _ := Delete("another-key", "another-key-2")
@@ -717,8 +714,8 @@ func ExampleDeleteWithoutDependency() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-destroy-cache-1", "my-value")
-	_ = Set("example-destroy-cache-2", "my-value")
+	_ = Set("example-destroy-cache-1", testStringValue)
+	_ = Set("example-destroy-cache-2", testStringValue)
 
 	// Delete keys
 	total, _ := DeleteWithoutDependency("example-destroy-cache-1", "example-destroy-cache-2")
@@ -762,7 +759,7 @@ func ExampleKillByDependency() {
 	defer Disconnect()
 
 	// Set the key/value
-	_ = Set("example-destroy-cache", "my-value", "another-key")
+	_ = Set("example-destroy-cache", testStringValue, "another-key")
 
 	// Delete keys
 	_, _ = KillByDependency("another-key", "another-key-2")
@@ -783,7 +780,7 @@ func TestDependencyManagement(t *testing.T) {
 	defer endTest()
 
 	// Set a key with two dependent keys
-	err := Set("test-set-dep", "my-value", "dependent-1", "dependent-2")
+	err := Set("test-set-dep", testStringValue, "dependent-1", "dependent-2")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -869,7 +866,7 @@ func TestHashMapDependencyManagement(t *testing.T) {
 
 	// Create pairs
 	pairs := [][2]interface{}{
-		{"pair-1", "pair-1-value"},
+		{"pair-1", testPairValue},
 		{"pair-2", "pair-2-value"},
 		{"pair-3", "pair-3-value"},
 	}
@@ -884,7 +881,7 @@ func TestHashMapDependencyManagement(t *testing.T) {
 	val, err = HashGet("test-hash-map-dependency", "pair-1")
 	if err != nil {
 		t.Fatal(err.Error())
-	} else if val != "pair-1-value" {
+	} else if val != testPairValue {
 		t.Fatal("expected value was wrong")
 	}
 
@@ -1022,7 +1019,7 @@ func TestSetAdd(t *testing.T) {
 		dependencies  string
 		expectedError bool
 	}{
-		{"test-set", "my-value", "another-key", false},
+		{"test-set", testStringValue, "another-key", false},
 		{"test-set", []string{"one", "two", "three"}, "another-key", false},
 		{"test-set", []int{1, 2, 3}, "another-key", false},
 		{"test-set", "", "another-key", false},

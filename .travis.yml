@@ -22,7 +22,7 @@ notifications:
 
 # Services required
 services:
- - redis-server
+ - redis
 
 # Run all scripts
 script:

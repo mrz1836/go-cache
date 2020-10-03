@@ -100,3 +100,20 @@ func TestReleaseLock(t *testing.T) {
 		t.Fatalf("expected release lock to succeed, got unlocked %t error %q", unlocked, err)
 	}
 }
+
+// TestWriteLockError will run basic error test for WriteLock()
+func TestWriteLockError(t *testing.T) {
+	// Create a local connection
+	if err := startTest(); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Disconnect at end
+	defer endTest()
+
+	// Test error case
+	_, err := WriteLock("d  `!$-()my-key", "d d d", int64(0))
+	if err == nil {
+		t.Fatalf("expected error to occur")
+	}
+}

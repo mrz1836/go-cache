@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
@@ -33,14 +34,14 @@ func TestWriteLock(t *testing.T) {
 
 	// attempt to re-lock with different secret (should return error)
 	locked, err = WriteLock("my-key", "the-different-secret", int64(5))
-	if locked || err != ErrLockMismatch {
+	if locked || !errors.Is(err, ErrLockMismatch) {
 		t.Fatalf("expected re-lock attempt to fail, got locked %t error %q", locked, err)
 	}
 
 	// attempt to release lock w/ bad secret
 	var unlocked bool
 	unlocked, err = ReleaseLock("my-key", "the-wrong-secret")
-	if unlocked || err != ErrLockMismatch {
+	if unlocked || !errors.Is(err, ErrLockMismatch) {
 		t.Fatalf("expected release lock w/ bad secret to fail, got unlocked %t error %q", unlocked, err)
 	}
 
@@ -81,7 +82,7 @@ func TestReleaseLock(t *testing.T) {
 
 	// test if lock is there
 	locked, err = WriteLock("my-key", "the-different-secret", int64(5))
-	if locked || err != ErrLockMismatch {
+	if locked || !errors.Is(err, ErrLockMismatch) {
 		t.Fatalf("expected lock attempt to fail, got locked %t error %q", locked, err)
 	}
 
@@ -89,7 +90,7 @@ func TestReleaseLock(t *testing.T) {
 
 	// test if lock is there
 	locked, err = WriteLock("my-key", "the-different-secret", int64(5))
-	if locked || err != ErrLockMismatch {
+	if locked || !errors.Is(err, ErrLockMismatch) {
 		t.Fatalf("expected lock attempt to fail, got locked %t error %q", locked, err)
 	}
 

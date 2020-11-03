@@ -22,7 +22,8 @@ func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, er
 }
 
 // Connect creates a new connection pool connected to the specified url
-func Connect(url string, maxActiveConnections, idleConnections, maxConnLifetime, idleTimeout int, dependencyMode bool, options ...redis.DialOption) (err error) {
+func Connect(url string, maxActiveConnections, idleConnections,
+	maxConnLifetime, idleTimeout int, dependencyMode bool, options ...redis.DialOption) (err error) {
 
 	// Create a new pool
 	pool = &redis.Pool{

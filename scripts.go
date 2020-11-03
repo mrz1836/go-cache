@@ -11,9 +11,9 @@ func RegisterScripts() (err error) {
 }
 
 // RegisterScript register a script
-func RegisterScript(script string) (sha string, err error) {
+func RegisterScript(script string) (string, error) {
 
-	// Create a new connection and defer closing
+	// Get a connection and defer closing the connection
 	conn := GetConnection()
 	defer func() {
 		_ = conn.Close()

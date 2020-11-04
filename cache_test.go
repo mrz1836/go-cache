@@ -12,11 +12,11 @@ import (
 
 // Testing variables
 const (
-	// testKillDependencyHash   = "a648f768f57e73e2497ccaa113d5ad9e731c5cd8"
 	testDependantKey         = "test-dependant-key-name"
 	testHashName             = "test-hash-name"
 	testIdleTimeout          = 240
 	testKey                  = "test-key-name"
+	testKillDependencyHash   = "a648f768f57e73e2497ccaa113d5ad9e731c5cd8"
 	testLocalConnectionURL   = "redis://localhost:6379"
 	testMaxActiveConnections = 0
 	testMaxConnLifetime      = 0

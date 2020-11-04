@@ -49,7 +49,7 @@ func TestConnect(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
-		assert.Equal(t, "a648f768f57e73e2497ccaa113d5ad9e731c5cd8", client.DependencyScriptSha)
+		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
 		assert.Equal(t, 1, len(client.ScriptsLoaded))
 
 		// Close

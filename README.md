@@ -83,7 +83,6 @@ release                Runs common.release then runs godocs
 release-snap           Test the full release (build binaries)
 release-test           Full production test release (everything except deploy)
 replace-version        Replaces the version in HTML/JS (pre-deploy)
-run-examples           Runs all the examples
 tag                    Generate a new tag and push (tag version=0.0.0)
 tag-remove             Remove a tag if found (tag-remove version=0.0.0)
 tag-update             Update an existing tag to current commit (tag-update version=0.0.0)
@@ -107,7 +106,7 @@ vet                    Run the Go vet application
 <br/>
 
 ## Examples & Tests
-All unit tests and [examples](examples/examples.go) run via [Travis CI](https://travis-ci.org/mrz1836/go-cache) and uses [Go version 1.15.x](https://golang.org/doc/go1.15). View the [deployment configuration file](.travis.yml).
+All unit tests and [examples](examples) run via [Travis CI](https://travis-ci.org/mrz1836/go-cache) and uses [Go version 1.15.x](https://golang.org/doc/go1.15). View the [deployment configuration file](.travis.yml).
 
 Run all tests (including integration tests)
 ```shell script
@@ -117,11 +116,6 @@ make test
 Run tests (excluding integration tests)
 ```shell script
 make test-short
-```
-
-Run the [examples](examples/examples.go):
-```shell script
-make run-examples
 ```
 
 <br/>
@@ -140,39 +134,7 @@ Read more about this Go project's [code standards](CODE_STANDARDS.md).
 <br/>
 
 ## Usage
-View the [examples](examples/examples.go)
-
-Basic implementation:
-```go
-package main
-
-import (
-    "log"
-    "time"
-    
-    "github.com/gomodule/redigo/redis"
-    "github.com/mrz1836/go-cache"
-)
-
-func main() {
-
-	// Create the pool and first connection
-	_ = cache.Connect("redis://localhost:6379", 0, 10, 0, 240, true, redis.DialKeepAlive(10*time.Second))
-
-	// Set a key
-	_ = cache.Set("key-name", "the-value", "dependent-key-1", "dependent-key-2")
-
-	// Get a key
-	value, _ := cache.Get("key-name")
-	log.Println("Got value:", value)
-	// Output: Got Value: the-value
-
-	// Kill keys by dependency
-	keys, _ := cache.KillByDependency("dependent-key-1")
-	log.Println("Keys Removed:", keys)
-	// Output: Keys Removed: 2
-}
-```
+View the [examples](examples)
 
 <br/>
 

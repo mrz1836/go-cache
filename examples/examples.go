@@ -3,14 +3,7 @@ Package main is an example package using the cache package
 */
 package main
 
-import (
-	"log"
-	"time"
-
-	"github.com/gomodule/redigo/redis"
-	"github.com/mrz1836/go-cache"
-)
-
+/*
 func main() {
 
 	// Create the pool and first connection
@@ -56,4 +49,4 @@ func main() {
 	} else if locked {
 		log.Println("lock succeeded")
 	}
-}
+}*/

@@ -68,8 +68,9 @@ func linkDependencies(conn redis.Conn, key interface{}, dependencies ...string) 
 		}
 	}
 
-	// Fire the exec command (ignore nil error response?) // todo: test against live redis vs mock
+	// Fire the exec command (ignore nil error response?)
 	if _, err = redis.Values(conn.Do(executeCommand)); errors.Is(err, redis.ErrNil) {
+		// todo: test against live redis vs mock (is =nil needed)
 		err = nil
 	}
 	return

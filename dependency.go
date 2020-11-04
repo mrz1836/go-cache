@@ -39,7 +39,12 @@ func KillByDependency(client *Client, conn redis.Conn, keys ...string) (total in
 	}
 
 	// Fire the delete
-	_, err = conn.Do(deleteCommand, deleteArgs...)
+	var deleted int
+	if deleted, err = redis.Int(conn.Do(deleteCommand, deleteArgs...)); err != nil {
+		return
+	}
+	total += deleted
+
 	return
 }
 

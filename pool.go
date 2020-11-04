@@ -11,9 +11,6 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-// Redis pool
-var pool *redis.Pool
-
 // buildDialer will build a redis connection from URL
 func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, error) {
 	return func() (redis.Conn, error) {
@@ -22,75 +19,84 @@ func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, er
 }
 
 // Connect creates a new connection pool connected to the specified url
-func Connect(url string, maxActiveConnections, idleConnections,
-	maxConnLifetime, idleTimeout int, dependencyMode bool, options ...redis.DialOption) (err error) {
+func Connect(url string, maxActiveConnections, idleConnections, maxConnLifetime, idleTimeout int,
+	dependencyMode bool, options ...redis.DialOption) (pool *redis.Pool, err error) {
 
 	// Create a new pool
 	pool = &redis.Pool{
+		Dial:            buildDialer(url, options...),
 		IdleTimeout:     time.Duration(idleTimeout) * time.Second,
 		MaxActive:       maxActiveConnections,
 		MaxConnLifetime: time.Duration(maxConnLifetime) * time.Second,
 		MaxIdle:         idleConnections,
-		Dial:            buildDialer(url, options...),
-		TestOnBorrow: func(c redis.Conn, t time.Time) (err error) {
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if time.Since(t) < time.Minute {
 				return nil
 			}
-			_, err = c.Do(pingCommand)
-			return
+			_, doErr := c.Do(pingCommand)
+			return doErr
 		},
 	}
 
 	// Cleanup
-	cleanUp()
+	cleanUp(pool)
 
 	// Register scripts if enabled
 	if dependencyMode {
-		err = RegisterScripts()
+		err = RegisterScripts(pool)
 	}
 
 	return
 }
 
-// Disconnect closes the connection pool
-func Disconnect() {
+// ClosePool closes the connection pool
+func ClosePool(pool *redis.Pool) {
 	if pool != nil {
-		_ = pool.Close() // todo: handle this error?
+		_ = pool.Close()
 	}
 	pool = nil
 }
 
-// GetPool returns the underlying connection pool
-func GetPool() *redis.Pool {
-	return pool
+// CloseConnection closes the connection pool
+func CloseConnection(conn redis.Conn) {
+	if conn != nil {
+		_ = conn.Close()
+	}
+	conn = nil
+}
+
+// CloseAll closes pool or conn or both
+func CloseAll(pool *redis.Pool, conn redis.Conn) {
+	ClosePool(pool)
+	CloseConnection(conn)
 }
 
 // GetConnection will return a connection from the pool. The connection must be
 // closed when done with use to return it to the pool
-func GetConnection() redis.Conn {
+func GetConnection(pool *redis.Pool) redis.Conn {
 	return pool.Get()
 }
 
 // ConnectToURL connects via REDIS_URL
 // Source: github.com/soveran/redisurl
 // URL Format: redis://localhost:6379
-func ConnectToURL(urlString string, options ...redis.DialOption) (c redis.Conn, err error) {
+func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.Conn, err error) {
 
 	// Parse the URL
 	var redisURL *url.URL
-	if redisURL, err = url.Parse(urlString); err != nil {
+	if redisURL, err = url.Parse(connectToURL); err != nil {
 		return
 	}
 
 	// Create the connection
-	if c, err = redis.Dial("tcp", redisURL.Host, options...); err != nil {
+	if conn, err = redis.Dial("tcp", redisURL.Host, options...); err != nil {
 		return
 	}
 
 	// Attempt authentication if needed
 	if redisURL.User != nil {
 		if password, ok := redisURL.User.Password(); ok {
-			if _, err = c.Do(authCommand, password); err != nil {
+			if _, err = conn.Do(authCommand, password); err != nil {
 				return
 			}
 		}
@@ -98,7 +104,7 @@ func ConnectToURL(urlString string, options ...redis.DialOption) (c redis.Conn, 
 
 	// Fire a select on DB
 	if len(redisURL.Path) > 1 {
-		_, err = c.Do(selectCommand, strings.TrimPrefix(redisURL.Path, "/"))
+		_, err = conn.Do(selectCommand, strings.TrimPrefix(redisURL.Path, "/"))
 	}
 
 	return
@@ -106,14 +112,14 @@ func ConnectToURL(urlString string, options ...redis.DialOption) (c redis.Conn, 
 
 // cleanUp is fired after the pool is created
 // Source: https://github.com/pete911/examples-redigo
-func cleanUp() {
+func cleanUp(pool *redis.Pool) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, syscall.SIGTERM)
 	signal.Notify(c, syscall.SIGKILL)
-	go func() {
+	go func(pool *redis.Pool) {
 		<-c
 		_ = pool.Close()
 		os.Exit(0)
-	}()
+	}(pool)
 }

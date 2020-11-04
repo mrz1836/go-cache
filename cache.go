@@ -1,9 +1,13 @@
-/*
-Package cache is a simple redis cache dependency system on-top of the famous redigo package
-*/
+// Package cache is a simple redis cache dependency system on-top of the famous redigo package
+//
+// If you have any suggestions or comments, please feel free to open an issue on
+// this GitHub repository!
+//
+// By @MrZ1836
 package cache
 
 import (
+	"errors"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -12,6 +16,7 @@ import (
 // Package constants (commands)
 const (
 	addToSetCommand      string = "SADD"
+	allKeysCommand       string = "*"
 	authCommand          string = "AUTH"
 	deleteCommand        string = "DEL"
 	dependencyPrefix     string = "depend:"
@@ -29,6 +34,7 @@ const (
 	keysCommand          string = "KEYS"
 	listPushCommand      string = "RPUSH"
 	listRangeCommand     string = "LRANGE"
+	loadCommand          string = "LOAD"
 	multiCommand         string = "MULTI"
 	pingCommand          string = "PING"
 	removeMemberCommand  string = "SREM"
@@ -39,39 +45,17 @@ const (
 )
 
 // Get gets a key from redis
-func Get(key string) (string, error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Fire the command
+func Get(conn redis.Conn, key string) (string, error) {
 	return redis.String(conn.Do(getCommand, key))
 }
 
 // GetBytes gets a key from redis in bytes
-func GetBytes(key string) ([]byte, error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Fire the command
+func GetBytes(conn redis.Conn, key string) ([]byte, error) {
 	return redis.Bytes(conn.Do(getCommand, key))
 }
 
 // GetList returns a []string stored in redis list
-func GetList(key string) (list []string, err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
+func GetList(conn redis.Conn, key string) (list []string, err error) {
 
 	// This command takes two parameters specifying the range: 0 start, -1 is the end of the list
 	var values []interface{}
@@ -85,13 +69,7 @@ func GetList(key string) (list []string, err error) {
 }
 
 // SetList saves a slice as a redis list (appends)
-func SetList(key string, slice []string) (err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
+func SetList(conn redis.Conn, key string, slice []string) (err error) {
 
 	// Create the arguments
 	args := make([]interface{}, len(slice)+1)
@@ -108,98 +86,48 @@ func SetList(key string, slice []string) (err error) {
 }
 
 // GetAllKeys returns a []string of keys
-func GetAllKeys() (keys []string, err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Get all the keys
-	return redis.Strings(conn.Do(keysCommand, "*"))
+func GetAllKeys(conn redis.Conn) (keys []string, err error) {
+	return redis.Strings(conn.Do(keysCommand, allKeysCommand))
 }
 
 // Set will set the key in redis and keep a reference to each dependency
 // value can be both a string or []byte
-func Set(key string, value interface{}, dependencies ...string) (err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Fire the set command
-	if _, err = conn.Do(setCommand, key, value); err != nil {
-		return
+func Set(conn redis.Conn, key string, value interface{}, dependencies ...string) error {
+	if _, err := conn.Do(setCommand, key, value); err != nil {
+		return err
 	}
 
-	// Link and return the error
 	return linkDependencies(conn, key, dependencies...)
 }
 
 // SetExp will set the key in redis and keep a reference to each dependency
 // value can be both a string or []byte
-func SetExp(key string, value interface{}, ttl time.Duration, dependencies ...string) error {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Fire the set expiration
+func SetExp(conn redis.Conn, key string, value interface{}, ttl time.Duration, dependencies ...string) error {
 	if _, err := conn.Do(setExpirationCommand, key, int64(ttl.Seconds()), value); err != nil {
 		return err
 	}
 
-	// Link and return the error
 	return linkDependencies(conn, key, dependencies...)
 }
 
 // Exists checks if a key is present or not
-func Exists(key string) (bool, error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Fire the command
+func Exists(conn redis.Conn, key string) (bool, error) {
 	return redis.Bool(conn.Do(existsCommand, key))
 }
 
 // Expire sets the expiration for a given key
-func Expire(key string, duration time.Duration) (err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Fire the expire command
+func Expire(conn redis.Conn, key string, duration time.Duration) (err error) {
 	_, err = conn.Do(expireCommand, key, int64(duration.Seconds()))
 	return
 }
 
 // Delete is an alias for KillByDependency()
-func Delete(keys ...string) (total int, err error) {
-	return KillByDependency(keys...)
+func Delete(conn redis.Conn, keys ...string) (total int, err error) {
+	return KillByDependency(conn, keys...)
 }
 
 // DeleteWithoutDependency will remove keys without using dependency script
-func DeleteWithoutDependency(keys ...string) (total int, err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Loop all keys and delete
+func DeleteWithoutDependency(conn redis.Conn, keys ...string) (total int, err error) {
 	for _, key := range keys {
 		if _, err = conn.Do(deleteCommand, key); err != nil {
 			return
@@ -212,44 +140,21 @@ func DeleteWithoutDependency(keys ...string) (total int, err error) {
 
 // HashSet will set the hashKey to the value in the specified hashName and link a
 // reference to each dependency for the entire hash
-func HashSet(hashName, hashKey string, value interface{}, dependencies ...string) error {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Set the hash key
+func HashSet(conn redis.Conn, hashName, hashKey string, value interface{}, dependencies ...string) error {
 	if _, err := conn.Do(hashKeySetCommand, hashName, hashKey, value); err != nil {
 		return err
 	}
 
-	// Link and return the error
 	return linkDependencies(conn, hashName, dependencies...)
 }
 
 // HashGet gets a key from redis via hash
-func HashGet(hash, key string) (string, error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Fire the command
+func HashGet(conn redis.Conn, hash, key string) (string, error) {
 	return redis.String(conn.Do(hashGetCommand, hash, key))
 }
 
 // HashMapGet gets values from a hash map for corresponding keys
-func HashMapGet(hashName string, keys ...interface{}) ([]string, error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
+func HashMapGet(conn redis.Conn, hashName string, keys ...interface{}) ([]string, error) {
 
 	// Build up the arguments
 	keys = append([]interface{}{hashName}, keys...)
@@ -260,13 +165,7 @@ func HashMapGet(hashName string, keys ...interface{}) ([]string, error) {
 
 // HashMapSet will set the hashKey to the value in the specified hashName and link a
 // reference to each dependency for the entire hash
-func HashMapSet(hashName string, pairs [][2]interface{}, dependencies ...string) error {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
+func HashMapSet(conn redis.Conn, hashName string, pairs [][2]interface{}, dependencies ...string) error {
 
 	// Set the arguments
 	args := make([]interface{}, 0, 2*len(pairs)+1)
@@ -287,13 +186,8 @@ func HashMapSet(hashName string, pairs [][2]interface{}, dependencies ...string)
 
 // HashMapSetExp will set the hashKey to the value in the specified hashName and link a
 // reference to each dependency for the entire hash
-func HashMapSetExp(hashName string, pairs [][2]interface{}, ttl time.Duration, dependencies ...string) error {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
+func HashMapSetExp(conn redis.Conn, hashName string, pairs [][2]interface{},
+	ttl time.Duration, dependencies ...string) error {
 
 	// Set the arguments
 	args := make([]interface{}, 0, 2*len(pairs)+1)
@@ -318,31 +212,16 @@ func HashMapSetExp(hashName string, pairs [][2]interface{}, ttl time.Duration, d
 }
 
 // SetAdd will add the member to the Set and link a reference to each dependency for the entire Set
-func SetAdd(setName, member interface{}, dependencies ...string) error {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Add member to set
+func SetAdd(conn redis.Conn, setName, member interface{}, dependencies ...string) error {
 	if _, err := conn.Do(addToSetCommand, setName, member); err != nil {
 		return err
 	}
 
-	// Link and return the error
 	return linkDependencies(conn, setName, dependencies...)
 }
 
 // SetAddMany will add many values to an existing set
-func SetAddMany(setName string, members ...interface{}) (err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
+func SetAddMany(conn redis.Conn, setName string, members ...interface{}) (err error) {
 
 	// Create the arguments
 	args := make([]interface{}, len(members)+1)
@@ -362,55 +241,26 @@ func SetAddMany(setName string, members ...interface{}) (err error) {
 }
 
 // SetIsMember returns if the member is part of the set
-func SetIsMember(set, member interface{}) (bool, error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Check if is member
+func SetIsMember(conn redis.Conn, set, member interface{}) (bool, error) {
 	return redis.Bool(conn.Do(isMemberCommand, set, member))
 }
 
 // SetRemoveMember removes the member from the set
-func SetRemoveMember(set, member interface{}) (err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Remove and return
+func SetRemoveMember(conn redis.Conn, set, member interface{}) (err error) {
 	_, err = conn.Do(removeMemberCommand, set, member)
 	return
 }
 
-// DestroyCache will flush the entire redis server. It only removes keys, not scripts
-func DestroyCache() (err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Fire the command
+// DestroyCache will flush the entire redis server
+// It only removes keys, not scripts
+func DestroyCache(conn redis.Conn) (err error) {
 	_, err = conn.Do(flushAllCommand)
 	return
 }
 
 // KillByDependency removes all keys which are listed as depending on the key(s)
 // Also: Delete()
-func KillByDependency(keys ...string) (total int, err error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
+func KillByDependency(conn redis.Conn, keys ...string) (total int, err error) {
 
 	// Do we have keys to kill?
 	if len(keys) == 0 {
@@ -460,7 +310,9 @@ func linkDependencies(conn redis.Conn, key interface{}, dependencies ...string) 
 		}
 	}
 
-	// Fire the exec command
-	_, err = redis.Values(conn.Do(executeCommand))
+	// Fire the exec command (ignore nil error response?) // todo: test against live redis vs mock
+	if _, err = redis.Values(conn.Do(executeCommand)); errors.Is(err, redis.ErrNil) {
+		err = nil
+	}
 	return
 }

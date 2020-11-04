@@ -15,6 +15,7 @@ const (
 	// testKillDependencyHash   = "a648f768f57e73e2497ccaa113d5ad9e731c5cd8"
 	// testPairValue            = "pair-1-value"
 	testDependantKey         = "test-dependant-key-name"
+	testHashName             = "test-hash-name"
 	testIdleTimeout          = 240
 	testKey                  = "test-key-name"
 	testLocalConnectionURL   = "redis://localhost:6379"
@@ -85,7 +86,7 @@ func startTestCustom() (pool *redis.Pool, err error) {
 	)
 }*/
 
-// TestSet is testing the Set() method
+// TestSet is testing the method Set()
 func TestSet(t *testing.T) {
 
 	t.Run("set command using mocked redis", func(t *testing.T) {
@@ -184,7 +185,7 @@ func TestSet(t *testing.T) {
 	})
 }
 
-// ExampleSet is an example of Set() method
+// ExampleSet is an example of the method Set()
 func ExampleSet() {
 
 	// Load a mocked redis for testing/examples
@@ -199,7 +200,7 @@ func ExampleSet() {
 	// Output:set: test-key-name value: test-string-value dep key: test-dependant-key-name
 }
 
-// TestSetExp is testing the SetExp() method
+// TestSetExp is testing the method SetExp()
 func TestSetExp(t *testing.T) {
 
 	t.Run("set exp command using mocked redis", func(t *testing.T) {
@@ -283,7 +284,7 @@ func TestSetExp(t *testing.T) {
 	})
 }
 
-// ExampleSetExp is an example of SetExp() method
+// ExampleSetExp is an example of the method SetExp()
 func ExampleSetExp() {
 	// Load a mocked redis for testing/examples
 	conn, pool := loadMockRedis()
@@ -297,76 +298,102 @@ func ExampleSetExp() {
 	// Output:set: test-key-name value: test-string-value exp: 2m0s dep key: test-dependant-key-name
 }
 
-/*
-
-// TestHashSet is testing the HashSet() method
+// TestHashSet is testing the method HashSet()
 func TestHashSet(t *testing.T) {
 
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
+	t.Run("hash set command using mocked redis", func(t *testing.T) {
+		t.Parallel()
 
-	// Disconnect at end
-	defer endTest()
+		// Load redis
+		conn, pool := loadMockRedis()
+		assert.NotNil(t, pool)
+		defer endTest(pool, conn)
 
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	var tests = []struct {
-		name          string
-		key           string
-		value         interface{}
-		dependencies  string
-		expectedError bool
-	}{
-		{"test-hash-name", "test-hash-key", "my-cache-value", "another-key", false},
-		{"test-hash-name1", "test-hash-key", "my-cache-value", "another-key", false},
-		{"test-hash-name2", "test-hash-key", "my-cache-value", "", false},
-		{"test-hash-name3", "test-hash-key", "", "", false},
-		{"test-hash-name4", "", "", "", false},
-		{"", "", "", "", false},
-		{"", "", []string{""}, "", false},
-		{"-", "-", []string{""}, "-", false},
-		{"-", "-", map[string]string{}, "-", false},
-	}
-
-	// Test all
-	for _, test := range tests {
-		if err := HashSet(test.name, test.key, test.value, test.dependencies); err != nil && !test.expectedError {
-			t.Errorf("%s Failed: [%s] inputted and [%s] and [%v], error [%s]", t.Name(), test.name, test.key, test.value, err.Error())
-		} else if err == nil && test.expectedError {
-			t.Errorf("%s Failed: [%s] inputted and [%s] and [%v], error was expected but did not occur", t.Name(), test.name, test.key, test.value)
+		var tests = []struct {
+			testCase     string
+			name         string
+			key          string
+			value        interface{}
+			dependencies []string
+		}{
+			{"one dependency", testHashName, testKey, testStringValue, []string{testDependantKey}},
+			{"new key with dep", "test-hash-name1", testKey, testStringValue, []string{testDependantKey}},
+			{"third key", "test-hash-name2", testKey, testStringValue, []string{""}},
+			{"fourth key", "test-hash-name3", testKey, "", []string{""}},
+			{"fifth key", "test-hash-name4", "", "", []string{""}},
+			{"no name", "", "", "", []string{""}},
+			{"no name or value", "", "", []string{""}, []string{""}},
+			{"name is symbol", "-", "-", []string{""}, []string{"-"}},
+			{"value is a json interface", "-", "-", map[string]string{}, []string{"-"}},
 		}
-	}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
 
-	// Get the value
-	val, err := HashGet("test-hash-name", "test-hash-key")
-	if err != nil {
-		t.Fatal(err.Error())
-	} else if val != "my-cache-value" {
-		t.Fatal("value returned was wrong", val)
-	}
+				// The main command to test
+				setCmd := conn.Command(hashKeySetCommand, test.name, test.key, test.value).Expect(test.value)
+
+				// Loop for each dependency
+				if len(test.dependencies) > 0 {
+					multiCmd := conn.Command(multiCommand)
+					for _, dep := range test.dependencies {
+						_ = conn.Command(addToSetCommand, dependencyPrefix+dep, test.name)
+					}
+					exeCmd := conn.Command(executeCommand)
+
+					err := HashSet(conn, test.name, test.key, test.value, test.dependencies...)
+					assert.NoError(t, err)
+					assert.Equal(t, true, multiCmd.Called)
+					assert.Equal(t, true, setCmd.Called)
+					assert.Equal(t, true, exeCmd.Called)
+
+				} else {
+					err := HashSet(conn, test.name, test.key, test.value, test.dependencies...)
+					assert.NoError(t, err)
+					assert.Equal(t, true, setCmd.Called)
+				}
+			})
+		}
+	})
+
+	t.Run("hash set command using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		conn, pool, err := loadRealRedis()
+		assert.NotNil(t, pool)
+		assert.NoError(t, err)
+		defer endTest(pool, conn)
+
+		// Fire the command
+		err = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Check that set worked
+		var testVal string
+		testVal, err = HashGet(conn, testHashName, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, testStringValue, testVal)
+	})
 }
 
-// ExampleHashSet is an example of HashSet() method
+// ExampleHashSet is an example of the method HashSet()
 func ExampleHashSet() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+	// Load a mocked redis for testing/examples
+	conn, pool := loadMockRedis()
 
-	// Disconnect at end
-	defer Disconnect()
+	// Close connections at end of request
+	defer CloseAll(pool, conn)
 
 	// Set the key/value
-	_ = HashSet("example-hash-set", "test-hash-key", "my-cache-value")
-	fmt.Print("set complete")
-	// Output: set complete
+	_ = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
+	fmt.Printf("set: %s:%s value: %s dep key: %s", testHashName, testKey, testStringValue, testDependantKey)
+	// Output:set: test-hash-name:test-key-name value: test-string-value dep key: test-dependant-key-name
 }
+
+/*
 
 // TestHashGet is testing the HashGet() method
 func TestHashGet(t *testing.T) {

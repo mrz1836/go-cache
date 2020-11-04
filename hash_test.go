@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rafaeljusto/redigomock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,27 +41,28 @@ func TestHashSet(t *testing.T) {
 			t.Run(test.testCase, func(t *testing.T) {
 				conn.Clear()
 
+				var commands []*redigomock.Cmd
+
 				// The main command to test
-				setCmd := conn.Command(hashKeySetCommand, test.hashName, test.key, test.value).Expect(test.value)
+				commands = append(commands, conn.Command(hashKeySetCommand, test.hashName, test.key, test.value).Expect(test.value))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					multiCmd := conn.Command(multiCommand)
+					commands = append(commands, conn.Command(multiCommand))
 					for _, dep := range test.dependencies {
-						_ = conn.Command(addToSetCommand, dependencyPrefix+dep, test.hashName)
+						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.hashName))
 					}
-					exeCmd := conn.Command(executeCommand)
+					commands = append(commands, conn.Command(executeCommand))
 
 					err := HashSet(conn, test.hashName, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, multiCmd.Called)
-					assert.Equal(t, true, setCmd.Called)
-					assert.Equal(t, true, exeCmd.Called)
-
 				} else {
 					err := HashSet(conn, test.hashName, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, setCmd.Called)
+				}
+
+				for _, c := range commands {
+					assert.Equal(t, true, c.Called)
 				}
 			})
 		}
@@ -242,27 +244,28 @@ func TestHashMapSet(t *testing.T) {
 					args = append(args, pair[1])
 				}
 
+				var commands []*redigomock.Cmd
+
 				// The main command to test
-				setCmd := conn.Command(hashMapSetCommand, args...)
+				commands = append(commands, conn.Command(hashMapSetCommand, args...))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					multiCmd := conn.Command(multiCommand)
+					commands = append(commands, conn.Command(multiCommand))
 					for _, dep := range test.dependencies {
-						_ = conn.Command(addToSetCommand, dependencyPrefix+dep, test.hashName)
+						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.hashName))
 					}
-					exeCmd := conn.Command(executeCommand)
+					commands = append(commands, conn.Command(executeCommand))
 
 					err := HashMapSet(conn, test.hashName, test.pairs, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, multiCmd.Called)
-					assert.Equal(t, true, setCmd.Called)
-					assert.Equal(t, true, exeCmd.Called)
-
 				} else {
 					err := HashMapSet(conn, test.hashName, test.pairs, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, setCmd.Called)
+				}
+
+				for _, c := range commands {
+					assert.Equal(t, true, c.Called)
 				}
 			})
 		}
@@ -390,30 +393,29 @@ func TestHashMapSetExp(t *testing.T) {
 					args = append(args, pair[0], pair[1])
 				}
 
+				var commands []*redigomock.Cmd
+
 				// The main command to test
-				setCmd := conn.Command(hashMapSetCommand, args...)
-				setExpCmd := conn.Command(expireCommand, test.hashName, int64(test.expiration.Seconds()))
+				commands = append(commands, conn.Command(hashMapSetCommand, args...))
+				commands = append(commands, conn.Command(expireCommand, test.hashName, int64(test.expiration.Seconds())))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					multiCmd := conn.Command(multiCommand)
+					commands = append(commands, conn.Command(multiCommand))
 					for _, dep := range test.dependencies {
-						_ = conn.Command(addToSetCommand, dependencyPrefix+dep, test.hashName)
+						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.hashName))
 					}
-					exeCmd := conn.Command(executeCommand)
+					commands = append(commands, conn.Command(executeCommand))
 
 					err := HashMapSetExp(conn, test.hashName, test.pairs, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, multiCmd.Called)
-					assert.Equal(t, true, setCmd.Called)
-					assert.Equal(t, true, setExpCmd.Called)
-					assert.Equal(t, true, exeCmd.Called)
-
 				} else {
 					err := HashMapSetExp(conn, test.hashName, test.pairs, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, setCmd.Called)
-					assert.Equal(t, true, setExpCmd.Called)
+				}
+
+				for _, c := range commands {
+					assert.Equal(t, true, c.Called)
 				}
 			})
 		}

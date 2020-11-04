@@ -113,26 +113,28 @@ func TestSet(t *testing.T) {
 			t.Run(test.testCase, func(t *testing.T) {
 				conn.Clear()
 
+				var commands []*redigomock.Cmd
+
 				// The main command to test
-				setCmd := conn.Command(setCommand, test.key, test.value).Expect(test.value)
+				commands = append(commands, conn.Command(setCommand, test.key, test.value).Expect(test.value))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					multiCmd := conn.Command(multiCommand)
+					commands = append(commands, conn.Command(multiCommand))
 					for _, dep := range test.dependencies {
-						_ = conn.Command(addToSetCommand, dependencyPrefix+dep, test.key)
+						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.key))
 					}
-					exeCmd := conn.Command(executeCommand)
+					commands = append(commands, conn.Command(executeCommand))
 
 					err := Set(conn, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, multiCmd.Called)
-					assert.Equal(t, true, setCmd.Called)
-					assert.Equal(t, true, exeCmd.Called)
 				} else {
 					err := Set(conn, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, setCmd.Called)
+				}
+
+				for _, c := range commands {
+					assert.Equal(t, true, c.Called)
 				}
 			})
 		}
@@ -225,27 +227,28 @@ func TestSetExp(t *testing.T) {
 			t.Run(test.testCase, func(t *testing.T) {
 				conn.Clear()
 
+				var commands []*redigomock.Cmd
+
 				// The main command to test
-				setCmd := conn.Command(setExpirationCommand, test.key, int64(test.expiration.Seconds()), test.value).Expect(test.value)
+				commands = append(commands, conn.Command(setExpirationCommand, test.key, int64(test.expiration.Seconds()), test.value).Expect(test.value))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					multiCmd := conn.Command(multiCommand)
+					commands = append(commands, conn.Command(multiCommand))
 					for _, dep := range test.dependencies {
-						_ = conn.Command(addToSetCommand, dependencyPrefix+dep, test.key)
+						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.key))
 					}
-					exeCmd := conn.Command(executeCommand)
+					commands = append(commands, conn.Command(executeCommand))
 
 					err := SetExp(conn, test.key, test.value, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, multiCmd.Called)
-					assert.Equal(t, true, setCmd.Called)
-					assert.Equal(t, true, exeCmd.Called)
-
 				} else {
 					err := SetExp(conn, test.key, test.value, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
-					assert.Equal(t, true, setCmd.Called)
+				}
+
+				for _, c := range commands {
+					assert.Equal(t, true, c.Called)
 				}
 			})
 		}
@@ -284,6 +287,7 @@ func TestSetExp(t *testing.T) {
 		testVal, err = Get(conn, testKey)
 		assert.Error(t, err)
 		assert.Equal(t, "", testVal)
+		assert.Equal(t, redis.ErrNil, err)
 	})
 }
 
@@ -580,7 +584,7 @@ func TestExists(t *testing.T) {
 	})
 }
 
-// ExampleExists is an example of Exists() method
+// ExampleExists is an example of the method Exists()
 func ExampleExists() {
 	// Load a mocked redis for testing/examples
 	conn, pool := loadMockRedis()
@@ -670,11 +674,12 @@ func TestExpire(t *testing.T) {
 		// Check that the key is expired
 		testVal, err = Get(conn, testKey)
 		assert.Error(t, err)
+		assert.Equal(t, redis.ErrNil, err)
 		assert.Equal(t, "", testVal)
 	})
 }
 
-// ExampleExpire is an example of Expire() method
+// ExampleExpire is an example of the method Expire()
 func ExampleExpire() {
 	// Load a mocked redis for testing/examples
 	conn, pool := loadMockRedis()
@@ -685,489 +690,383 @@ func ExampleExpire() {
 	// Set the key/value
 	_ = Set(conn, testKey, testStringValue, testDependantKey)
 
-	// Set the expire
+	// Fire the command
 	_ = Expire(conn, testKey, 1*time.Minute)
 	fmt.Printf("expiration on key: %s set for: %v", testKey, 1*time.Minute)
 	// Output:expiration on key: test-key-name set for: 1m0s
 }
 
-/*
-// TestDestroyCache is testing the DestroyCache() method
+// TestDestroyCache is testing the method DestroyCache()
 func TestDestroyCache(t *testing.T) {
 
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
+	t.Run("destroy cache / flush all command using mocked redis", func(t *testing.T) {
+		t.Parallel()
 
-	// Disconnect at end
-	defer endTest()
+		// Load redis
+		conn, pool := loadMockRedis()
+		assert.NotNil(t, pool)
+		defer endTest(pool, conn)
 
-	// Set
-	err := Set("test-destroy", testStringValue, "another-key")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+		conn.Clear()
 
-	// Check the set
-	val, _ := Get("test-destroy")
-	if val != testStringValue {
-		t.Fatalf("expected value: %s, got: %s", testStringValue, val)
-	}
+		// The main command to test
+		destroyCmd := conn.Command(flushAllCommand)
 
-	// Fire destroy
-	if err = DestroyCache(); err != nil {
-		t.Fatal(err.Error())
-	}
+		err := DestroyCache(conn)
+		assert.NoError(t, err)
+		assert.Equal(t, true, destroyCmd.Called)
+	})
 
-	// Check the destroy
-	if val, _ = Get("test-destroy"); val == testStringValue {
-		t.Fatalf("expected value: %s, got: %s", "", val)
-	}
+	t.Run("destroy cache / flush all command using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		conn, pool, err := loadRealRedis()
+		assert.NotNil(t, pool)
+		assert.NoError(t, err)
+		defer endTest(pool, conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = Set(conn, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Test getting a value
+		var val string
+		val, err = Get(conn, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, val, testStringValue)
+
+		// Check that the command worked
+		err = DestroyCache(conn)
+		assert.NoError(t, err)
+
+		// Value should not exist
+		val, err = Get(conn, testKey)
+		assert.Error(t, err)
+		assert.Equal(t, err, redis.ErrNil)
+		assert.Equal(t, val, "")
+	})
 }
 
-// ExampleDestroyCache is an example of DestroyCache() method
+// ExampleDestroyCache is an example of the method DestroyCache()
 func ExampleDestroyCache() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+	// Load a mocked redis for testing/examples
+	conn, pool := loadMockRedis()
 
-	// Disconnect at end
-	defer Disconnect()
+	// Close connections at end of request
+	defer CloseAll(pool, conn)
 
-	// Set the key/value
-	_ = Set("example-destroy-cache", testStringValue, "another-key")
-
-	// Set the expire
-	_ = DestroyCache()
+	// Fire the command
+	_ = DestroyCache(conn)
 	fmt.Print("cache destroyed")
-	// Output: cache destroyed
+	// Output:cache destroyed
 }
 
-// ExampleDelete is an example of Delete() method
-func ExampleDelete() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Set the key/value
-	_ = Set("example-destroy-cache", testStringValue, "another-key")
-
-	// Delete keys
-	total, _ := Delete("another-key", "another-key-2")
-	fmt.Print(total, " deleted keys")
-	// Output: 2 deleted keys
-}
-
-// ExampleDeleteWithoutDependency is an example of DeleteWithoutDependency() method
-func ExampleDeleteWithoutDependency() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Set the key/value
-	_ = Set("example-destroy-cache-1", testStringValue)
-	_ = Set("example-destroy-cache-2", testStringValue)
-
-	// Delete keys
-	total, _ := DeleteWithoutDependency("example-destroy-cache-1", "example-destroy-cache-2")
-	fmt.Print(total, " deleted keys")
-	// Output: 2 deleted keys
-}
-
-// TestKillByDependency will test KillByDependency()
-func TestKillByDependency(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Test no keys
-	_, err := KillByDependency()
-	if err != nil {
-		t.Errorf("error occurred %s", err.Error())
-	}
-
-	// Test  keys
-	if _, err = KillByDependency("key1"); err != nil {
-		t.Errorf("error occurred %s", err.Error())
-	}
-
-	// Test  keys
-	if _, err = KillByDependency("key1", "key two; another"); err != nil {
-		t.Errorf("error occurred %s", err.Error())
-	}
-}
-
-// ExampleKillByDependency is an example of KillByDependency() method
-func ExampleKillByDependency() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Set the key/value
-	_ = Set("example-destroy-cache", testStringValue, "another-key")
-
-	// Delete keys
-	_, _ = KillByDependency("another-key", "another-key-2")
-	fmt.Print("deleted keys")
-	// Output: deleted keys
-}
-
-// TestDependencyManagement tests basic dependency functionality
-// Tests a myriad of methods
-func TestDependencyManagement(t *testing.T) {
-
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Set a key with two dependent keys
-	err := Set("test-set-dep", testStringValue, "dependent-1", "dependent-2")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Test for dependent key 1
-	var ok bool
-	if ok, err = SetIsMember("depend:dependent-1", "test-set-dep"); err != nil {
-		t.Fatal(err.Error())
-	} else if !ok {
-		t.Fatal("expected to be true")
-	}
-
-	// Test for dependent key 2
-	if ok, err = SetIsMember("depend:dependent-2", "test-set-dep"); err != nil {
-		t.Fatal(err.Error())
-	} else if !ok {
-		t.Fatal("expected to be true")
-	}
-
-	// Kill a dependent key
-	var total int
-	if total, err = Delete("dependent-1"); err != nil {
-		t.Fatal(err.Error())
-	} else if total != 2 {
-		t.Fatal("expected 2 keys to be removed", total)
-	}
-
-	// Test for main key
-	var found bool
-	if found, err = Exists("test-set-dep"); err != nil {
-		t.Fatal(err.Error())
-	} else if found {
-		t.Fatal("expected found to be false")
-	}
-
-	// Test for dependency relation
-	if found, err = Exists("depend:dependent-1"); err != nil {
-		t.Fatal(err.Error())
-	} else if found {
-		t.Fatal("expected found to be false")
-	}
-
-	// Test for dependent key 2
-	if ok, err = SetIsMember("depend:dependent-2", "test-set-dep"); err != nil {
-		t.Fatal(err.Error())
-	} else if !ok {
-		t.Fatal("expected to be true")
-	}
-
-	// Kill all dependent keys
-	if total, err = KillByDependency("dependent-1", "dependent-2"); err != nil {
-		t.Fatal(err.Error())
-	} else if total != 1 {
-		t.Fatal("expected 1 key to be removed", total)
-	}
-
-	// Test for dependency relation
-	if found, err = Exists("depend:dependent-2"); err != nil {
-		t.Fatal(err.Error())
-	} else if found {
-		t.Fatal("expected found to be false")
-	}
-
-	// Test for main key
-	if found, err = Exists("test-set-dep"); err != nil {
-		t.Fatal(err.Error())
-	} else if found {
-		t.Fatal("expected found to be false")
-	}
-}
-
-// TestHashMapDependencyManagement tests HASH map dependency functionality
-// Tests a myriad of methods
-func TestHashMapDependencyManagement(t *testing.T) {
-
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Create pairs
-	pairs := [][2]interface{}{
-		{"pair-1", testPairValue},
-		{"pair-2", "pair-2-value"},
-		{"pair-3", "pair-3-value"},
-	}
-
-	// Set the hash map
-	err := HashMapSet("test-hash-map-dependency", pairs, "test-hash-map-depend-1", "test-hash-map-depend-2")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	var val string
-	val, err = HashGet("test-hash-map-dependency", "pair-1")
-	if err != nil {
-		t.Fatal(err.Error())
-	} else if val != testPairValue {
-		t.Fatal("expected value was wrong")
-	}
-
-	// Get a key in the map
-	var values []string
-	values, err = HashMapGet("test-hash-map-dependency", "pair-1", "pair-2")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Got two values?
-	if len(values) != 2 {
-		t.Fatal("expected 2 values", values, len(values))
-	}
-
-	// Test for dependent key 1
-	var ok bool
-	ok, err = SetIsMember("depend:test-hash-map-depend-1", "test-hash-map-dependency")
-	if err != nil {
-		t.Fatal(err.Error())
-	} else if !ok {
-		t.Fatal("expected to be true")
-	}
-
-	// Test for dependent key 2
-	ok, err = SetIsMember("depend:test-hash-map-depend-2", "test-hash-map-dependency")
-	if err != nil {
-		t.Fatal(err.Error())
-	} else if !ok {
-		t.Fatal("expected to be true")
-	}
-
-	// Kill a dependent key
-	var total int
-	total, err = Delete("test-hash-map-depend-2")
-	if err != nil {
-		t.Fatal(err.Error())
-	} else if total != 2 {
-		t.Fatal("expected 2 keys to be removed", total)
-	}
-
-	// Test for main key
-	var found bool
-	found, err = Exists("test-hash-map-dependency")
-	if err != nil {
-		t.Fatal(err.Error())
-	} else if found {
-		t.Fatal("expected found to be false")
-	}
-}
-
-// TestSetAddMany test the SetAddMany() method
-func TestSetAddMany(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	var empty []interface{}
-	empty = append(empty, "one", "two", "three")
-
-	err := SetAddMany("test-set", empty...)
-	if err != nil {
-		t.Fatal("error setting members", err.Error())
-	}
-
-	// Test the set
-	var found bool
-	found, err = SetIsMember("test-set", "two")
-	if err != nil {
-		t.Fatal("error in SetIsMember", err.Error())
-	} else if !found {
-		t.Fatal("failed to find a member that should exist")
-	}
-
-	// Test for not finding a value
-	found, err = SetIsMember("test-set", "not-here")
-	if err != nil {
-		t.Fatal("error in SetIsMember", err.Error())
-	} else if found {
-		t.Fatal("found a member that should NOT exist")
-	}
-}
-
-// TestSetRemoveMember test the SetRemoveMember() method
-func TestSetRemoveMember(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	var empty []interface{}
-	empty = append(empty, "one", "two", "three")
-
-	err := SetAddMany("test-set", empty...)
-	if err != nil {
-		t.Fatal("error setting members", err.Error())
-	}
-
-	// Try to delete
-	err = SetRemoveMember("test-set", "two")
-	if err != nil {
-		t.Fatal("error SetRemoveMember", err.Error())
-	}
-
-	// Test for not finding a value
-	var found bool
-	found, err = SetIsMember("test-set", "two")
-	if err != nil {
-		t.Fatal("error in SetIsMember", err.Error())
-	} else if found {
-		t.Fatal("found a member that should NOT exist")
-	}
-}
-
-// TestSetAdd test the SetAdd() method
-func TestSetAdd(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	var tests = []struct {
-		name          string
-		member        interface{}
-		dependencies  string
-		expectedError bool
-	}{
-		{"test-set", testStringValue, "another-key", false},
-		{"test-set", []string{"one", "two", "three"}, "another-key", false},
-		{"test-set", []int{1, 2, 3}, "another-key", false},
-		{"test-set", "", "another-key", false},
-		{"test-set", "", "", false},
-		{"", "", "", false},
-	}
-
-	// Test all
-	for _, test := range tests {
-		if err := SetAdd(test.name, test.member, test.dependencies); err != nil && !test.expectedError {
-			t.Errorf("%s Failed: [%s] inputted and [%v], error [%s]", t.Name(), test.name, test.member, err.Error())
-		} else if err == nil && test.expectedError {
-			t.Errorf("%s Failed: [%s] inputted and [%v], error was expected but did not occur", t.Name(), test.name, test.member)
-		}
-	}
-}
-
-// TestSetList test the SetList() method
-func TestSetList(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	var tests = []struct {
-		key           string
-		list          []string
-		expectedError bool
-	}{
-		{"test-set", []string{"val1", "val2"}, false},
-		{"test-set-bad-empty", []string{""}, false},
-		{"test-set-bad-no-list", []string{}, true},
-	}
-
-	// Test all
-	for _, test := range tests {
-		if err := SetList(test.key, test.list); err != nil && !test.expectedError {
-			t.Errorf("%s Failed: [%s] inputted and [%v], error [%s]", t.Name(), test.key, test.list, err.Error())
-		} else if err == nil && test.expectedError {
-			t.Errorf("%s Failed: [%s] inputted and [%v], error was expected but did not occur", t.Name(), test.key, test.list)
-		}
-	}
-}
-
-// TestGetList test the GetList() method
+// TestGetList test the method GetList()
 func TestGetList(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
 
-	// Disconnect at end
-	defer endTest()
+	t.Run("get list command using mocked redis", func(t *testing.T) {
+		t.Parallel()
 
-	var tests = []struct {
-		key           string
-		input         []string
-		expected      []string
-		expectedError bool
-	}{
-		{"test-set", []string{}, []string{}, false},
-		{"test-set", []string{"1"}, []string{"1"}, false},
-		{"test-set", []string{"1", "1"}, []string{"1", "1", "1"}, false},
-		{"test-set", []string{}, []string{"1", "1", "1"}, false},
-		{"test-set", []string{""}, []string{"1", "1", "1", ""}, false},
-	}
+		// Load redis
+		conn, pool := loadMockRedis()
+		assert.NotNil(t, pool)
+		defer endTest(pool, conn)
 
-	// Test all
-	for _, test := range tests {
-
-		_ = SetList(test.key, test.input)
-
-		if list, err := GetList(test.key); err != nil && !test.expectedError {
-			t.Errorf("%s Failed: [%s] inputted and expected [%v], result [%s] error [%s]", t.Name(), test.input, test.expected, list, err.Error())
-		} else if err == nil && test.expectedError {
-			t.Errorf("%s Failed: [%s] inputted and expected  [%v], result [%s], error was expected but did not occur", t.Name(), test.input, test.expected, list)
-		} else if len(list) != len(test.expected) {
-			t.Errorf("%s Failed: [%s] inputted and expected [%v], result [%s]", t.Name(), test.input, test.expected, list)
+		var tests = []struct {
+			testCase           string
+			key                string
+			inputList          []string
+			expectedList       []interface{}
+			expectedStringList []string
+		}{
+			{
+				"empty list",
+				"test-set",
+				[]string{""},
+				[]interface{}{""},
+				[]string{""},
+			},
+			{
+				"one item",
+				"test-set",
+				[]string{"1"},
+				[]interface{}{[]byte("1")},
+				[]string{"1"},
+			},
+			{
+				"multiple items",
+				"test-set",
+				[]string{"1", "1"},
+				[]interface{}{[]byte("1"), []byte("1")},
+				[]string{"1", "1"},
+			},
 		}
-	}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
+
+				// The main command to test
+				getCmd := conn.Command(listRangeCommand, test.key, 0, -1).Expect(test.expectedList)
+
+				list, err := GetList(conn, test.key)
+				assert.NoError(t, err)
+				assert.Equal(t, true, getCmd.Called)
+				assert.Equal(t, test.expectedStringList, list)
+			})
+		}
+	})
+
+	t.Run("get list command using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		conn, pool, err := loadRealRedis()
+		assert.NotNil(t, pool)
+		assert.NoError(t, err)
+		defer endTest(pool, conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = SetList(conn, testKey, []string{testStringValue})
+		assert.NoError(t, err)
+
+		// Check that the command worked
+		var list []string
+		list, err = GetList(conn, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, []string{testStringValue}, list)
+	})
 }
 
-func TestGetOrSetWithExpirationGob(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
+// ExampleGetList is an example of the method GetList()
+func ExampleGetList() {
+	// Load a mocked redis for testing/examples
+	conn, pool := loadMockRedis()
 
-	// Disconnect at end
-	defer endTest()
+	// Close connections at end of request
+	defer CloseAll(pool, conn)
 
+	// Set the key/value
+	_ = SetList(conn, testKey, []string{testStringValue})
+
+	// Fire the command
+	_, _ = GetList(conn, testKey)
+	fmt.Printf("got list: %v", []string{testStringValue})
+	// Output:got list: [test-string-value]
 }
-*/
+
+// TestSetList test the method SetList()
+func TestSetList(t *testing.T) {
+
+	t.Run("set list command using mocked redis", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		conn, pool := loadMockRedis()
+		assert.NotNil(t, pool)
+		defer endTest(pool, conn)
+
+		var tests = []struct {
+			testCase  string
+			key       string
+			inputList []string
+		}{
+			{
+				"empty list",
+				"test-set",
+				[]string{""},
+			},
+			{
+				"one item",
+				"test-set",
+				[]string{"1"},
+			},
+			{
+				"multiple items",
+				"test-set",
+				[]string{"1", "1"},
+			},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
+
+				// Create the arguments
+				args := make([]interface{}, len(test.inputList)+1)
+				args[0] = test.key
+
+				// Loop members
+				for i, param := range test.inputList {
+					args[i+1] = param
+				}
+
+				// The main command to test
+				setCmd := conn.Command(listPushCommand, args...)
+
+				err := SetList(conn, test.key, test.inputList)
+				assert.NoError(t, err)
+				assert.Equal(t, true, setCmd.Called)
+			})
+		}
+	})
+
+	t.Run("set list command using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		conn, pool, err := loadRealRedis()
+		assert.NotNil(t, pool)
+		assert.NoError(t, err)
+		defer endTest(pool, conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = SetList(conn, testKey, []string{testStringValue})
+		assert.NoError(t, err)
+
+		// Check that the command worked
+		var list []string
+		list, err = GetList(conn, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, []string{testStringValue}, list)
+	})
+}
+
+// ExampleSetList is an example of the method SetList()
+func ExampleSetList() {
+	// Load a mocked redis for testing/examples
+	conn, pool := loadMockRedis()
+
+	// Close connections at end of request
+	defer CloseAll(pool, conn)
+
+	// Set the key/value
+	_ = SetList(conn, testKey, []string{testStringValue})
+
+	// Fire the command
+	_, _ = GetList(conn, testKey)
+	fmt.Printf("got list: %v", []string{testStringValue})
+	// Output:got list: [test-string-value]
+}
+
+// TestDeleteWithoutDependency test the method DeleteWithoutDependency()
+func TestDeleteWithoutDependency(t *testing.T) {
+
+	t.Run("delete without using dependencies using mocked redis", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		conn, pool := loadMockRedis()
+		assert.NotNil(t, pool)
+		defer endTest(pool, conn)
+
+		var tests = []struct {
+			testCase     string
+			keys         []string
+			totalDeleted int
+		}{
+			{
+				"empty list",
+				[]string{},
+				0,
+			},
+			{
+				"one item",
+				[]string{testKey},
+				1,
+			},
+			{
+				"multiple items",
+				[]string{testKey, testKey + "2"},
+				2,
+			},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
+
+				// The main command to test
+				var commands []*redigomock.Cmd
+				for _, key := range test.keys {
+					cmd := conn.Command(deleteCommand, key)
+					commands = append(commands, cmd)
+				}
+
+				total, err := DeleteWithoutDependency(conn, test.keys...)
+				assert.NoError(t, err)
+				assert.Equal(t, test.totalDeleted, total)
+				for _, c := range commands {
+					assert.Equal(t, true, c.Called)
+				}
+			})
+		}
+	})
+
+	t.Run("delete without using dependencies using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		conn, pool, err := loadRealRedis()
+		assert.NotNil(t, pool)
+		assert.NoError(t, err)
+		defer endTest(pool, conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Set a key
+		err = Set(conn, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Fire the command
+		var total int
+		total, err = DeleteWithoutDependency(conn, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, total)
+
+		// Check that the command worked
+		var val string
+		val, err = Get(conn, testKey)
+		assert.Error(t, err)
+		assert.Equal(t, redis.ErrNil, err)
+		assert.Equal(t, "", val)
+	})
+}
+
+// ExampleDeleteWithoutDependency is an example of the method DeleteWithoutDependency()
+func ExampleDeleteWithoutDependency() {
+	// Load a mocked redis for testing/examples
+	conn, pool := loadMockRedis()
+
+	// Close connections at end of request
+	defer CloseAll(pool, conn)
+
+	// Set the key/value
+	_ = Set(conn, testKey, testStringValue)
+	_ = Set(conn, testKey+"2", testStringValue)
+
+	// Delete keys
+	_, _ = DeleteWithoutDependency(conn, testKey, testKey+"2")
+	fmt.Printf("deleted keys: %d", 2)
+	// Output:deleted keys: 2
+}

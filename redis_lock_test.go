@@ -1,12 +1,6 @@
 package cache
 
-import (
-	"errors"
-	"testing"
-	"time"
-)
-
-// TestWriteLock will run basic tests for lock/release
+/*// TestWriteLock will run basic tests for lock/release
 func TestWriteLock(t *testing.T) {
 
 	// Create a local connection
@@ -118,3 +112,4 @@ func TestWriteLockError(t *testing.T) {
 		t.Fatalf("expected error to occur")
 	}
 }
+*/

@@ -1,11 +1,6 @@
 package cache
 
-import (
-	"fmt"
-	"testing"
-)
-
-// TestRegisterScript tests registering a script
+/*// TestRegisterScript tests registering a script
 func TestRegisterScript(t *testing.T) {
 
 	// Create a local connection
@@ -138,3 +133,4 @@ func BenchmarkDidRegisterKillByDependencyScript(b *testing.B) {
 		_ = DidRegisterKillByDependencyScript()
 	}
 }
+*/

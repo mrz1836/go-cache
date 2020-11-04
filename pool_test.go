@@ -1,13 +1,6 @@
 package cache
 
-import (
-	"fmt"
-	"testing"
-	"time"
-
-	"github.com/gomodule/redigo/redis"
-)
-
+/*
 // TestConnectToURL test the ConnectToURL() method
 func TestConnectToURL(t *testing.T) {
 
@@ -285,3 +278,4 @@ func ExampleGetConnection() {
 	fmt.Print("got connection")
 	// Output: got connection
 }
+*/

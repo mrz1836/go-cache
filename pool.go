@@ -44,13 +44,6 @@ func (c *Client) CloseConnection(conn redis.Conn) redis.Conn {
 	return CloseConnection(conn)
 }
 
-// buildDialer will build a redis connection from URL
-func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, error) {
-	return func() (redis.Conn, error) {
-		return ConnectToURL(url, options...)
-	}
-}
-
 // CloseConnection will close a connection
 func CloseConnection(conn redis.Conn) redis.Conn {
 	if conn != nil {
@@ -136,8 +129,16 @@ func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.
 	return
 }
 
+// buildDialer will build a redis connection from URL
+func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, error) {
+	return func() (redis.Conn, error) {
+		return ConnectToURL(url, options...)
+	}
+}
+
 // cleanUp is fired after the pool is created
 // Source: https://github.com/pete911/examples-redigo
+// todo: is this really needed?
 func cleanUp(pool *redis.Pool) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

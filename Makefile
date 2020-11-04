@@ -26,6 +26,3 @@ clean: ## Remove previous builds and any test cache data
 
 release:: ## Runs common.release then runs godocs
 	@$(MAKE) godocs
-
-run-examples: ## Runs all the examples
-	@go run examples/examples.go

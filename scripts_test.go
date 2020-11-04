@@ -3,138 +3,196 @@ package cache
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// TestRegisterScript tests registering a script
+// TestClient_RegisterScripts tests the method RegisterScripts()
+func TestClient_RegisterScripts(t *testing.T) {
+
+	t.Run("valid client - run register", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, err := Connect(
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+		assert.Equal(t, "", client.DependencyScriptSha)
+		assert.Equal(t, 0, len(client.ScriptsLoaded))
+		defer client.Close()
+
+		// Run register
+		err = client.RegisterScripts()
+		assert.NoError(t, err)
+		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
+		assert.Equal(t, 1, len(client.ScriptsLoaded))
+	})
+
+	t.Run("valid client - run register 2 times", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, err := Connect(
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+		assert.Equal(t, "", client.DependencyScriptSha)
+		assert.Equal(t, 0, len(client.ScriptsLoaded))
+		defer client.Close()
+
+		// Run register
+		err = client.RegisterScripts()
+		assert.NoError(t, err)
+		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
+		assert.Equal(t, 1, len(client.ScriptsLoaded))
+
+		// Run again (should skip)
+		err = client.RegisterScripts()
+		assert.NoError(t, err)
+		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
+		assert.Equal(t, 1, len(client.ScriptsLoaded))
+	})
+}
+
+// ExampleClient_RegisterScripts is an example of the method RegisterScripts()
+func ExampleClient_RegisterScripts() {
+
+	// Load a mocked redis for testing/examples
+	client, conn := loadMockRedis()
+
+	// Close connections at end of request
+	defer client.CloseAll(conn)
+
+	// Register known scripts
+	_ = client.RegisterScripts()
+
+	fmt.Printf("scripts registered")
+	// Output:scripts registered
+}
+
+// TestRegisterScript is testing the method RegisterScript()
 func TestRegisterScript(t *testing.T) {
 
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
+	t.Run("register script command using mocked redis", func(t *testing.T) {
+		t.Parallel()
 
-	// Disconnect at end
-	defer endTest()
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
-	// Register the script
-	sha, err := RegisterScript(killByDependencyLua)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+		var tests = []struct {
+			testCase    string
+			script      string
+			expectedSha string
+		}{
+			{"valid script", killByDependencyLua, testKillDependencyHash},
+			{"another script", `return redis.call("get", KEYS[1])`, "4e6d8fc8bb01276962cce5371fa795a7763657ae"},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
 
-	// Test the returned sha
-	if sha != killDependencyHash {
-		t.Fatalf("expected: %s, got: %s", killDependencyHash, sha)
-	}
+				// The main command to test
+				setCmd := conn.Command(scriptCommand, loadCommand, test.script).Expect(test.expectedSha)
 
-	// Is it set
-	if !DidRegisterKillByDependencyScript() {
-		t.Fatal("Failed to register script")
-	}
+				val, err := RegisterScript(client, conn, test.script)
+				assert.NoError(t, err)
+				assert.Equal(t, true, setCmd.Called)
+				assert.Equal(t, test.expectedSha, val)
+			})
+		}
+	})
+
+	t.Run("register script using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		var sha string
+		sha, err = RegisterScript(client, conn, killByDependencyLua)
+		assert.NoError(t, err)
+		assert.Equal(t, testKillDependencyHash, sha)
+
+		// Another script
+		sha, err = RegisterScript(client, conn, `return redis.call("get", KEYS[1])`)
+		assert.NoError(t, err)
+		assert.Equal(t, "a5260dd66ce02462c5b5231c727b3f7772c0bcc5", sha)
+
+		// Another script
+		sha, err = RegisterScript(client, conn, lockScript)
+		assert.NoError(t, err)
+		assert.Equal(t, "e60d96cbb3894dc682fafae2980ad674822f99e1", sha)
+
+		// Another script
+		sha, err = RegisterScript(client, conn, releaseLockScript)
+		assert.NoError(t, err)
+		assert.Equal(t, "3271ffa78c3ca6743c9dc476ff6cae55a9cd3cb4", sha)
+	})
+
+	t.Run("register script error", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		var sha string
+		sha, err = RegisterScript(client, conn, "invalid script")
+		assert.Error(t, err)
+		assert.Equal(t, "", sha)
+	})
 }
 
-// ExampleRegisterScript is an example of RegisterScript() method
+// ExampleRegisterScript is an example of the method RegisterScript()
 func ExampleRegisterScript() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
-	// Disconnect at end
-	defer Disconnect()
+	// Load a mocked redis for testing/examples
+	client, conn := loadMockRedis()
 
-	// Fire the method
-	sha, _ := RegisterScript(killByDependencyLua)
-	fmt.Print(sha)
-	// Output: a648f768f57e73e2497ccaa113d5ad9e731c5cd8
-}
+	// Close connections at end of request
+	defer client.CloseAll(conn)
 
-// BenchmarkRegisterScript benchmarks the RegisterScript() method
-func BenchmarkRegisterScript(b *testing.B) {
-	_ = startTest()
-	for i := 0; i < b.N; i++ {
-		_, _ = RegisterScript(killByDependencyLua)
-	}
-}
+	// Register known scripts
+	_, _ = RegisterScript(client, conn, killByDependencyLua)
 
-// TestRegisterScripts tests registering all scripts
-func TestRegisterScripts(t *testing.T) {
-
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Register the script
-	err := RegisterScripts()
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Test our only script
-	if !DidRegisterKillByDependencyScript() {
-		t.Fatal("Did not register the script")
-	}
-}
-
-// ExampleRegisterScripts is an example of RegisterScripts() method
-func ExampleRegisterScripts() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Fire
-	_ = RegisterScripts()
-	fmt.Print("registered")
-	// Output: registered
-}
-
-// BenchmarkRegisterScripts benchmarks the RegisterScripts() method
-func BenchmarkRegisterScripts(b *testing.B) {
-	_ = startTest()
-	for i := 0; i < b.N; i++ {
-		_ = RegisterScripts()
-	}
-}
-
-// TestDidRegisterKillByDependencyScript tests the check method
-func TestDidRegisterKillByDependencyScript(t *testing.T) {
-
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Test our only script
-	if !DidRegisterKillByDependencyScript() {
-		t.Fatal("Did not register the script")
-	}
-}
-
-// ExampleRegisterScripts is an example of RegisterScripts() method
-func ExampleDidRegisterKillByDependencyScript() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Fire
-	_ = DidRegisterKillByDependencyScript()
-	fmt.Print("registered")
-	// Output: registered
-}
-
-// BenchmarkDidRegisterKillByDependencyScript benchmarks the DidRegisterKillByDependencyScript() method
-func BenchmarkDidRegisterKillByDependencyScript(b *testing.B) {
-	_ = startTest()
-	for i := 0; i < b.N; i++ {
-		_ = DidRegisterKillByDependencyScript()
-	}
+	fmt.Printf("registered: %s", testKillDependencyHash)
+	// Output:registered: a648f768f57e73e2497ccaa113d5ad9e731c5cd8
 }

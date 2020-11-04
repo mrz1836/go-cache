@@ -351,13 +351,9 @@ linters:
     - goconst
   disable:
     - gocritic # use this for very opinionated linting
-    - gochecknoglobals
     - whitespace
-    - wsl
-    - goerr113
     - godot
     - testpackage
-    - nestif
     - nlreturn
   disable-all: false
   presets:
@@ -384,9 +380,7 @@ issues:
     - path: _test\.go
       linters:
         - gocyclo
-        - errcheck
         - dupl
-        - gosec
 
     # Exclude known linters from partially hard-vendored code,
     # which is impossible to exclude via "nolint" comments.

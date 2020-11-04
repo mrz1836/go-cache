@@ -162,6 +162,8 @@ func ExampleWriteLock() {
 // TestReleaseLock tests the method ReleaseLock()
 func TestReleaseLock(t *testing.T) {
 
+	// todo: mock redis unlock
+
 	t.Run("release lock - real redis", func(t *testing.T) {
 		if testing.Short() {
 			t.Skip("skipping live local redis tests")

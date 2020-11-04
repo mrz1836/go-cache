@@ -16,9 +16,9 @@ func TestHashSet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase     string
@@ -74,10 +74,10 @@ func TestHashSet(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -98,10 +98,10 @@ func TestHashSet(t *testing.T) {
 // ExampleHashSet is an example of the method HashSet()
 func ExampleHashSet() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
@@ -116,9 +116,9 @@ func TestHashGet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase string
@@ -154,10 +154,10 @@ func TestHashGet(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -178,10 +178,10 @@ func TestHashGet(t *testing.T) {
 // ExampleHashGet is an example of the method HashGet()
 func ExampleHashGet() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
@@ -199,9 +199,9 @@ func TestHashMapSet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase     string
@@ -277,10 +277,10 @@ func TestHashMapSet(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -321,10 +321,10 @@ func TestHashMapSet(t *testing.T) {
 // ExampleHashMapSet is an example of the method HashMapSet()
 func ExampleHashMapSet() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Create pairs
 	pairs := [][2]interface{}{
@@ -346,9 +346,9 @@ func TestHashMapSetExp(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase     string
@@ -427,10 +427,10 @@ func TestHashMapSetExp(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -479,10 +479,10 @@ func TestHashMapSetExp(t *testing.T) {
 // ExampleHashMapSetExp is an example of the method HashMapSetExp()
 func ExampleHashMapSetExp() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Create pairs
 	pairs := [][2]interface{}{

@@ -25,28 +25,33 @@ const (
 )
 
 // loadMockRedis will load a mocked redis connection
-func loadMockRedis() (conn *redigomock.Conn, pool *redis.Pool) {
+func loadMockRedis() (client *Client, conn *redigomock.Conn) {
 	conn = redigomock.NewConn()
-	pool = &redis.Pool{
-		Dial:            func() (redis.Conn, error) { return conn, nil },
-		IdleTimeout:     time.Duration(testIdleTimeout) * time.Second,
-		MaxActive:       testMaxActiveConnections,
-		MaxConnLifetime: testMaxConnLifetime,
-		MaxIdle:         testMaxIdleConnections,
-		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			if time.Since(t) < time.Minute {
-				return nil
-			}
-			_, doErr := c.Do(pingCommand)
-			return doErr
+	client = &Client{
+		DependencyScriptSha: "",
+		Pool: &redis.Pool{
+			Dial:            func() (redis.Conn, error) { return conn, nil },
+			IdleTimeout:     time.Duration(testIdleTimeout) * time.Second,
+			MaxActive:       testMaxActiveConnections,
+			MaxConnLifetime: testMaxConnLifetime,
+			MaxIdle:         testMaxIdleConnections,
+			TestOnBorrow: func(c redis.Conn, t time.Time) error {
+				if time.Since(t) < time.Minute {
+					return nil
+				}
+				_, doErr := c.Do(pingCommand)
+				return doErr
+			},
 		},
+		ScriptsLoaded: nil,
 	}
+
 	return
 }
 
 // loadRealRedis will load a real redis connection
-func loadRealRedis() (conn redis.Conn, pool *redis.Pool, err error) {
-	pool, err = Connect(
+func loadRealRedis() (client *Client, conn redis.Conn, err error) {
+	client, err = Connect(
 		testLocalConnectionURL,
 		testMaxActiveConnections,
 		testMaxIdleConnections,
@@ -58,7 +63,7 @@ func loadRealRedis() (conn redis.Conn, pool *redis.Pool, err error) {
 		return
 	}
 
-	conn = GetConnection(pool)
+	conn = client.GetConnection()
 	return
 }
 
@@ -67,24 +72,6 @@ func clearRealRedis(conn redis.Conn) error {
 	return DestroyCache(conn)
 }
 
-// endTest end tests the same way
-func endTest(pool *redis.Pool, conn redis.Conn) {
-	CloseAll(pool, conn)
-}
-
-/*// startTest start all tests the same way
-func startTestCustom() (pool *redis.Pool, err error) {
-	return Connect(
-		testLocalConnectionURL,
-		testMaxActiveConnections,
-		testMaxIdleConnections,
-		testMaxConnLifetime,
-		testIdleTimeout,
-		true,
-		redis.DialKeepAlive(10*time.Second),
-	)
-}*/
-
 // TestSet is testing the method Set()
 func TestSet(t *testing.T) {
 
@@ -92,9 +79,9 @@ func TestSet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase     string
@@ -147,10 +134,10 @@ func TestSet(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase     string
@@ -190,10 +177,10 @@ func TestSet(t *testing.T) {
 func ExampleSet() {
 
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = Set(conn, testKey, testStringValue, testDependantKey)
@@ -208,9 +195,9 @@ func TestSetExp(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase     string
@@ -260,10 +247,10 @@ func TestSetExp(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -294,10 +281,10 @@ func TestSetExp(t *testing.T) {
 // ExampleSetExp is an example of the method SetExp()
 func ExampleSetExp() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = SetExp(conn, testKey, testStringValue, 2*time.Minute, testDependantKey)
@@ -312,9 +299,9 @@ func TestGet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase string
@@ -348,10 +335,10 @@ func TestGet(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -372,10 +359,10 @@ func TestGet(t *testing.T) {
 // ExampleGet is an example of the method Get()
 func ExampleGet() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = Set(conn, testKey, testStringValue, testDependantKey)
@@ -393,9 +380,9 @@ func TestGetBytes(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase string
@@ -429,10 +416,10 @@ func TestGetBytes(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -453,10 +440,10 @@ func TestGetBytes(t *testing.T) {
 // ExampleGetBytes is an example of the method GetBytes()
 func ExampleGetBytes() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = Set(conn, testKey, testStringValue, testDependantKey)
@@ -474,9 +461,9 @@ func TestGetAllKeys(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		conn.Clear()
 
@@ -495,10 +482,10 @@ func TestGetAllKeys(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -519,10 +506,10 @@ func TestGetAllKeys(t *testing.T) {
 // ExampleGetAllKeys is an example of the method GetAllKeys()
 func ExampleGetAllKeys() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = Set(conn, testKey, testStringValue, testDependantKey)
@@ -540,9 +527,9 @@ func TestExists(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		conn.Clear()
 
@@ -563,10 +550,10 @@ func TestExists(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -587,10 +574,10 @@ func TestExists(t *testing.T) {
 // ExampleExists is an example of the method Exists()
 func ExampleExists() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = Set(conn, testKey, testStringValue, testDependantKey)
@@ -608,9 +595,9 @@ func TestExpire(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase   string
@@ -642,10 +629,10 @@ func TestExpire(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -682,10 +669,10 @@ func TestExpire(t *testing.T) {
 // ExampleExpire is an example of the method Expire()
 func ExampleExpire() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = Set(conn, testKey, testStringValue, testDependantKey)
@@ -703,9 +690,9 @@ func TestDestroyCache(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		conn.Clear()
 
@@ -723,10 +710,10 @@ func TestDestroyCache(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -757,10 +744,10 @@ func TestDestroyCache(t *testing.T) {
 // ExampleDestroyCache is an example of the method DestroyCache()
 func ExampleDestroyCache() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Fire the command
 	_ = DestroyCache(conn)
@@ -775,9 +762,9 @@ func TestGetList(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase           string
@@ -829,10 +816,10 @@ func TestGetList(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -853,10 +840,10 @@ func TestGetList(t *testing.T) {
 // ExampleGetList is an example of the method GetList()
 func ExampleGetList() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = SetList(conn, testKey, []string{testStringValue})
@@ -874,9 +861,9 @@ func TestSetList(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase  string
@@ -928,10 +915,10 @@ func TestSetList(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -952,10 +939,10 @@ func TestSetList(t *testing.T) {
 // ExampleSetList is an example of the method SetList()
 func ExampleSetList() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = SetList(conn, testKey, []string{testStringValue})
@@ -973,9 +960,9 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		conn, pool := loadMockRedis()
-		assert.NotNil(t, pool)
-		defer endTest(pool, conn)
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
 
 		var tests = []struct {
 			testCase     string
@@ -1025,10 +1012,10 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		}
 
 		// Load redis
-		conn, pool, err := loadRealRedis()
-		assert.NotNil(t, pool)
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
 		assert.NoError(t, err)
-		defer endTest(pool, conn)
+		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
@@ -1056,10 +1043,10 @@ func TestDeleteWithoutDependency(t *testing.T) {
 // ExampleDeleteWithoutDependency is an example of the method DeleteWithoutDependency()
 func ExampleDeleteWithoutDependency() {
 	// Load a mocked redis for testing/examples
-	conn, pool := loadMockRedis()
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer CloseAll(pool, conn)
+	defer client.CloseAll(conn)
 
 	// Set the key/value
 	_ = Set(conn, testKey, testStringValue)

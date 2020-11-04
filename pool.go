@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"net/url"
 	"os"
 	"os/signal"
@@ -11,6 +12,38 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
+// Client is used to store the redis.Pool and additional fields/information
+type Client struct {
+	DependencyScriptSha string      // Stored SHA of the script after loaded
+	Pool                *redis.Pool // Redis pool for the client (get connections)
+	ScriptsLoaded       []string    // List of scripts that have been loaded
+}
+
+// Close closes the connection pool
+func (c *Client) Close() {
+	if c.Pool != nil {
+		_ = c.Pool.Close()
+	}
+	c.Pool = nil
+}
+
+// CloseAll closes the connection pool and given connection
+func (c *Client) CloseAll(conn redis.Conn) redis.Conn {
+	c.Close()
+	return c.CloseConnection(conn)
+}
+
+// GetConnection will return a connection from the pool. (convenience method)
+// The connection must be closed when done with use to return it to the pool
+func (c *Client) GetConnection() redis.Conn {
+	return c.Pool.Get()
+}
+
+// CloseConnection will close a previously open connection
+func (c *Client) CloseConnection(conn redis.Conn) redis.Conn {
+	return CloseConnection(conn)
+}
+
 // buildDialer will build a redis connection from URL
 func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, error) {
 	return func() (redis.Conn, error) {
@@ -18,66 +51,58 @@ func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, er
 	}
 }
 
-// Connect creates a new connection pool connected to the specified url
-func Connect(url string, maxActiveConnections, idleConnections, maxConnLifetime, idleTimeout int,
-	dependencyMode bool, options ...redis.DialOption) (pool *redis.Pool, err error) {
+// CloseConnection will close a connection
+func CloseConnection(conn redis.Conn) redis.Conn {
+	if conn != nil {
+		_ = conn.Close()
+	}
+	return nil
+}
 
-	// Create a new pool
-	pool = &redis.Pool{
-		Dial:            buildDialer(url, options...),
-		IdleTimeout:     time.Duration(idleTimeout) * time.Second,
-		MaxActive:       maxActiveConnections,
-		MaxConnLifetime: time.Duration(maxConnLifetime) * time.Second,
-		MaxIdle:         idleConnections,
-		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			if time.Since(t) < time.Minute {
-				return nil
-			}
-			_, doErr := c.Do(pingCommand)
-			return doErr
+// Connect creates a new connection pool connected to the specified url
+// URL Format: redis://localhost:6379
+func Connect(redisURL string, maxActiveConnections, idleConnections, maxConnLifetime, idleTimeout int,
+	dependencyMode bool, options ...redis.DialOption) (client *Client, err error) {
+
+	// Required param for dial
+	if len(redisURL) == 0 {
+		err = errors.New("missing required parameter: redisURL")
+		return
+	}
+
+	// Create a new redis client (pool)
+	client = &Client{
+		Pool: &redis.Pool{
+			Dial:            buildDialer(redisURL, options...),
+			IdleTimeout:     time.Duration(idleTimeout) * time.Second,
+			MaxActive:       maxActiveConnections,
+			MaxConnLifetime: time.Duration(maxConnLifetime) * time.Second,
+			MaxIdle:         idleConnections,
+			TestOnBorrow: func(c redis.Conn, t time.Time) error {
+				if time.Since(t) < time.Minute {
+					return nil
+				}
+				_, doErr := c.Do(pingCommand)
+				return doErr
+			},
 		},
+		ScriptsLoaded:       nil,
+		DependencyScriptSha: "",
 	}
 
 	// Cleanup
-	cleanUp(pool)
+	cleanUp(client.Pool)
 
 	// Register scripts if enabled
 	if dependencyMode {
-		err = RegisterScripts(pool)
+		err = client.RegisterScripts()
 	}
 
 	return
 }
 
-// ClosePool closes the connection pool
-func ClosePool(pool *redis.Pool) {
-	if pool != nil {
-		_ = pool.Close()
-	}
-	pool = nil
-}
-
-// CloseConnection closes the connection pool
-func CloseConnection(conn redis.Conn) {
-	if conn != nil {
-		_ = conn.Close()
-	}
-	conn = nil
-}
-
-// CloseAll closes pool or conn or both
-func CloseAll(pool *redis.Pool, conn redis.Conn) {
-	ClosePool(pool)
-	CloseConnection(conn)
-}
-
-// GetConnection will return a connection from the pool. The connection must be
-// closed when done with use to return it to the pool
-func GetConnection(pool *redis.Pool) redis.Conn {
-	return pool.Get()
-}
-
-// ConnectToURL connects via REDIS_URL
+// ConnectToURL connects via REDIS_URL and returns a single connection
+// Preferred method is Connect() to create a pool
 // Source: github.com/soveran/redisurl
 // URL Format: redis://localhost:6379
 func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.Conn, err error) {
@@ -97,6 +122,7 @@ func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.
 	if redisURL.User != nil {
 		if password, ok := redisURL.User.Password(); ok {
 			if _, err = conn.Do(authCommand, password); err != nil {
+				conn = nil
 				return
 			}
 		}

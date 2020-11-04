@@ -7,13 +7,13 @@ import (
 )
 
 // Delete is an alias for KillByDependency()
-func Delete(conn redis.Conn, keys ...string) (total int, err error) {
-	return KillByDependency(conn, keys...)
+func Delete(client *Client, conn redis.Conn, keys ...string) (total int, err error) {
+	return KillByDependency(client, conn, keys...)
 }
 
 // KillByDependency removes all keys which are listed as depending on the key(s)
-// Also: Delete()
-func KillByDependency(conn redis.Conn, keys ...string) (total int, err error) {
+// Alias: Delete()
+func KillByDependency(client *Client, conn redis.Conn, keys ...string) (total int, err error) {
 
 	// Do we have keys to kill?
 	if len(keys) == 0 {
@@ -24,7 +24,7 @@ func KillByDependency(conn redis.Conn, keys ...string) (total int, err error) {
 	args := make([]interface{}, len(keys)+2)
 	deleteArgs := make([]interface{}, len(keys))
 
-	args[0] = killByDependencySha
+	args[0] = client.DependencyScriptSha
 	args[1] = 0
 
 	// Loop keys
@@ -33,7 +33,7 @@ func KillByDependency(conn redis.Conn, keys ...string) (total int, err error) {
 		deleteArgs[i] = key
 	}
 
-	// Create the script
+	// Run the script
 	if total, err = redis.Int(conn.Do(evalCommand, args...)); err != nil {
 		return
 	}

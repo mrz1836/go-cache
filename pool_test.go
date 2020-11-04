@@ -1,281 +1,442 @@
 package cache
 
-/*
-// TestConnectToURL test the ConnectToURL() method
-func TestConnectToURL(t *testing.T) {
+import (
+	"fmt"
+	"testing"
+	"time"
 
-	// Bad url
-	c, err := ConnectToURL("redis://user:pass{DEf1=ghi@domain.com")
-	if err == nil {
-		t.Errorf("expected an error, bad url")
-	}
+	"github.com/gomodule/redigo/redis"
+	"github.com/stretchr/testify/assert"
+)
 
-	// Bad url
-	c, err = ConnectToURL("foo.html")
-	if err == nil {
-		t.Errorf("expected an error, bad url")
-	}
-
-	// Cannot connect
-	c, err = ConnectToURL("redis://doesnotexist.com")
-	if err == nil {
-		t.Errorf("expected an error, bad url")
-	}
-
-	// Cannot connect (port)
-	c, err = ConnectToURL("redis://doesnotexist.com:6379", redis.DialConnectTimeout(3*time.Second))
-	if err == nil {
-		t.Errorf("expected an error, bad port")
-	}
-
-	// Bad user/pass - Cannot Auth
-	c, err = ConnectToURL("redis://user:pass@localhost:6379", redis.DialConnectTimeout(3*time.Second))
-	if err == nil {
-		t.Errorf("expected an error, bad user/pass")
-	}
-
-	// Bad path
-	c, err = ConnectToURL("redis://localhost:6379/pathDb", redis.DialConnectTimeout(3*time.Second))
-	if err == nil {
-		t.Errorf("expected an error, bad path")
-	}
-
-	// Connect to url string
-	c, err = ConnectToURL(connectionURL)
-	if err != nil {
-		t.Errorf("Error returned")
-	} else if c == nil {
-		t.Errorf("Client was nil")
-	}
-
-	// Close the connection
-	defer func() {
-		_ = c.Close()
-	}()
-
-	// Try to ping
-	var pong string
-	if pong, err = redis.String(c.Do(pingCommand)); err != nil {
-		t.Errorf("Call to %s returned an error: %v", pingCommand, err)
-	}
-
-	// Got a pong?
-	if pong != "PONG" {
-		t.Errorf("Wanted PONG, got %v\n", pong)
-	}
-}
-
-// TestConnectToURL_DialOptions test the ConnectToURL() method
-func TestConnectToURL_DialOptions(t *testing.T) {
-
-	// Connect to url string
-	c, err := ConnectToURL(connectionURL, redis.DialUseTLS(false), redis.DialKeepAlive(3*time.Second))
-	if err != nil {
-		t.Errorf("Error returned")
-	} else if c == nil {
-		t.Errorf("Client was nil")
-	}
-
-	// Close the connection
-	defer func() {
-		_ = c.Close()
-	}()
-
-	// Try to ping
-	var pong string
-	if pong, err = redis.String(c.Do(pingCommand)); err != nil {
-		t.Errorf("Call to %s returned an error: %v", pingCommand, err)
-	}
-
-	// Got a pong?
-	if pong != "PONG" {
-		t.Errorf("Wanted PONG, got %v\n", pong)
-	}
-}
-
-// ExampleConnectToURL is an example of ConnectToURL() method
-func ExampleConnectToURL() {
-	// Create a local connection
-	_, _ = ConnectToURL(connectionURL)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Connected
-	fmt.Print("connected")
-	// Output: connected
-}
-
-// TestConnect tests the connect method
+// TestConnect tests the method Connect()
 func TestConnect(t *testing.T) {
 
-	// Test if pool is nil
-	if GetPool() != nil {
-		t.Fatal("pool should be nil")
-	}
+	t.Run("valid connection, no dependency mode", func(t *testing.T) {
+		t.Parallel()
 
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
+		client, err := Connect(
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+		assert.Equal(t, "", client.DependencyScriptSha)
+		assert.Equal(t, 0, len(client.ScriptsLoaded))
 
-	// Disconnect at end
-	defer endTest()
+		// Close
+		client.Close()
+	})
 
-	// Get a connection
-	c := GetConnection()
+	t.Run("valid connection, with dependency mode", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
 
-	// Close
-	defer func() {
-		_ = c.Close()
-	}()
+		client, err := Connect(
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			true,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+		assert.Equal(t, "a648f768f57e73e2497ccaa113d5ad9e731c5cd8", client.DependencyScriptSha)
+		assert.Equal(t, 1, len(client.ScriptsLoaded))
 
-	// Test our only script
-	if !DidRegisterKillByDependencyScript() {
-		t.Fatal("Did not register the script")
-	}
+		// Close
+		client.Close()
+	})
 
-	// Test if pool exists
-	if GetPool() == nil {
-		t.Fatal("expected pool to not be nil")
-	}
+	t.Run("valid connection, custom options", func(t *testing.T) {
+		t.Parallel()
+
+		client, err := Connect(
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+			redis.DialKeepAlive(10*time.Second),
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+		assert.Equal(t, "", client.DependencyScriptSha)
+		assert.Equal(t, 0, len(client.ScriptsLoaded))
+
+		// Close
+		client.Close()
+	})
+
+	t.Run("invalid connection", func(t *testing.T) {
+		t.Parallel()
+
+		client, err := Connect(
+			"",
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+		)
+		assert.Error(t, err)
+		assert.Nil(t, client)
+	})
 }
 
-// TestConnect_CustomOptions tests the connect method
-func TestConnect_CustomOptions(t *testing.T) {
-
-	// Test if pool is nil
-	if GetPool() != nil {
-		t.Fatal("pool should be nil")
-	}
-
-	// Create a local connection
-	if err := startTestCustom(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Get a connection
-	c := GetConnection()
-
-	// Close
-	defer func() {
-		_ = c.Close()
-	}()
-
-	// Test our only script
-	if !DidRegisterKillByDependencyScript() {
-		t.Fatal("Did not register the script")
-	}
-
-	// Test if pool exists
-	if GetPool() == nil {
-		t.Fatal("expected pool to not be nil")
-	}
-}
-
-// ExampleConnect is an example of Connect() method
+// ExampleConnect is an example of the method Connect()
 func ExampleConnect() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
 
-	// Disconnect at end
-	defer Disconnect()
+	client, _ := Connect(
+		testLocalConnectionURL,
+		testMaxActiveConnections,
+		testMaxIdleConnections,
+		testMaxConnLifetime,
+		testIdleTimeout,
+		false,
+	)
 
-	// Connected
-	fmt.Print("connected")
-	// Output: connected
+	// Close connections at end of request
+	defer client.Close()
+
+	fmt.Printf("connected")
+	// Output:connected
 }
 
-// BenchmarkConnect benchmarks the Connect() method
-func BenchmarkConnect(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = startTest()
-		Disconnect()
+// TestClient_Close tests the method Close()
+func TestClient_Close(t *testing.T) {
+	t.Run("close a nil pool", func(t *testing.T) {
+		t.Parallel()
+
+		client := new(Client)
+		assert.NotNil(t, client)
+		client.Close()
+		assert.Nil(t, client.Pool)
+	})
+
+	t.Run("close an active pool", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, err := Connect(
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+
+		client.Close()
+		assert.Nil(t, client.Pool)
+	})
+}
+
+// ExampleClient_Close is an example of the method Close()
+func ExampleClient_Close() {
+
+	client, _ := Connect(
+		testLocalConnectionURL,
+		testMaxActiveConnections,
+		testMaxIdleConnections,
+		testMaxConnLifetime,
+		testIdleTimeout,
+		false,
+	)
+
+	// Close connections at end of request
+	defer client.Close()
+
+	fmt.Printf("closed the pool")
+	// Output:closed the pool
+}
+
+// TestClient_GetConnection tests the method GetConnection()
+func TestClient_GetConnection(t *testing.T) {
+	t.Run("get a connection", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, err := Connect(
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+
+		conn := client.GetConnection()
+		assert.NotNil(t, conn)
+
+		client.Close()
+		assert.Nil(t, client.Pool)
+	})
+}
+
+// ExampleClient_GetConnection is an example of the method GetConnection()
+func ExampleClient_GetConnection() {
+
+	client, _ := Connect(
+		testLocalConnectionURL,
+		testMaxActiveConnections,
+		testMaxIdleConnections,
+		testMaxConnLifetime,
+		testIdleTimeout,
+		false,
+	)
+
+	// Close connections at end of request
+	defer client.Close()
+
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	if conn != nil {
+		fmt.Printf("got a connection")
 	}
+	// Output:got a connection
 }
 
-// TestGetPool test getting a pool
-func TestGetPool(t *testing.T) {
+// TestClient_CloseConnection tests the method CloseConnection()
+func TestClient_CloseConnection(t *testing.T) {
+	t.Run("close a nil connection", func(t *testing.T) {
+		t.Parallel()
 
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
+		client := new(Client)
+		conn := *new(redis.Conn)
+		conn = client.CloseConnection(conn)
+		assert.Nil(t, conn)
+	})
+
+	t.Run("close an active connection", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, err := Connect(
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+
+		conn := client.GetConnection()
+		assert.NotNil(t, conn)
+
+		conn = client.CloseConnection(conn)
+		assert.Nil(t, conn)
+	})
+}
+
+// ExampleClient_CloseConnection is an example of the method CloseConnection()
+func ExampleClient_CloseConnection() {
+
+	client, _ := Connect(
+		testLocalConnectionURL,
+		testMaxActiveConnections,
+		testMaxIdleConnections,
+		testMaxConnLifetime,
+		testIdleTimeout,
+		false,
+	)
+
+	// Close connections at end of request
+	defer client.Close()
+
+	// Close after finished
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+
+	// Got a connection?
+	if conn != nil {
+		fmt.Printf("got a connection and closed")
 	}
+	// Output:got a connection and closed
+}
 
-	// Disconnect at end
-	defer endTest()
+// TestClient_CloseAll tests the method CloseAll()
+func TestClient_CloseAll(t *testing.T) {
+	t.Run("close a nil connection", func(t *testing.T) {
+		t.Parallel()
 
-	// Get the pool
-	if p := GetPool(); p == nil {
-		t.Fatal("expected to get pool")
+		client := new(Client)
+		assert.NotNil(t, client)
+		conn := *new(redis.Conn)
+		client.CloseAll(conn)
+		assert.Nil(t, conn)
+		assert.Nil(t, client.Pool)
+	})
+
+	t.Run("close an active connection", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, err := Connect(
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+
+		conn := client.GetConnection()
+		assert.NotNil(t, conn)
+
+		conn = client.CloseAll(conn)
+		assert.Nil(t, conn)
+	})
+}
+
+// ExampleClient_CloseAll is an example of the method CloseAll()
+func ExampleClient_CloseAll() {
+
+	client, _ := Connect(
+		testLocalConnectionURL,
+		testMaxActiveConnections,
+		testMaxIdleConnections,
+		testMaxConnLifetime,
+		testIdleTimeout,
+		false,
+	)
+
+	// Close connections at end of request
+	defer client.Close()
+
+	// Close after finished
+	conn := client.GetConnection()
+	defer func() {
+		_ = client.CloseAll(conn)
+	}()
+
+	// Got a connection?
+	if conn != nil {
+		fmt.Printf("got a connection and closed")
 	}
+	// Output:got a connection and closed
 }
 
-// ExampleGetPool is an example of GetPool() method
-func ExampleGetPool() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+// TestConnectToURL tests the method ConnectToURL()
+func TestConnectToURL(t *testing.T) {
+	t.Run("bad url (format)", func(t *testing.T) {
+		t.Parallel()
 
-	// Disconnect at end
-	defer Disconnect()
+		c, err := ConnectToURL("redis://user:pass{DEf1=ghi@domain.com")
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
 
-	// Get pool
-	_ = GetPool()
-	fmt.Print("got pool")
-	// Output: got pool
+	t.Run("bad url (file)", func(t *testing.T) {
+		t.Parallel()
+
+		c, err := ConnectToURL("foo.html")
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("cannot connect (bad host)", func(t *testing.T) {
+		t.Parallel()
+
+		c, err := ConnectToURL("redis://doesnotexist.com")
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("cannot connect (bad port)", func(t *testing.T) {
+		t.Parallel()
+
+		c, err := ConnectToURL("redis://doesnotexist.com:6379", redis.DialConnectTimeout(2*time.Second))
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("cannot connect (bad authentication)", func(t *testing.T) {
+		t.Parallel()
+
+		c, err := ConnectToURL("redis://user:pass@localhost:6379", redis.DialConnectTimeout(2*time.Second))
+		assert.Error(t, err)
+		assert.Nil(t, c)
+	})
+
+	t.Run("bad path", func(t *testing.T) {
+		t.Parallel()
+
+		c, err := ConnectToURL("redis://localhost:6379/pathDb", redis.DialConnectTimeout(2*time.Second))
+		assert.Error(t, err)
+		assert.NotNil(t, c)
+		CloseConnection(c)
+	})
+
+	t.Run("valid local connection", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		c, err := ConnectToURL(testLocalConnectionURL)
+		assert.NoError(t, err)
+		assert.NotNil(t, c)
+		defer CloseConnection(c)
+
+		// Try to ping
+		var pong string
+		pong, err = redis.String(c.Do(pingCommand))
+		assert.NoError(t, err)
+		assert.Equal(t, "PONG", pong)
+	})
+
+	t.Run("valid local connection - dial options", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		c, err := ConnectToURL(testLocalConnectionURL, redis.DialUseTLS(false), redis.DialKeepAlive(3*time.Second))
+		assert.NoError(t, err)
+		assert.NotNil(t, c)
+		defer CloseConnection(c)
+
+		// Try to ping
+		var pong string
+		pong, err = redis.String(c.Do(pingCommand))
+		assert.NoError(t, err)
+		assert.Equal(t, "PONG", pong)
+	})
 }
 
-// BenchmarkGetPool benchmarks the GetPool() method
-func BenchmarkGetPool(b *testing.B) {
-	_ = startTest()
-	defer Disconnect()
-	for i := 0; i < b.N; i++ {
-		_ = GetPool()
-	}
+// ExampleConnectToURL is an example of the method ConnectToURL()
+func ExampleConnectToURL() {
+
+	c, _ := ConnectToURL(testLocalConnectionURL)
+
+	// Close connections at end of request
+	defer CloseConnection(c)
+
+	fmt.Printf("connected")
+	// Output:connected
 }
-
-// TestDisconnect test disconnecting the pool
-func TestDisconnect(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect
-	Disconnect()
-
-	// Test pool
-	if p := GetPool(); p != nil {
-		t.Fatal("pool expected to be nil")
-	}
-}
-
-// ExampleDisconnect is an example of Disconnect() method
-func ExampleDisconnect() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	Disconnect()
-
-	fmt.Print("disconnected")
-	// Output: disconnected
-}
-
-// ExampleGetConnection is an example of GetConnection() method
-func ExampleGetConnection() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Connected
-	_ = GetConnection()
-	fmt.Print("got connection")
-	// Output: got connection
-}
-*/

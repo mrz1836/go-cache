@@ -13,7 +13,6 @@ import (
 // Testing variables
 const (
 	// testKillDependencyHash   = "a648f768f57e73e2497ccaa113d5ad9e731c5cd8"
-	// testPairValue            = "pair-1-value"
 	testDependantKey         = "test-dependant-key-name"
 	testHashName             = "test-hash-name"
 	testIdleTimeout          = 240
@@ -104,11 +103,11 @@ func TestSet(t *testing.T) {
 			dependencies []string
 		}{
 			{"key with dependencies", testKey, testStringValue, []string{testDependantKey}},
-			{"key with no dependencies", testKey, testStringValue, []string{""}},
-			{"key with empty value", testKey, "", []string{""}},
-			{"key with spaces", "key name", "some val", []string{""}},
-			{"key with symbols", ".key name;!()\\", "", []string{""}},
-			{"key with symbols and value as symbols", ".key name;!()\\", `\ / ; [ ] { }!`, []string{""}},
+			{"key with no dependencies", testKey, testStringValue, []string{}},
+			{"key with empty value", testKey, "", []string{}},
+			{"key with spaces", "key name", "some val", []string{}},
+			{"key with symbols", ".key name;!()\\", "", []string{}},
+			{"key with symbols and value as symbols", ".key name;!()\\", `\ / ; [ ] { }!`, []string{}},
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
@@ -219,8 +218,8 @@ func TestSetExp(t *testing.T) {
 			dependencies []string
 		}{
 			{"key with dependencies", "test-set-exp", testStringValue, 2 * time.Second, []string{testDependantKey}},
-			{"key with no dependencies", "test-set2", testStringValue, 2 * time.Second, []string{""}},
-			{"key with empty value", "test-set3", "", 2 * time.Second, []string{""}},
+			{"key with no dependencies", "test-set2", testStringValue, 2 * time.Second, []string{}},
+			{"key with empty value", "test-set3", "", 2 * time.Second, []string{}},
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
@@ -263,17 +262,21 @@ func TestSetExp(t *testing.T) {
 		assert.NoError(t, err)
 		defer endTest(pool, conn)
 
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
 		// Fire the command
 		err = SetExp(conn, testKey, testStringValue, 2*time.Second, testDependantKey)
 		assert.NoError(t, err)
 
-		// Check that set worked
+		// Check that the command worked
 		var testVal string
 		testVal, err = Get(conn, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 
-		// Wait 2 seconds and test
+		// Wait a few seconds and test
 		t.Log("sleeping for 3 seconds...")
 		time.Sleep(time.Second * 3)
 
@@ -298,10 +301,10 @@ func ExampleSetExp() {
 	// Output:set: test-key-name value: test-string-value exp: 2m0s dep key: test-dependant-key-name
 }
 
-// TestHashSet is testing the method HashSet()
-func TestHashSet(t *testing.T) {
+// TestGet is testing the method Get()
+func TestGet(t *testing.T) {
 
-	t.Run("hash set command using mocked redis", func(t *testing.T) {
+	t.Run("get command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
@@ -310,53 +313,32 @@ func TestHashSet(t *testing.T) {
 		defer endTest(pool, conn)
 
 		var tests = []struct {
-			testCase     string
-			name         string
-			key          string
-			value        interface{}
-			dependencies []string
+			testCase string
+			key      string
+			value    interface{}
 		}{
-			{"one dependency", testHashName, testKey, testStringValue, []string{testDependantKey}},
-			{"new key with dep", "test-hash-name1", testKey, testStringValue, []string{testDependantKey}},
-			{"third key", "test-hash-name2", testKey, testStringValue, []string{""}},
-			{"fourth key", "test-hash-name3", testKey, "", []string{""}},
-			{"fifth key", "test-hash-name4", "", "", []string{""}},
-			{"no name", "", "", "", []string{""}},
-			{"no name or value", "", "", []string{""}, []string{""}},
-			{"name is symbol", "-", "-", []string{""}, []string{"-"}},
-			{"value is a json interface", "-", "-", map[string]string{}, []string{"-"}},
+			{"valid value", testHashName, testStringValue},
+			{"new key", "test-hash-name1", testStringValue},
+			{"third key", "test-hash-name2", testStringValue},
+			{"fourth key", "test-hash-name3", ""},
+			{"no name", "", ""},
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				setCmd := conn.Command(hashKeySetCommand, test.name, test.key, test.value).Expect(test.value)
+				getCmd := conn.Command(getCommand, test.key).Expect(test.value)
 
-				// Loop for each dependency
-				if len(test.dependencies) > 0 {
-					multiCmd := conn.Command(multiCommand)
-					for _, dep := range test.dependencies {
-						_ = conn.Command(addToSetCommand, dependencyPrefix+dep, test.name)
-					}
-					exeCmd := conn.Command(executeCommand)
-
-					err := HashSet(conn, test.name, test.key, test.value, test.dependencies...)
-					assert.NoError(t, err)
-					assert.Equal(t, true, multiCmd.Called)
-					assert.Equal(t, true, setCmd.Called)
-					assert.Equal(t, true, exeCmd.Called)
-
-				} else {
-					err := HashSet(conn, test.name, test.key, test.value, test.dependencies...)
-					assert.NoError(t, err)
-					assert.Equal(t, true, setCmd.Called)
-				}
+				val, err := Get(conn, test.key)
+				assert.NoError(t, err)
+				assert.Equal(t, true, getCmd.Called)
+				assert.Equal(t, test.value, val)
 			})
 		}
 	})
 
-	t.Run("hash set command using real redis", func(t *testing.T) {
+	t.Run("get command using real redis", func(t *testing.T) {
 		if testing.Short() {
 			t.Skip("skipping live local redis tests")
 		}
@@ -367,20 +349,24 @@ func TestHashSet(t *testing.T) {
 		assert.NoError(t, err)
 		defer endTest(pool, conn)
 
-		// Fire the command
-		err = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
+		// Start with a fresh db
+		err = clearRealRedis(conn)
 		assert.NoError(t, err)
 
-		// Check that set worked
+		// Fire the command
+		err = Set(conn, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Check that the command worked
 		var testVal string
-		testVal, err = HashGet(conn, testHashName, testKey)
+		testVal, err = Get(conn, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
 }
 
-// ExampleHashSet is an example of the method HashSet()
-func ExampleHashSet() {
+// ExampleGet is an example of the method Get()
+func ExampleGet() {
 	// Load a mocked redis for testing/examples
 	conn, pool := loadMockRedis()
 
@@ -388,416 +374,324 @@ func ExampleHashSet() {
 	defer CloseAll(pool, conn)
 
 	// Set the key/value
-	_ = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
-	fmt.Printf("set: %s:%s value: %s dep key: %s", testHashName, testKey, testStringValue, testDependantKey)
-	// Output:set: test-hash-name:test-key-name value: test-string-value dep key: test-dependant-key-name
-}
-
-/*
-
-// TestHashGet is testing the HashGet() method
-func TestHashGet(t *testing.T) {
-
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Set the hash
-	err := HashSet("test-hash-name", "test-hash-key", "my-cache-value")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+	_ = Set(conn, testKey, testStringValue, testDependantKey)
 
 	// Get the value
-	var val string
-	val, err = HashGet("test-hash-name", "test-hash-key")
-	if err != nil {
-		t.Fatal(err.Error())
-	} else if val != "my-cache-value" {
-		t.Fatal("value returned was wrong", val)
-	}
+	_, _ = Get(conn, testKey)
+	fmt.Printf("got value: %s", testStringValue)
+	// Output:got value: test-string-value
 }
 
-// ExampleHashGet is an example of HashGet() method
-func ExampleHashGet() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Set the key/value
-	_ = HashSet("example-hash-get", "test-hash-key", "my-cache-value")
-
-	// Get the value
-	val, _ := HashGet("example-hash-get", "test-hash-key")
-	fmt.Print(val)
-	// Output: my-cache-value
-}
-
-// TestHashMapSet is testing the HashMapSet() method
-func TestHashMapSet(t *testing.T) {
-
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Create pairs
-	pairs := [][2]interface{}{
-		{"pair-1", testPairValue},
-		{"pair-2", "pair-2-value"},
-		{"pair-3", "pair-3-value"},
-	}
-
-	// Set the hash map
-	err := HashMapSet("test-hash-map-set", pairs, "test-hash-map-1", "test-hash-map-2")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	var val string
-	val, err = HashGet("test-hash-map-set", "pair-1")
-	if err != nil {
-		t.Fatal(err.Error())
-	} else if val != testPairValue {
-		t.Fatal("expected value was wrong")
-	}
-
-	// Get a key in the map
-	var values []string
-	values, err = HashMapGet("test-hash-map-set", "pair-1", "pair-2")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Got two values?
-	if len(values) != 2 {
-		t.Fatal("expected 2 values", values, len(values))
-	}
-
-	// Test value 1
-	if values[0] != testPairValue {
-		t.Fatal("expected value", values[0])
-	}
-
-	// Test value 2
-	if values[1] != "pair-2-value" {
-		t.Fatal("expected value", values[1])
-	}
-}
-
-// ExampleHashMapSet is an example of HashMapSet() method
-func ExampleHashMapSet() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Create pairs
-	pairs := [][2]interface{}{
-		{"pair-1", testPairValue},
-		{"pair-2", "pair-2-value"},
-		{"pair-3", "pair-3-value"},
-	}
-
-	// Set the hash map
-	_ = HashMapSet("example-hash-map-set", pairs, "test-hash-map-1", "test-hash-map-2")
-	fmt.Print("set complete")
-	// Output: set complete
-}
-
-// TestHashMapSetExp is testing the HashMapSetExp() method
-func TestHashMapSetExp(t *testing.T) {
-
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Create pairs
-	pairs := [][2]interface{}{
-		{"pair-1", testPairValue},
-		{"pair-2", "pair-2-value"},
-		{"pair-3", "pair-3-value"},
-	}
-
-	// Set the hash map
-	err := HashMapSetExp("test-hash-map-set-expire", pairs, 2*time.Second, "test-hash-map-2")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	var val string
-	val, err = HashGet("test-hash-map-set-expire", "pair-1")
-	if err != nil {
-		t.Fatal(err.Error())
-	} else if val != testPairValue {
-		t.Fatal("expected value was wrong")
-	}
-
-	// Wait 2 seconds and test
-	time.Sleep(time.Second * 3)
-
-	val, err = HashGet("test-hash-map-set-expire", "pair-1")
-	if err == nil {
-		t.Fatal("expected error: redigo: nil returned", err)
-	} else if val != "" {
-		t.Fatal("expected value to be empty")
-	}
-}
-
-// ExampleHashMapSetExp is an example of HashMapSetExp() method
-func ExampleHashMapSetExp() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Create pairs
-	pairs := [][2]interface{}{
-		{"pair-1", testPairValue},
-		{"pair-2", "pair-2-value"},
-		{"pair-3", "pair-3-value"},
-	}
-
-	// Set the hash map
-	_ = HashMapSetExp("example-hash-map-set-exp", pairs, 2*time.Minute, "test-hash-map-1", "test-hash-map-2")
-	fmt.Print("set complete")
-	// Output: set complete
-}
-
-// TestGet is testing the Get() method
-func TestGet(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Disconnect at end
-	defer endTest()
-
-	// Set
-	err := Set("test-get", testStringValue)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	// Get the value
-	val, _ := Get("test-get")
-	if val != testStringValue {
-		t.Fatalf("expected value: %s, got: %s", testStringValue, val)
-	}
-}
-
-// ExampleGet is an example of Get() method
-func ExampleGet() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
-
-	// Disconnect at end
-	defer Disconnect()
-
-	// Set the key/value
-	_ = Set("example-get", testStringValue, "another-key")
-
-	// Get the value
-	value, _ := Get("example-get")
-	fmt.Print(value)
-	// Output: test-string-value
-}
-
-// TestGetBytes is testing the GetBytes() method
+// TestGetBytes is testing the method GetBytes()
 func TestGetBytes(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
 
-	// Disconnect at end
-	defer endTest()
+	t.Run("get bytes command using mocked redis", func(t *testing.T) {
+		t.Parallel()
 
-	// Set
-	err := Set("test-get-bytes", testStringValue)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+		// Load redis
+		conn, pool := loadMockRedis()
+		assert.NotNil(t, pool)
+		defer endTest(pool, conn)
 
-	// Get the value
-	val, _ := GetBytes("test-get-bytes")
-	if string(val) != testStringValue {
-		t.Fatalf("expected value: %s, got: %s", testStringValue, val)
-	}
+		var tests = []struct {
+			testCase string
+			key      string
+			value    string
+		}{
+			{"valid value", testHashName, testStringValue},
+			{"new key", "test-hash-name1", testStringValue},
+			{"third key", "test-hash-name2", testStringValue},
+			{"fourth key", "test-hash-name3", ""},
+			{"no name", "", ""},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
+
+				// The main command to test
+				getCmd := conn.Command(getCommand, test.key).Expect([]byte(test.value))
+
+				val, err := GetBytes(conn, test.key)
+				assert.NoError(t, err)
+				assert.Equal(t, true, getCmd.Called)
+				assert.Equal(t, []byte(test.value), val)
+			})
+		}
+	})
+
+	t.Run("get bytes command using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		conn, pool, err := loadRealRedis()
+		assert.NotNil(t, pool)
+		assert.NoError(t, err)
+		defer endTest(pool, conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = Set(conn, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Check that the command worked
+		var testVal []byte
+		testVal, err = GetBytes(conn, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, []byte(testStringValue), testVal)
+	})
 }
 
-// ExampleGetBytes is an example of GetBytes() method
+// ExampleGetBytes is an example of the method GetBytes()
 func ExampleGetBytes() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+	// Load a mocked redis for testing/examples
+	conn, pool := loadMockRedis()
 
-	// Disconnect at end
-	defer Disconnect()
+	// Close connections at end of request
+	defer CloseAll(pool, conn)
 
 	// Set the key/value
-	_ = Set("example-get-bytes", testStringValue, "another-key")
+	_ = Set(conn, testKey, testStringValue, testDependantKey)
 
 	// Get the value
-	value, _ := GetBytes("example-get-bytes")
-	fmt.Print(string(value))
-	// Output: test-string-value
+	_, _ = GetBytes(conn, testKey)
+	fmt.Printf("got value: %s", testStringValue)
+	// Output:got value: test-string-value
 }
 
-// TestGetAllKeys is testing the GetAllKeys() method
+// TestGetAllKeys is testing the method GetAllKeys()
 func TestGetAllKeys(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
 
-	// Disconnect at end
-	defer endTest()
+	t.Run("get all keys command using mocked redis", func(t *testing.T) {
+		t.Parallel()
 
-	// Set
-	err := Set("test-get", testStringValue)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+		// Load redis
+		conn, pool := loadMockRedis()
+		assert.NotNil(t, pool)
+		defer endTest(pool, conn)
 
-	// Get the value
-	var keys []string
-	keys, err = GetAllKeys()
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-	if len(keys) == 0 {
-		t.Fatal("expected to have at least 1 key")
-	}
+		conn.Clear()
+
+		// The main command to test
+		getCmd := conn.Command(keysCommand, allKeysCommand).Expect([]interface{}{[]byte(testKey)})
+
+		val, err := GetAllKeys(conn)
+		assert.NoError(t, err)
+		assert.Equal(t, true, getCmd.Called)
+		assert.Equal(t, []string{testKey}, val)
+	})
+
+	t.Run("get all keys command using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		conn, pool, err := loadRealRedis()
+		assert.NotNil(t, pool)
+		assert.NoError(t, err)
+		defer endTest(pool, conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = Set(conn, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Check that the command worked
+		var keys []string
+		keys, err = GetAllKeys(conn)
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(keys))
+	})
 }
 
-// ExampleGetAllKeys is an example of GetAllKeys() method
+// ExampleGetAllKeys is an example of the method GetAllKeys()
 func ExampleGetAllKeys() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+	// Load a mocked redis for testing/examples
+	conn, pool := loadMockRedis()
 
-	// Disconnect at end
-	defer Disconnect()
+	// Close connections at end of request
+	defer CloseAll(pool, conn)
 
 	// Set the key/value
-	_ = Set("example-get-all-keys", testStringValue, "another-key")
+	_ = Set(conn, testKey, testStringValue, testDependantKey)
 
-	// Get the value
-	_, _ = GetAllKeys()
-	fmt.Print("found keys")
-	// Output: found keys
+	// Get the keys
+	_, _ = GetAllKeys(conn)
+	fmt.Printf("found keys: %d", len([]string{testKey, testDependantKey}))
+	// Output:found keys: 2
 }
 
-// TestExists is testing the Exists() method
+// TestExists is testing the method Exists()
 func TestExists(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
 
-	// Disconnect at end
-	defer endTest()
+	t.Run("exists command using mocked redis", func(t *testing.T) {
+		t.Parallel()
 
-	// Set
-	err := Set("test-exists", testStringValue)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+		// Load redis
+		conn, pool := loadMockRedis()
+		assert.NotNil(t, pool)
+		defer endTest(pool, conn)
 
-	// Check the set / exists
-	exists, _ := Exists("test-exists")
-	if !exists {
-		t.Fatal("expected key to exist")
-	}
+		conn.Clear()
+
+		// todo: add table tests
+
+		// The main command to test
+		existsCmd := conn.Command(existsCommand, testKey).Expect(interface{}(int64(1)))
+
+		val, err := Exists(conn, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, true, existsCmd.Called)
+		assert.Equal(t, true, val)
+	})
+
+	t.Run("exists command using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		conn, pool, err := loadRealRedis()
+		assert.NotNil(t, pool)
+		assert.NoError(t, err)
+		defer endTest(pool, conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = Set(conn, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Check that the command worked
+		var found bool
+		found, err = Exists(conn, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, true, found)
+	})
 }
 
 // ExampleExists is an example of Exists() method
 func ExampleExists() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+	// Load a mocked redis for testing/examples
+	conn, pool := loadMockRedis()
 
-	// Disconnect at end
-	defer Disconnect()
+	// Close connections at end of request
+	defer CloseAll(pool, conn)
 
 	// Set the key/value
-	_ = Set("example-exists", testStringValue, "another-key")
+	_ = Set(conn, testKey, testStringValue, testDependantKey)
 
 	// Get the value
-	_, _ = Exists("example-exists")
+	_, _ = Exists(conn, testKey)
 	fmt.Print("key exists")
-	// Output: key exists
+	// Output:key exists
 }
 
-// TestExpire is testing the Expire() method
+// TestExpire is testing the method Expire()
 func TestExpire(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
 
-	// Disconnect at end
-	defer endTest()
+	t.Run("expire command using mocked redis", func(t *testing.T) {
+		t.Parallel()
 
-	// Set
-	err := SetExp("test-set-expire", testStringValue, 1*time.Minute, "another-key")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+		// Load redis
+		conn, pool := loadMockRedis()
+		assert.NotNil(t, pool)
+		defer endTest(pool, conn)
 
-	// Check the set
-	val, _ := Get("test-set-expire")
-	if val != testStringValue {
-		t.Fatalf("expected value: %s, got: %s", testStringValue, val)
-	}
+		var tests = []struct {
+			testCase   string
+			key        string
+			expiration time.Duration
+		}{
+			{"regular key", "test-set-exp", 2 * time.Second},
+			{"lots of time", "test-set2", 200 * time.Hour},
+			{"no time", "test-set3", 0},
+			{"no key name", "", 2 * time.Second},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
 
-	// Fire the expire
-	err = Expire("test-set-expire", 1*time.Second)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+				// The main command to test
+				expireCmd := conn.Command(expireCommand, test.key, int64(test.expiration.Seconds()))
 
-	// Wait 2 seconds and test
-	time.Sleep(time.Second * 2)
+				err := Expire(conn, test.key, test.expiration)
+				assert.NoError(t, err)
+				assert.Equal(t, true, expireCmd.Called)
+			})
+		}
+	})
 
-	// Check the expire
-	val, _ = Get("test-set-expire")
-	if val == testStringValue {
-		t.Fatalf("expected value: %s, got: %s", "", val)
-	}
+	t.Run("expire command using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		conn, pool, err := loadRealRedis()
+		assert.NotNil(t, pool)
+		assert.NoError(t, err)
+		defer endTest(pool, conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = SetExp(conn, testKey, testStringValue, 5*time.Second, testDependantKey)
+		assert.NoError(t, err)
+
+		// Check that the command worked
+		var testVal string
+		testVal, err = Get(conn, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, testStringValue, testVal)
+
+		// Expire
+		err = Expire(conn, testKey, 1*time.Second)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
+		// Wait a few seconds and test
+		t.Log("sleeping for 2 seconds...")
+		time.Sleep(time.Second * 2)
+
+		// Check that the key is expired
+		testVal, err = Get(conn, testKey)
+		assert.Error(t, err)
+		assert.Equal(t, "", testVal)
+	})
 }
 
 // ExampleExpire is an example of Expire() method
 func ExampleExpire() {
-	// Create a local connection
-	_ = Connect(connectionURL, maxActiveConnections, maxIdleConnections, maxConnLifetime, idleTimeout, true)
+	// Load a mocked redis for testing/examples
+	conn, pool := loadMockRedis()
 
-	// Disconnect at end
-	defer Disconnect()
+	// Close connections at end of request
+	defer CloseAll(pool, conn)
 
 	// Set the key/value
-	_ = Set("example-expire", testStringValue, "another-key")
+	_ = Set(conn, testKey, testStringValue, testDependantKey)
 
 	// Set the expire
-	_ = Expire("example-expire", 1*time.Minute)
-	fmt.Print("expiration set")
-	// Output: expiration set
+	_ = Expire(conn, testKey, 1*time.Minute)
+	fmt.Printf("expiration on key: %s set for: %v", testKey, 1*time.Minute)
+	// Output:expiration on key: test-key-name set for: 1m0s
 }
 
+/*
 // TestDestroyCache is testing the DestroyCache() method
 func TestDestroyCache(t *testing.T) {
 

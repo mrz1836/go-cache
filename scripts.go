@@ -18,6 +18,8 @@ func (c *Client) RegisterScripts() (err error) {
 }
 
 // RegisterScript register a new script
+//
+// Spec: https://redis.io/commands/script-load
 func RegisterScript(client *Client, conn redis.Conn, script string) (sha string, err error) {
 	if sha, err = redis.String(conn.Do(scriptCommand, loadCommand, script)); err != nil {
 		return

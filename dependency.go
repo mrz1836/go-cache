@@ -13,6 +13,10 @@ func Delete(client *Client, conn redis.Conn, keys ...string) (total int, err err
 
 // KillByDependency removes all keys which are listed as depending on the key(s)
 // Alias: Delete()
+//
+// Commands used:
+// https://redis.io/commands/eval
+// https://redis.io/commands/del
 func KillByDependency(client *Client, conn redis.Conn, keys ...string) (total int, err error) {
 
 	// Do we have keys to kill?
@@ -49,6 +53,11 @@ func KillByDependency(client *Client, conn redis.Conn, keys ...string) (total in
 }
 
 // linkDependencies links any dependencies
+//
+// Commands used:
+// https://redis.io/commands/multi
+// https://redis.io/commands/sadd
+// https://redis.io/commands/exec
 func linkDependencies(conn redis.Conn, key interface{}, dependencies ...string) (err error) {
 
 	// No dependencies given

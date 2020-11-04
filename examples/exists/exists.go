@@ -26,5 +26,9 @@ func main() {
 	defer client.CloseAll(conn)
 
 	// Run command
-	_ = cache.Set(conn, "test-key", "test-value", "dependent-key-of-test-key")
+	_ = cache.Set(conn, "test-key", "test-value")
+
+	// Exists
+	found, _ := cache.Exists(conn, "test-key")
+	log.Printf("found: %v", found)
 }

@@ -26,7 +26,7 @@ func main() {
 	defer client.CloseAll(conn)
 
 	// Run command
-	err = cache.Set(conn, "test-key", "test-value")
+	err = cache.Set(conn, "test-key", "test-value", "dependent-key-of-test-key")
 	if err != nil {
 		log.Fatalf("error occurred: %s", err.Error())
 	}

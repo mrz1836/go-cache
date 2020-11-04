@@ -3,24 +3,16 @@ package cache
 import "github.com/gomodule/redigo/redis"
 
 // RegisterScripts register all scripts
-func RegisterScripts() (err error) {
-
-	// Register the kill dependency script
-	killByDependencySha, err = RegisterScript(killByDependencyLua)
+func RegisterScripts(pool *redis.Pool) (err error) {
+	conn := GetConnection(pool)
+	defer CloseConnection(conn)
+	killByDependencySha, err = RegisterScript(conn, killByDependencyLua)
 	return
 }
 
 // RegisterScript register a script
-func RegisterScript(script string) (string, error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
-	// Set the script for killByDependency and return sha/error
-	return redis.String(conn.Do(scriptCommand, "LOAD", script))
+func RegisterScript(conn redis.Conn, script string) (string, error) {
+	return redis.String(conn.Do(scriptCommand, loadCommand, script))
 }
 
 // DidRegisterKillByDependencyScript returns true if the script has a sha from redis

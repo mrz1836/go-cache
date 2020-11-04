@@ -33,14 +33,7 @@ end
 `
 
 // WriteLock attempts to grab a redis lock.
-func WriteLock(name, secret string, ttl int64) (bool, error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
+func WriteLock(conn redis.Conn, name, secret string, ttl int64) (bool, error) {
 	script := redis.NewScript(1, lockScript)
 	if resp, err := redis.Int(script.Do(conn, name, secret, ttl)); err != nil {
 		return false, err
@@ -51,14 +44,7 @@ func WriteLock(name, secret string, ttl int64) (bool, error) {
 }
 
 // ReleaseLock releases the redis lock
-func ReleaseLock(name, secret string) (bool, error) {
-
-	// Get a connection and defer closing the connection
-	conn := GetConnection()
-	defer func() {
-		_ = conn.Close()
-	}()
-
+func ReleaseLock(conn redis.Conn, name, secret string) (bool, error) {
 	script := redis.NewScript(1, unlockScript)
 	if resp, err := redis.Int(script.Do(conn, name, secret)); err != nil {
 		return false, err

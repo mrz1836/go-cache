@@ -74,17 +74,11 @@ func TestClient_RegisterScripts(t *testing.T) {
 // ExampleClient_RegisterScripts is an example of the method RegisterScripts()
 func ExampleClient_RegisterScripts() {
 
-	client, _ := Connect(
-		testLocalConnectionURL,
-		testMaxActiveConnections,
-		testMaxIdleConnections,
-		testMaxConnLifetime,
-		testIdleTimeout,
-		false,
-	)
+	// Load a mocked redis for testing/examples
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.Close()
+	defer client.CloseAll(conn)
 
 	// Register known scripts
 	_ = client.RegisterScripts()
@@ -152,6 +146,16 @@ func TestRegisterScript(t *testing.T) {
 		sha, err = RegisterScript(client, conn, `return redis.call("get", KEYS[1])`)
 		assert.NoError(t, err)
 		assert.Equal(t, "a5260dd66ce02462c5b5231c727b3f7772c0bcc5", sha)
+
+		// Another script
+		sha, err = RegisterScript(client, conn, lockScript)
+		assert.NoError(t, err)
+		assert.Equal(t, "e60d96cbb3894dc682fafae2980ad674822f99e1", sha)
+
+		// Another script
+		sha, err = RegisterScript(client, conn, releaseLockScript)
+		assert.NoError(t, err)
+		assert.Equal(t, "3271ffa78c3ca6743c9dc476ff6cae55a9cd3cb4", sha)
 	})
 
 	t.Run("register script error", func(t *testing.T) {
@@ -180,23 +184,15 @@ func TestRegisterScript(t *testing.T) {
 // ExampleRegisterScript is an example of the method RegisterScript()
 func ExampleRegisterScript() {
 
-	client, _ := Connect(
-		testLocalConnectionURL,
-		testMaxActiveConnections,
-		testMaxIdleConnections,
-		testMaxConnLifetime,
-		testIdleTimeout,
-		false,
-	)
-
-	conn := client.GetConnection()
+	// Load a mocked redis for testing/examples
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
 	defer client.CloseAll(conn)
 
 	// Register known scripts
-	sha, _ := RegisterScript(client, conn, killByDependencyLua)
+	_, _ = RegisterScript(client, conn, killByDependencyLua)
 
-	fmt.Printf("registered: %s", sha)
+	fmt.Printf("registered: %s", testKillDependencyHash)
 	// Output:registered: a648f768f57e73e2497ccaa113d5ad9e731c5cd8
 }

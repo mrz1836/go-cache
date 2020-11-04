@@ -1,115 +1,268 @@
 package cache
 
-/*// TestWriteLock will run basic tests for lock/release
+import (
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+)
+
+// TestWriteLock tests the method WriteLock()
 func TestWriteLock(t *testing.T) {
 
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
+	// todo: mock redis write
 
-	// Disconnect at end
-	defer endTest()
+	t.Run("write lock error - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
 
-	// attempt to lock
-	locked, err := WriteLock("my-key", "the-secret", int64(10))
-	if err != nil {
-		t.Fatalf("error acquiring lock: %q", err.Error())
-	}
-	if !locked {
-		t.Fatal("expected WriteLock to return true")
-	}
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
 
-	// attempt to re-lock (should succeed)
-	locked, err = WriteLock("my-key", "the-secret", int64(5))
-	if !locked || err != nil {
-		t.Fatalf("expected re-lock attempt to succeed, got locked %t error %q", locked, err)
-	}
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
 
-	// attempt to re-lock with different secret (should return error)
-	locked, err = WriteLock("my-key", "the-different-secret", int64(5))
-	if locked || !errors.Is(err, ErrLockMismatch) {
-		t.Fatalf("expected re-lock attempt to fail, got locked %t error %q", locked, err)
-	}
+		// Write a lock
+		var locked bool
+		locked, err = WriteLock(conn, "d  `!$-()my-key", "d d d", int64(0))
+		assert.Error(t, err)
+		assert.Equal(t, false, locked)
+	})
 
-	// attempt to release lock w/ bad secret
-	var unlocked bool
-	unlocked, err = ReleaseLock("my-key", "the-wrong-secret")
-	if unlocked || !errors.Is(err, ErrLockMismatch) {
-		t.Fatalf("expected release lock w/ bad secret to fail, got unlocked %t error %q", unlocked, err)
-	}
+	t.Run("write lock - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
 
-	// attempt to release lock w/ correct secret
-	unlocked, err = ReleaseLock("my-key", "the-secret")
-	if !unlocked || err != nil {
-		t.Fatalf("expected release lock to succeed, got unlocked %t error %q", unlocked, err)
-	}
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
 
-	// attempt to release lock again (should return true, nil)
-	unlocked, err = ReleaseLock("myKey", "the-secret")
-	if !unlocked || err != nil {
-		t.Fatalf("expected repeat release lock to succeed, got unlocked %t error %q", unlocked, err)
-	}
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Write a lock
+		var locked bool
+		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+	})
+
+	t.Run("re-lock - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Write a lock
+		var locked bool
+		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+
+		// Attempt to re-lock (should succeed)
+		locked, err = WriteLock(conn, "my-key", "the-secret", int64(5))
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+	})
+
+	t.Run("re-lock different secret - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Write a lock
+		var locked bool
+		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+
+		// Attempt to re-lock (should succeed)
+		locked, err = WriteLock(conn, "my-key", "different-secret", int64(5))
+		assert.Error(t, err)
+		assert.Equal(t, false, locked)
+	})
+
+	t.Run("lock expired - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Write a lock
+		var locked bool
+		locked, err = WriteLock(conn, "my-key", "the-secret", int64(1))
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+
+		time.Sleep(2 * time.Second)
+
+		// Write new lock
+		locked, err = WriteLock(conn, "my-key", "new-secret", int64(2))
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+	})
 }
 
-// TestReleaseLock will run basic tests for lock/release
+// ExampleWriteLock is an example of the method WriteLock()
+func ExampleWriteLock() {
+
+	// Load a mocked redis for testing/examples
+	client, conn := loadMockRedis()
+
+	// Close connections at end of request
+	defer client.CloseAll(conn)
+
+	// Write a lock
+	_, _ = WriteLock(conn, "test-lock", "test-secret", int64(10))
+
+	if conn != nil {
+		fmt.Printf("lock created")
+	}
+	// Output:lock created
+}
+
+// TestReleaseLock tests the method ReleaseLock()
 func TestReleaseLock(t *testing.T) {
 
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
+	t.Run("release lock - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
 
-	// Disconnect at end
-	defer endTest()
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
 
-	// attempt to lock
-	locked, err := WriteLock("my-key", "the-secret", int64(5))
-	if err != nil {
-		t.Fatalf("error acquiring lock: %q", err.Error())
-	}
-	if !locked {
-		t.Fatal("expected WriteLock to return true")
-	}
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
 
-	time.Sleep(50 * time.Millisecond)
+		// Write a lock
+		var locked bool
+		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
 
-	// test if lock is there
-	locked, err = WriteLock("my-key", "the-different-secret", int64(5))
-	if locked || !errors.Is(err, ErrLockMismatch) {
-		t.Fatalf("expected lock attempt to fail, got locked %t error %q", locked, err)
-	}
+		// Release a lock
+		locked, err = ReleaseLock(conn, "my-key", "the-secret")
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+	})
 
-	time.Sleep(50 * time.Millisecond)
+	t.Run("release lock twice - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
 
-	// test if lock is there
-	locked, err = WriteLock("my-key", "the-different-secret", int64(5))
-	if locked || !errors.Is(err, ErrLockMismatch) {
-		t.Fatalf("expected lock attempt to fail, got locked %t error %q", locked, err)
-	}
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
 
-	// attempt to release lock w/ correct secret
-	var unlocked bool
-	unlocked, err = ReleaseLock("my-key", "the-secret")
-	if !unlocked || err != nil {
-		t.Fatalf("expected release lock to succeed, got unlocked %t error %q", unlocked, err)
-	}
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Write a lock
+		var locked bool
+		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+
+		// Release a lock
+		locked, err = ReleaseLock(conn, "my-key", "the-secret")
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+
+		// Release a lock (again)
+		locked, err = ReleaseLock(conn, "my-key", "the-secret")
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+	})
+
+	t.Run("release lock - wrong secret - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Write a lock
+		var locked bool
+		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		assert.NoError(t, err)
+		assert.Equal(t, true, locked)
+
+		// Release a lock
+		locked, err = ReleaseLock(conn, "my-key", "wrong-secret")
+		assert.Error(t, err)
+		assert.Equal(t, false, locked)
+	})
 }
 
-// TestWriteLockError will run basic error test for WriteLock()
-func TestWriteLockError(t *testing.T) {
-	// Create a local connection
-	if err := startTest(); err != nil {
-		t.Fatal(err.Error())
-	}
+// ExampleReleaseLock is an example of the method ReleaseLock()
+func ExampleReleaseLock() {
 
-	// Disconnect at end
-	defer endTest()
+	// Load a mocked redis for testing/examples
+	client, conn := loadMockRedis()
 
-	// Test error case
-	_, err := WriteLock("d  `!$-()my-key", "d d d", int64(0))
-	if err == nil {
-		t.Fatalf("expected error to occur")
+	// Close connections at end of request
+	defer client.CloseAll(conn)
+
+	// Release a lock
+	_, _ = ReleaseLock(conn, "test-lock", "test-secret")
+
+	if conn != nil {
+		fmt.Printf("lock released")
 	}
+	// Output:lock released
 }
-*/

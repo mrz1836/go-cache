@@ -129,18 +129,11 @@ func TestClient_Close(t *testing.T) {
 			t.Skip("skipping live local redis tests")
 		}
 
-		client, err := Connect(
-			testLocalConnectionURL,
-			testMaxActiveConnections,
-			testMaxIdleConnections,
-			testMaxConnLifetime,
-			testIdleTimeout,
-			false,
-		)
-		assert.NoError(t, err)
+		// Load redis
+		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NotNil(t, client.Pool)
-
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
 		client.Close()
 		assert.Nil(t, client.Pool)
 	})
@@ -149,14 +142,8 @@ func TestClient_Close(t *testing.T) {
 // ExampleClient_Close is an example of the method Close()
 func ExampleClient_Close() {
 
-	client, _ := Connect(
-		testLocalConnectionURL,
-		testMaxActiveConnections,
-		testMaxIdleConnections,
-		testMaxConnLifetime,
-		testIdleTimeout,
-		false,
-	)
+	// Load a mocked redis for testing/examples
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
 	defer client.Close()
@@ -204,11 +191,8 @@ func ExampleClient_GetConnection() {
 		false,
 	)
 
-	// Close connections at end of request
-	defer client.Close()
-
 	conn := client.GetConnection()
-	defer client.CloseConnection(conn)
+	defer client.CloseAll(conn)
 	if conn != nil {
 		fmt.Printf("got a connection")
 	}
@@ -254,20 +238,10 @@ func TestClient_CloseConnection(t *testing.T) {
 // ExampleClient_CloseConnection is an example of the method CloseConnection()
 func ExampleClient_CloseConnection() {
 
-	client, _ := Connect(
-		testLocalConnectionURL,
-		testMaxActiveConnections,
-		testMaxIdleConnections,
-		testMaxConnLifetime,
-		testIdleTimeout,
-		false,
-	)
-
-	// Close connections at end of request
-	defer client.Close()
+	// Load a mocked redis for testing/examples
+	client, conn := loadMockRedis()
 
 	// Close after finished
-	conn := client.GetConnection()
 	defer client.CloseConnection(conn)
 
 	// Got a connection?
@@ -318,23 +292,11 @@ func TestClient_CloseAll(t *testing.T) {
 // ExampleClient_CloseAll is an example of the method CloseAll()
 func ExampleClient_CloseAll() {
 
-	client, _ := Connect(
-		testLocalConnectionURL,
-		testMaxActiveConnections,
-		testMaxIdleConnections,
-		testMaxConnLifetime,
-		testIdleTimeout,
-		false,
-	)
+	// Load a mocked redis for testing/examples
+	client, conn := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.Close()
-
-	// Close after finished
-	conn := client.GetConnection()
-	defer func() {
-		_ = client.CloseAll(conn)
-	}()
+	defer client.CloseAll(conn)
 
 	// Got a connection?
 	if conn != nil {

@@ -20,8 +20,8 @@ else
 end
 `
 
-// unlockScript is the unlocking script
-const unlockScript = `
+// releaseLockScript is the release lock script (removes lock)
+const releaseLockScript = `
 local v = redis.call("GET",KEYS[1])
 if v == false then
 	return 1
@@ -32,7 +32,7 @@ else
 end
 `
 
-// WriteLock attempts to grab a redis lock.
+// WriteLock attempts to grab a redis lock
 func WriteLock(conn redis.Conn, name, secret string, ttl int64) (bool, error) {
 	script := redis.NewScript(1, lockScript)
 	if resp, err := redis.Int(script.Do(conn, name, secret, ttl)); err != nil {
@@ -45,7 +45,7 @@ func WriteLock(conn redis.Conn, name, secret string, ttl int64) (bool, error) {
 
 // ReleaseLock releases the redis lock
 func ReleaseLock(conn redis.Conn, name, secret string) (bool, error) {
-	script := redis.NewScript(1, unlockScript)
+	script := redis.NewScript(1, releaseLockScript)
 	if resp, err := redis.Int(script.Do(conn, name, secret)); err != nil {
 		return false, err
 	} else if resp != 0 {

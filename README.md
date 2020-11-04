@@ -42,6 +42,7 @@ View the generated [documentation](https://pkg.go.dev/github.com/mrz1836/go-cach
 - Cache Dependencies Between Keys (toggle functionality)
 - Connect via URL
 - Better Pool Management & Creation
+- Test Coverage (mock redis & real redis)
 - Register Scripts
 - Helper Methods (Get, Set, HashGet, etc)
 - Basic Lock/Release (from [bgentry lock.go](https://gist.github.com/bgentry/6105288))

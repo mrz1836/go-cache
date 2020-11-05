@@ -28,7 +28,12 @@ func RegisterScript(client *Client, conn redis.Conn, script string) (sha string,
 	return
 }
 
+// killByDependencySha is the SHA of the below script
+const killByDependencySha = "a648f768f57e73e2497ccaa113d5ad9e731c5cd8"
+
 // killByDependencyLua is a script for kill related dependencies
+//
+// Editing this script requires a new SHA above
 var killByDependencyLua = `
 --@begin=lua@
 redis.replicate_commands()

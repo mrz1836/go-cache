@@ -26,7 +26,7 @@ func main() {
 
 	// Delete
 	var total int
-	total, err = cache.Delete(client, conn, "test-key")
+	total, err = cache.Delete(conn, "test-key")
 	if err != nil {
 		log.Fatalf("error occurred: %s", err.Error())
 	} else if total != 1 {

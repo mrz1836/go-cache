@@ -28,7 +28,7 @@ func TestDelete(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Test no keys
-		_, err = Delete(client, conn)
+		_, err = Delete(conn)
 		assert.NoError(t, err)
 	})
 
@@ -49,7 +49,7 @@ func TestDelete(t *testing.T) {
 
 		// Test one key
 		var total int
-		total, err = Delete(client, conn, testKey)
+		total, err = Delete(conn, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -71,7 +71,7 @@ func TestDelete(t *testing.T) {
 
 		// Test multiple keys
 		var total int
-		total, err = Delete(client, conn, testKey, "key2", "key3")
+		total, err = Delete(conn, testKey, "key2", "key3")
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -87,7 +87,7 @@ func ExampleDelete() {
 	defer client.CloseAll(conn)
 
 	// Run command
-	_, _ = Delete(client, conn, testDependantKey)
+	_, _ = Delete(conn, testDependantKey)
 	if conn != nil {
 		fmt.Printf("all dependencies deleted")
 	}
@@ -115,7 +115,7 @@ func TestKillByDependency(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Test no keys
-		_, err = KillByDependency(client, conn)
+		_, err = KillByDependency(conn)
 		assert.NoError(t, err)
 	})
 
@@ -136,7 +136,7 @@ func TestKillByDependency(t *testing.T) {
 
 		// Test one key
 		var total int
-		total, err = KillByDependency(client, conn, testKey)
+		total, err = KillByDependency(conn, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -158,7 +158,7 @@ func TestKillByDependency(t *testing.T) {
 
 		// Test multiple keys
 		var total int
-		total, err = KillByDependency(client, conn, testKey, "key2", "key3")
+		total, err = KillByDependency(conn, testKey, "key2", "key3")
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -174,7 +174,7 @@ func ExampleKillByDependency() {
 	defer client.CloseAll(conn)
 
 	// Run command
-	_, _ = KillByDependency(client, conn, testDependantKey)
+	_, _ = KillByDependency(conn, testDependantKey)
 	if conn != nil {
 		fmt.Printf("all dependencies removed")
 	}
@@ -218,7 +218,7 @@ func TestDependencyManagement(t *testing.T) {
 
 		// Kill a dependent key
 		var total int
-		total, err = Delete(client, conn, "dependent-1")
+		total, err = Delete(conn, "dependent-1")
 		assert.NoError(t, err)
 		assert.Equal(t, 2, total)
 
@@ -239,7 +239,7 @@ func TestDependencyManagement(t *testing.T) {
 		assert.Equal(t, true, found)
 
 		// Kill all dependent keys
-		total, err = KillByDependency(client, conn, "dependent-1", "dependent-2")
+		total, err = KillByDependency(conn, "dependent-1", "dependent-2")
 		assert.NoError(t, err)
 		assert.Equal(t, 1, total)
 
@@ -312,7 +312,7 @@ func TestHashMapDependencyManagement(t *testing.T) {
 
 		// Kill a dependent key
 		var total int
-		total, err = Delete(client, conn, "test-hash-map-depend-2")
+		total, err = Delete(conn, "test-hash-map-depend-2")
 		assert.NoError(t, err)
 		assert.Equal(t, 2, total)
 

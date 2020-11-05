@@ -7,6 +7,7 @@
 package cache
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -282,5 +283,34 @@ func DestroyCache(client *Client) error {
 // Spec: https://redis.io/commands/flushall
 func DestroyCacheRaw(conn redis.Conn) (err error) {
 	_, err = conn.Do(flushAllCommand)
+	return
+}
+
+// SetToJSON stores the struct data (Struct->JSON) into redis under a key
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: SetToJSONRaw()
+func SetToJSON(client *Client, keyName string, modelData interface{},
+	ttl time.Duration, dependencies ...string) error {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return SetToJSONRaw(conn, keyName, modelData, ttl, dependencies...)
+}
+
+// SetToJSONRaw stores the struct data (Struct->JSON) into redis under a key
+// Uses existing connection (does not close connection)
+//
+// Uses methods: SetExpRaw() or SetRaw()
+func SetToJSONRaw(conn redis.Conn, keyName string, modelData interface{},
+	ttl time.Duration, dependencies ...string) (err error) {
+	var responseBytes []byte
+	if responseBytes, err = json.Marshal(&modelData); err != nil {
+		return
+	}
+	if ttl > 0 {
+		err = SetExpRaw(conn, keyName, string(responseBytes), ttl, dependencies...)
+	} else {
+		err = SetRaw(conn, keyName, string(responseBytes), dependencies...)
+	}
 	return
 }

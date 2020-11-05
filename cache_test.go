@@ -1,7 +1,9 @@
 package cache
 
 import (
+	"encoding/json"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -1056,4 +1058,276 @@ func ExampleDeleteWithoutDependency() {
 	_, _ = DeleteWithoutDependency(client, testKey, testKey+"2")
 	fmt.Printf("deleted keys: %d", 2)
 	// Output:deleted keys: 2
+}
+
+// TestSetToJSON is testing the method SetToJSON()
+func TestSetToJSON(t *testing.T) {
+
+	t.Run("set to json command using mocked redis (valid)", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
+
+		var tests = []struct {
+			testCase     string
+			key          string
+			modelData    interface{}
+			dependencies []string
+		}{
+			{"key with dependencies", testKey, struct {
+				testFieldString string
+				testFieldInt    int
+				testFieldFloat  float64
+				testFieldBool   bool
+			}{
+				testFieldString: "test-value",
+				testFieldInt:    123,
+				testFieldFloat:  123.123,
+				testFieldBool:   true,
+			},
+				[]string{testDependantKey},
+			},
+			{"key with no dependencies", testKey, struct {
+				testFieldString string
+				testFieldInt    int
+				testFieldFloat  float64
+				testFieldBool   bool
+			}{
+				testFieldString: "test-value",
+				testFieldInt:    123,
+				testFieldFloat:  123.123,
+				testFieldBool:   true,
+			},
+				[]string{},
+			},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
+
+				responseBytes, err := json.Marshal(&test.modelData)
+				assert.NoError(t, err)
+
+				var commands []*redigomock.Cmd
+
+				// The main command to test
+				commands = append(commands, conn.Command(setCommand, test.key, string(responseBytes)))
+
+				// Loop for each dependency
+				if len(test.dependencies) > 0 {
+					commands = append(commands, conn.Command(multiCommand))
+					for _, dep := range test.dependencies {
+						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.key))
+					}
+					commands = append(commands, conn.Command(executeCommand))
+
+					err = SetToJSONRaw(conn, test.key, test.modelData, 0, test.dependencies...)
+					assert.NoError(t, err)
+				} else {
+					err = SetToJSONRaw(conn, test.key, test.modelData, 0, test.dependencies...)
+					assert.NoError(t, err)
+				}
+
+				for _, c := range commands {
+					assert.Equal(t, true, c.Called)
+				}
+			})
+		}
+	})
+
+	t.Run("set to json command using mocked redis (valid) (exp)", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
+
+		var tests = []struct {
+			testCase     string
+			key          string
+			modelData    interface{}
+			dependencies []string
+			expiration   time.Duration
+		}{
+			{"key with dependencies", testKey, struct {
+				testFieldString string
+				testFieldInt    int
+				testFieldFloat  float64
+				testFieldBool   bool
+			}{
+				testFieldString: "test-value",
+				testFieldInt:    123,
+				testFieldFloat:  123.123,
+				testFieldBool:   true,
+			},
+				[]string{testDependantKey},
+				10 * time.Second,
+			},
+			{"key with no dependencies", testKey, struct {
+				testFieldString string
+				testFieldInt    int
+				testFieldFloat  float64
+				testFieldBool   bool
+			}{
+				testFieldString: "test-value",
+				testFieldInt:    123,
+				testFieldFloat:  123.123,
+				testFieldBool:   true,
+			},
+				[]string{},
+				10 * time.Second,
+			},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
+
+				responseBytes, err := json.Marshal(&test.modelData)
+				assert.NoError(t, err)
+
+				var commands []*redigomock.Cmd
+
+				// The main command to test
+				commands = append(commands, conn.Command(setExpirationCommand, test.key, int64(test.expiration.Seconds()), string(responseBytes)))
+
+				// Loop for each dependency
+				if len(test.dependencies) > 0 {
+					commands = append(commands, conn.Command(multiCommand))
+					for _, dep := range test.dependencies {
+						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.key))
+					}
+					commands = append(commands, conn.Command(executeCommand))
+
+					err = SetToJSONRaw(conn, test.key, test.modelData, test.expiration, test.dependencies...)
+					assert.NoError(t, err)
+				} else {
+					err = SetToJSONRaw(conn, test.key, test.modelData, test.expiration, test.dependencies...)
+					assert.NoError(t, err)
+				}
+
+				for _, c := range commands {
+					assert.Equal(t, true, c.Called)
+				}
+			})
+		}
+	})
+
+	t.Run("set to json command using mocked redis (invalid json)", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
+
+		var tests = []struct {
+			testCase     string
+			key          string
+			modelData    interface{}
+			dependencies []string
+		}{
+			{
+				"json error - infinite",
+				testKey,
+				math.Inf(1),
+				[]string{},
+			},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				err := SetToJSON(client, test.key, test.modelData, 0, test.dependencies...)
+				assert.Error(t, err)
+			})
+		}
+	})
+
+	t.Run("set to json command using real redis (valid)", func(t *testing.T) {
+
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		var tests = []struct {
+			testCase     string
+			key          string
+			modelData    interface{}
+			dependencies []string
+			expiration   time.Duration
+		}{
+			{"key with dependencies", testKey, struct {
+				testFieldString string
+				testFieldInt    int
+				testFieldFloat  float64
+				testFieldBool   bool
+			}{
+				testFieldString: "test-value",
+				testFieldInt:    123,
+				testFieldFloat:  123.123,
+				testFieldBool:   true,
+			},
+				[]string{testDependantKey},
+				10 * time.Second,
+			},
+			{"key with no dependencies", testKey, struct {
+				testFieldString string
+				testFieldInt    int
+				testFieldFloat  float64
+				testFieldBool   bool
+			}{
+				testFieldString: "test-value",
+				testFieldInt:    123,
+				testFieldFloat:  123.123,
+				testFieldBool:   true,
+			},
+				[]string{},
+				10 * time.Second,
+			},
+			{"key with no exp", testKey, struct {
+				testFieldString string
+				testFieldInt    int
+				testFieldFloat  float64
+				testFieldBool   bool
+			}{
+				testFieldString: "test-value",
+				testFieldInt:    123,
+				testFieldFloat:  123.123,
+				testFieldBool:   true,
+			},
+				[]string{},
+				0,
+			},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+
+				// Start with a fresh db
+				err = clearRealRedis(conn)
+				assert.NoError(t, err)
+
+				var responseBytes []byte
+				responseBytes, err = json.Marshal(&test.modelData)
+				assert.NoError(t, err)
+
+				// Run command
+				err = SetToJSONRaw(conn, test.key, test.modelData, test.expiration, test.dependencies...)
+				assert.NoError(t, err)
+
+				// Validate via getting the data from redis
+				var testVal string
+				testVal, err = GetRaw(conn, test.key)
+				assert.NoError(t, err)
+				assert.Equal(t, string(responseBytes), testVal)
+			})
+		}
+	})
 }

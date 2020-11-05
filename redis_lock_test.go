@@ -30,7 +30,7 @@ func TestWriteLock(t *testing.T) {
 
 		// Write a lock
 		var locked bool
-		locked, err = WriteLock(conn, "d  `!$-()my-key", "d d d", int64(0))
+		locked, err = WriteLock(client, "d  `!$-()my-key", "d d d", int64(0))
 		assert.Error(t, err)
 		assert.Equal(t, false, locked)
 	})
@@ -52,7 +52,7 @@ func TestWriteLock(t *testing.T) {
 
 		// Write a lock
 		var locked bool
-		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
@@ -74,12 +74,12 @@ func TestWriteLock(t *testing.T) {
 
 		// Write a lock
 		var locked bool
-		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Attempt to re-lock (should succeed)
-		locked, err = WriteLock(conn, "my-key", "the-secret", int64(5))
+		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(5))
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
@@ -101,12 +101,12 @@ func TestWriteLock(t *testing.T) {
 
 		// Write a lock
 		var locked bool
-		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Attempt to re-lock (should succeed)
-		locked, err = WriteLock(conn, "my-key", "different-secret", int64(5))
+		locked, err = WriteLockRaw(conn, "my-key", "different-secret", int64(5))
 		assert.Error(t, err)
 		assert.Equal(t, false, locked)
 	})
@@ -128,14 +128,14 @@ func TestWriteLock(t *testing.T) {
 
 		// Write a lock
 		var locked bool
-		locked, err = WriteLock(conn, "my-key", "the-secret", int64(1))
+		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(1))
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		time.Sleep(2 * time.Second)
 
 		// Write new lock
-		locked, err = WriteLock(conn, "my-key", "new-secret", int64(2))
+		locked, err = WriteLockRaw(conn, "my-key", "new-secret", int64(2))
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
@@ -145,17 +145,15 @@ func TestWriteLock(t *testing.T) {
 func ExampleWriteLock() {
 
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Write a lock
-	_, _ = WriteLock(conn, "test-lock", "test-secret", int64(10))
+	_, _ = WriteLock(client, "test-lock", "test-secret", int64(10))
 
-	if conn != nil {
-		fmt.Printf("lock created")
-	}
+	fmt.Printf("lock created")
 	// Output:lock created
 }
 
@@ -181,12 +179,12 @@ func TestReleaseLock(t *testing.T) {
 
 		// Write a lock
 		var locked bool
-		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Release a lock
-		locked, err = ReleaseLock(conn, "my-key", "the-secret")
+		locked, err = ReleaseLockRaw(conn, "my-key", "the-secret")
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
@@ -208,17 +206,17 @@ func TestReleaseLock(t *testing.T) {
 
 		// Write a lock
 		var locked bool
-		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Release a lock
-		locked, err = ReleaseLock(conn, "my-key", "the-secret")
+		locked, err = ReleaseLockRaw(conn, "my-key", "the-secret")
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Release a lock (again)
-		locked, err = ReleaseLock(conn, "my-key", "the-secret")
+		locked, err = ReleaseLockRaw(conn, "my-key", "the-secret")
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
@@ -240,12 +238,12 @@ func TestReleaseLock(t *testing.T) {
 
 		// Write a lock
 		var locked bool
-		locked, err = WriteLock(conn, "my-key", "the-secret", int64(10))
+		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		assert.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Release a lock
-		locked, err = ReleaseLock(conn, "my-key", "wrong-secret")
+		locked, err = ReleaseLockRaw(conn, "my-key", "wrong-secret")
 		assert.Error(t, err)
 		assert.Equal(t, false, locked)
 	})
@@ -255,16 +253,14 @@ func TestReleaseLock(t *testing.T) {
 func ExampleReleaseLock() {
 
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Release a lock
-	_, _ = ReleaseLock(conn, "test-lock", "test-secret")
+	_, _ = ReleaseLock(client, "test-lock", "test-secret")
 
-	if conn != nil {
-		fmt.Printf("lock released")
-	}
+	fmt.Printf("lock released")
 	// Output:lock released
 }

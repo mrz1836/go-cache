@@ -7,17 +7,43 @@ import (
 )
 
 // Delete is an alias for KillByDependency()
-func Delete(conn redis.Conn, keys ...string) (total int, err error) {
-	return KillByDependency(conn, keys...)
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: DeleteRaw()
+func Delete(client *Client, keys ...string) (total int, err error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return DeleteRaw(conn, keys...)
+}
+
+// DeleteRaw is an alias for KillByDependency()
+// Uses existing connection (does not close connection)
+func DeleteRaw(conn redis.Conn, keys ...string) (total int, err error) {
+	return KillByDependencyRaw(conn, keys...)
 }
 
 // KillByDependency removes all keys which are listed as depending on the key(s)
+// Alias: Delete()
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: KillByDependencyRaw()
+//
+// Commands used:
+// https://redis.io/commands/eval
+// https://redis.io/commands/del
+func KillByDependency(client *Client, keys ...string) (int, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return KillByDependencyRaw(conn, keys...)
+}
+
+// KillByDependencyRaw removes all keys which are listed as depending on the key(s)
 // Alias: Delete()
 //
 // Commands used:
 // https://redis.io/commands/eval
 // https://redis.io/commands/del
-func KillByDependency(conn redis.Conn, keys ...string) (total int, err error) {
+func KillByDependencyRaw(conn redis.Conn, keys ...string) (total int, err error) {
 
 	// Do we have keys to kill?
 	if len(keys) == 0 {

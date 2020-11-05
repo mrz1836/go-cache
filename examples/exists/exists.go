@@ -14,14 +14,10 @@ func main() {
 		log.Fatalf("error occurred: %s", err.Error())
 	}
 
-	// Get a connection (close pool and connection after)
-	conn := client.GetConnection()
-	defer client.CloseAll(conn)
-
 	// Run command
-	_ = cache.Set(conn, "test-key", "test-value")
+	_ = cache.Set(client, "test-key", "test-value")
 
 	// Exists
-	found, _ := cache.Exists(conn, "test-key")
+	found, _ := cache.Exists(client, "test-key")
 	log.Printf("found: %v", found)
 }

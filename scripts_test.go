@@ -113,7 +113,7 @@ func TestRegisterScript(t *testing.T) {
 				// The main command to test
 				setCmd := conn.Command(scriptCommand, loadCommand, test.script).Expect(test.expectedSha)
 
-				val, err := RegisterScript(client, conn, test.script)
+				val, err := RegisterScriptRaw(client, conn, test.script)
 				assert.NoError(t, err)
 				assert.Equal(t, true, setCmd.Called)
 				assert.Equal(t, test.expectedSha, val)
@@ -138,22 +138,22 @@ func TestRegisterScript(t *testing.T) {
 
 		// Fire the command
 		var sha string
-		sha, err = RegisterScript(client, conn, killByDependencyLua)
+		sha, err = RegisterScript(client, killByDependencyLua)
 		assert.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, sha)
 
 		// Another script
-		sha, err = RegisterScript(client, conn, `return redis.call("get", KEYS[1])`)
+		sha, err = RegisterScript(client, `return redis.call("get", KEYS[1])`)
 		assert.NoError(t, err)
 		assert.Equal(t, "a5260dd66ce02462c5b5231c727b3f7772c0bcc5", sha)
 
 		// Another script
-		sha, err = RegisterScript(client, conn, lockScript)
+		sha, err = RegisterScript(client, lockScript)
 		assert.NoError(t, err)
 		assert.Equal(t, "e60d96cbb3894dc682fafae2980ad674822f99e1", sha)
 
 		// Another script
-		sha, err = RegisterScript(client, conn, releaseLockScript)
+		sha, err = RegisterScript(client, releaseLockScript)
 		assert.NoError(t, err)
 		assert.Equal(t, "3271ffa78c3ca6743c9dc476ff6cae55a9cd3cb4", sha)
 	})
@@ -175,7 +175,7 @@ func TestRegisterScript(t *testing.T) {
 
 		// Fire the command
 		var sha string
-		sha, err = RegisterScript(client, conn, "invalid script")
+		sha, err = RegisterScript(client, "invalid script")
 		assert.Error(t, err)
 		assert.Equal(t, "", sha)
 	})
@@ -185,13 +185,13 @@ func TestRegisterScript(t *testing.T) {
 func ExampleRegisterScript() {
 
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Register known scripts
-	_, _ = RegisterScript(client, conn, killByDependencyLua)
+	_, _ = RegisterScript(client, killByDependencyLua)
 
 	fmt.Printf("registered: %s", testKillDependencyHash)
 	// Output:registered: a648f768f57e73e2497ccaa113d5ad9e731c5cd8

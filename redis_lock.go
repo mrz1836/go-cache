@@ -33,7 +33,18 @@ end
 `
 
 // WriteLock attempts to grab a redis lock
-func WriteLock(conn redis.Conn, name, secret string, ttl int64) (bool, error) {
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: WriteLockRaw()
+func WriteLock(client *Client, name, secret string, ttl int64) (bool, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return WriteLockRaw(conn, name, secret, ttl)
+}
+
+// WriteLockRaw attempts to grab a redis lock
+// Uses existing connection (does not close connection)
+func WriteLockRaw(conn redis.Conn, name, secret string, ttl int64) (bool, error) {
 	script := redis.NewScript(1, lockScript)
 	if resp, err := redis.Int(script.Do(conn, name, secret, ttl)); err != nil {
 		return false, err
@@ -44,7 +55,18 @@ func WriteLock(conn redis.Conn, name, secret string, ttl int64) (bool, error) {
 }
 
 // ReleaseLock releases the redis lock
-func ReleaseLock(conn redis.Conn, name, secret string) (bool, error) {
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: ReleaseLockRaw()
+func ReleaseLock(client *Client, name, secret string) (bool, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return ReleaseLockRaw(conn, name, secret)
+}
+
+// ReleaseLockRaw releases the redis lock
+// Uses existing connection (does not close connection)
+func ReleaseLockRaw(conn redis.Conn, name, secret string) (bool, error) {
 	script := redis.NewScript(1, releaseLockScript)
 	if resp, err := redis.Int(script.Do(conn, name, secret)); err != nil {
 		return false, err

@@ -44,23 +44,56 @@ const (
 )
 
 // Get gets a key from redis in string format
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: GetRaw()
+func Get(client *Client, key string) (string, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return GetRaw(conn, key)
+}
+
+// GetRaw gets a key from redis in string format
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/get
-func Get(conn redis.Conn, key string) (string, error) {
+func GetRaw(conn redis.Conn, key string) (string, error) {
 	return redis.String(conn.Do(getCommand, key))
 }
 
 // GetBytes gets a key from redis formatted in bytes
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: GetBytesRaw()
+func GetBytes(client *Client, key string) ([]byte, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return GetBytesRaw(conn, key)
+}
+
+// GetBytesRaw gets a key from redis formatted in bytes
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/get
-func GetBytes(conn redis.Conn, key string) ([]byte, error) {
+func GetBytesRaw(conn redis.Conn, key string) ([]byte, error) {
 	return redis.Bytes(conn.Do(getCommand, key))
 }
 
 // GetList returns a []string stored in redis list
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: GetListRaw()
+func GetList(client *Client, key string) ([]string, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return GetListRaw(conn, key)
+}
+
+// GetListRaw returns a []string stored in redis list
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/lrange
-func GetList(conn redis.Conn, key string) (list []string, err error) {
+func GetListRaw(conn redis.Conn, key string) (list []string, err error) {
 
 	// This command takes two parameters specifying the range: 0 start, -1 is the end of the list
 	var values []interface{}
@@ -74,9 +107,20 @@ func GetList(conn redis.Conn, key string) (list []string, err error) {
 }
 
 // SetList saves a slice as a redis list (appends)
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: SetListRaw()
+func SetList(client *Client, key string, slice []string) error {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return SetListRaw(conn, key, slice)
+}
+
+// SetListRaw saves a slice as a redis list (appends)
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/rpush
-func SetList(conn redis.Conn, key string, slice []string) (err error) {
+func SetListRaw(conn redis.Conn, key string, slice []string) (err error) {
 
 	// Create the arguments
 	args := make([]interface{}, len(slice)+1)
@@ -93,17 +137,40 @@ func SetList(conn redis.Conn, key string, slice []string) (err error) {
 }
 
 // GetAllKeys returns a []string of keys
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: GetAllKeysRaw()
+func GetAllKeys(client *Client) (keys []string, err error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return GetAllKeysRaw(conn)
+}
+
+// GetAllKeysRaw returns a []string of keys
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/keys
-func GetAllKeys(conn redis.Conn) (keys []string, err error) {
+func GetAllKeysRaw(conn redis.Conn) (keys []string, err error) {
 	return redis.Strings(conn.Do(keysCommand, allKeysCommand))
 }
 
 // Set will set the key in redis and keep a reference to each dependency
 // value can be both a string or []byte
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: SetRaw()
+func Set(client *Client, key string, value interface{}, dependencies ...string) error {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return SetRaw(conn, key, value, dependencies...)
+}
+
+// SetRaw will set the key in redis and keep a reference to each dependency
+// value can be both a string or []byte
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/set
-func Set(conn redis.Conn, key string, value interface{}, dependencies ...string) error {
+func SetRaw(conn redis.Conn, key string, value interface{}, dependencies ...string) error {
 	if _, err := conn.Do(setCommand, key, value); err != nil {
 		return err
 	}
@@ -113,9 +180,21 @@ func Set(conn redis.Conn, key string, value interface{}, dependencies ...string)
 
 // SetExp will set the key in redis and keep a reference to each dependency
 // value can be both a string or []byte
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: SetExpRaw()
+func SetExp(client *Client, key string, value interface{}, ttl time.Duration, dependencies ...string) error {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return SetExpRaw(conn, key, value, ttl, dependencies...)
+}
+
+// SetExpRaw will set the key in redis and keep a reference to each dependency
+// value can be both a string or []byte
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/setex
-func SetExp(conn redis.Conn, key string, value interface{}, ttl time.Duration, dependencies ...string) error {
+func SetExpRaw(conn redis.Conn, key string, value interface{}, ttl time.Duration, dependencies ...string) error {
 	if _, err := conn.Do(setExpirationCommand, key, int64(ttl.Seconds()), value); err != nil {
 		return err
 	}
@@ -124,24 +203,57 @@ func SetExp(conn redis.Conn, key string, value interface{}, ttl time.Duration, d
 }
 
 // Exists checks if a key is present or not
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: ExistsRaw()
+func Exists(client *Client, key string) (bool, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return ExistsRaw(conn, key)
+}
+
+// ExistsRaw checks if a key is present or not
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/exists
-func Exists(conn redis.Conn, key string) (bool, error) {
+func ExistsRaw(conn redis.Conn, key string) (bool, error) {
 	return redis.Bool(conn.Do(existsCommand, key))
 }
 
 // Expire sets the expiration for a given key
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: ExpireRaw()
+func Expire(client *Client, key string, duration time.Duration) error {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return ExpireRaw(conn, key, duration)
+}
+
+// ExpireRaw sets the expiration for a given key
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/expire
-func Expire(conn redis.Conn, key string, duration time.Duration) (err error) {
+func ExpireRaw(conn redis.Conn, key string, duration time.Duration) (err error) {
 	_, err = conn.Do(expireCommand, key, int64(duration.Seconds()))
 	return
 }
 
 // DeleteWithoutDependency will remove keys without using dependency script
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: DeleteWithoutDependencyRaw()
+func DeleteWithoutDependency(client *Client, keys ...string) (int, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return DeleteWithoutDependencyRaw(conn, keys...)
+}
+
+// DeleteWithoutDependencyRaw will remove keys without using dependency script
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/del
-func DeleteWithoutDependency(conn redis.Conn, keys ...string) (total int, err error) {
+func DeleteWithoutDependencyRaw(conn redis.Conn, keys ...string) (total int, err error) {
 	for _, key := range keys {
 		if _, err = conn.Do(deleteCommand, key); err != nil {
 			return
@@ -154,9 +266,21 @@ func DeleteWithoutDependency(conn redis.Conn, keys ...string) (total int, err er
 
 // DestroyCache will flush the entire redis server
 // It only removes keys, not scripts
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: DestroyCacheRaw()
+func DestroyCache(client *Client) error {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return DestroyCacheRaw(conn)
+}
+
+// DestroyCacheRaw will flush the entire redis server
+// It only removes keys, not scripts
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/flushall
-func DestroyCache(conn redis.Conn) (err error) {
+func DestroyCacheRaw(conn redis.Conn) (err error) {
 	_, err = conn.Do(flushAllCommand)
 	return
 }

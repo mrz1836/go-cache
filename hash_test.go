@@ -54,10 +54,10 @@ func TestHashSet(t *testing.T) {
 					}
 					commands = append(commands, conn.Command(executeCommand))
 
-					err := HashSet(conn, test.hashName, test.key, test.value, test.dependencies...)
+					err := HashSetRaw(conn, test.hashName, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
 				} else {
-					err := HashSet(conn, test.hashName, test.key, test.value, test.dependencies...)
+					err := HashSetRaw(conn, test.hashName, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
 				}
 
@@ -84,12 +84,12 @@ func TestHashSet(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
+		err = HashSet(client, testHashName, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
-		testVal, err = HashGet(conn, testHashName, testKey)
+		testVal, err = HashGet(client, testHashName, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
@@ -98,13 +98,13 @@ func TestHashSet(t *testing.T) {
 // ExampleHashSet is an example of the method HashSet()
 func ExampleHashSet() {
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Set the key/value
-	_ = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
+	_ = HashSet(client, testHashName, testKey, testStringValue, testDependantKey)
 	fmt.Printf("set: %s:%s value: %s dep key: %s", testHashName, testKey, testStringValue, testDependantKey)
 	// Output:set: test-hash-name:test-key-name value: test-string-value dep key: test-dependant-key-name
 }
@@ -140,7 +140,7 @@ func TestHashGet(t *testing.T) {
 				// The main command to test
 				getCmd := conn.Command(hashGetCommand, test.hashName, test.key).Expect(test.value)
 
-				val, err := HashGet(conn, test.hashName, test.key)
+				val, err := HashGetRaw(conn, test.hashName, test.key)
 				assert.NoError(t, err)
 				assert.Equal(t, true, getCmd.Called)
 				assert.Equal(t, test.value, val)
@@ -164,12 +164,12 @@ func TestHashGet(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
+		err = HashSet(client, testHashName, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
-		testVal, err = HashGet(conn, testHashName, testKey)
+		testVal, err = HashGet(client, testHashName, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
@@ -178,16 +178,16 @@ func TestHashGet(t *testing.T) {
 // ExampleHashGet is an example of the method HashGet()
 func ExampleHashGet() {
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Set the key/value
-	_ = HashSet(conn, testHashName, testKey, testStringValue, testDependantKey)
+	_ = HashSet(client, testHashName, testKey, testStringValue, testDependantKey)
 
 	// Get the value
-	_, _ = HashGet(conn, testHashName, testKey)
+	_, _ = HashGet(client, testHashName, testKey)
 	fmt.Printf("got value: %s", testStringValue)
 	// Output:got value: test-string-value
 }
@@ -257,10 +257,10 @@ func TestHashMapSet(t *testing.T) {
 					}
 					commands = append(commands, conn.Command(executeCommand))
 
-					err := HashMapSet(conn, test.hashName, test.pairs, test.dependencies...)
+					err := HashMapSetRaw(conn, test.hashName, test.pairs, test.dependencies...)
 					assert.NoError(t, err)
 				} else {
-					err := HashMapSet(conn, test.hashName, test.pairs, test.dependencies...)
+					err := HashMapSetRaw(conn, test.hashName, test.pairs, test.dependencies...)
 					assert.NoError(t, err)
 				}
 
@@ -294,17 +294,17 @@ func TestHashMapSet(t *testing.T) {
 		}
 
 		// Set the hash map
-		err = HashMapSet(conn, testHashName, pairs, testDependantKey)
+		err = HashMapSetRaw(conn, testHashName, pairs, testDependantKey)
 		assert.NoError(t, err)
 
 		var val string
-		val, err = HashGet(conn, testHashName, "pair-1")
+		val, err = HashGetRaw(conn, testHashName, "pair-1")
 		assert.NoError(t, err)
 		assert.Equal(t, "pair-1-value", val)
 
 		// Get a key in the map
 		var values []string
-		values, err = HashMapGet(conn, testHashName, "pair-1", "pair-2")
+		values, err = HashMapGetRaw(conn, testHashName, "pair-1", "pair-2")
 		assert.NoError(t, err)
 
 		// Got two values?
@@ -321,10 +321,10 @@ func TestHashMapSet(t *testing.T) {
 // ExampleHashMapSet is an example of the method HashMapSet()
 func ExampleHashMapSet() {
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Create pairs
 	pairs := [][2]interface{}{
@@ -334,7 +334,7 @@ func ExampleHashMapSet() {
 	}
 
 	// Set the hash map
-	_ = HashMapSet(conn, testHashName, pairs, testDependantKey)
+	_ = HashMapSet(client, testHashName, pairs, testDependantKey)
 	fmt.Printf("set: %s pairs: %d dep key: %s", testHashName, len(pairs), testDependantKey)
 	// Output:set: test-hash-name pairs: 3 dep key: test-dependant-key-name
 }
@@ -407,10 +407,10 @@ func TestHashMapSetExp(t *testing.T) {
 					}
 					commands = append(commands, conn.Command(executeCommand))
 
-					err := HashMapSetExp(conn, test.hashName, test.pairs, test.expiration, test.dependencies...)
+					err := HashMapSetExp(client, test.hashName, test.pairs, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
 				} else {
-					err := HashMapSetExp(conn, test.hashName, test.pairs, test.expiration, test.dependencies...)
+					err := HashMapSetExp(client, test.hashName, test.pairs, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
 				}
 
@@ -444,17 +444,17 @@ func TestHashMapSetExp(t *testing.T) {
 		}
 
 		// Set the hash map
-		err = HashMapSetExp(conn, testHashName, pairs, 2*time.Second, testDependantKey)
+		err = HashMapSetExpRaw(conn, testHashName, pairs, 2*time.Second, testDependantKey)
 		assert.NoError(t, err)
 
 		var val string
-		val, err = HashGet(conn, testHashName, "pair-1")
+		val, err = HashGetRaw(conn, testHashName, "pair-1")
 		assert.NoError(t, err)
 		assert.Equal(t, "pair-1-value", val)
 
 		// Get a key in the map
 		var values []string
-		values, err = HashMapGet(conn, testHashName, "pair-1", "pair-2")
+		values, err = HashMapGetRaw(conn, testHashName, "pair-1", "pair-2")
 		assert.NoError(t, err)
 
 		// Got two values?
@@ -470,7 +470,7 @@ func TestHashMapSetExp(t *testing.T) {
 		t.Log("sleeping for 3 seconds...")
 		time.Sleep(time.Second * 3)
 
-		values, err = HashMapGet(conn, testHashName, "pair-1")
+		values, err = HashMapGetRaw(conn, testHashName, "pair-1")
 		assert.NoError(t, err)
 		assert.Equal(t, []string{""}, values)
 	})
@@ -479,10 +479,10 @@ func TestHashMapSetExp(t *testing.T) {
 // ExampleHashMapSetExp is an example of the method HashMapSetExp()
 func ExampleHashMapSetExp() {
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Create pairs
 	pairs := [][2]interface{}{
@@ -492,7 +492,7 @@ func ExampleHashMapSetExp() {
 	}
 
 	// Set the hash map
-	_ = HashMapSetExp(conn, testHashName, pairs, 5*time.Second, testDependantKey)
+	_ = HashMapSetExp(client, testHashName, pairs, 5*time.Second, testDependantKey)
 	fmt.Printf("set: %s pairs: %d dep key: %s exp: %v", testHashName, len(pairs), testDependantKey, 5*time.Second)
 	// Output:set: test-hash-name pairs: 3 dep key: test-dependant-key-name exp: 5s
 }

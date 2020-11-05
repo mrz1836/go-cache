@@ -12,15 +12,26 @@ func (c *Client) RegisterScripts() (err error) {
 
 	// Load dependency script if not loaded
 	if len(c.DependencyScriptSha) == 0 {
-		c.DependencyScriptSha, err = RegisterScript(c, conn, killByDependencyLua)
+		c.DependencyScriptSha, err = RegisterScript(c, killByDependencyLua)
 	}
 	return
 }
 
 // RegisterScript register a new script
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: RegisterScriptRaw()
+func RegisterScript(client *Client, script string) (string, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return RegisterScriptRaw(client, conn, script)
+}
+
+// RegisterScriptRaw register a new script
+// Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/script-load
-func RegisterScript(client *Client, conn redis.Conn, script string) (sha string, err error) {
+func RegisterScriptRaw(client *Client, conn redis.Conn, script string) (sha string, err error) {
 	if sha, err = redis.String(conn.Do(scriptCommand, loadCommand, script)); err != nil {
 		return
 	}

@@ -28,7 +28,7 @@ func TestDelete(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Test no keys
-		_, err = Delete(conn)
+		_, err = Delete(client)
 		assert.NoError(t, err)
 	})
 
@@ -49,7 +49,7 @@ func TestDelete(t *testing.T) {
 
 		// Test one key
 		var total int
-		total, err = Delete(conn, testKey)
+		total, err = Delete(client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -71,7 +71,7 @@ func TestDelete(t *testing.T) {
 
 		// Test multiple keys
 		var total int
-		total, err = Delete(conn, testKey, "key2", "key3")
+		total, err = Delete(client, testKey, "key2", "key3")
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -87,7 +87,7 @@ func ExampleDelete() {
 	defer client.CloseAll(conn)
 
 	// Run command
-	_, _ = Delete(conn, testDependantKey)
+	_, _ = Delete(client, testDependantKey)
 	if conn != nil {
 		fmt.Printf("all dependencies deleted")
 	}
@@ -115,7 +115,7 @@ func TestKillByDependency(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Test no keys
-		_, err = KillByDependency(conn)
+		_, err = KillByDependency(client)
 		assert.NoError(t, err)
 	})
 
@@ -136,7 +136,7 @@ func TestKillByDependency(t *testing.T) {
 
 		// Test one key
 		var total int
-		total, err = KillByDependency(conn, testKey)
+		total, err = KillByDependency(client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -158,7 +158,7 @@ func TestKillByDependency(t *testing.T) {
 
 		// Test multiple keys
 		var total int
-		total, err = KillByDependency(conn, testKey, "key2", "key3")
+		total, err = KillByDependency(client, testKey, "key2", "key3")
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -168,16 +168,14 @@ func TestKillByDependency(t *testing.T) {
 func ExampleKillByDependency() {
 
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Run command
-	_, _ = KillByDependency(conn, testDependantKey)
-	if conn != nil {
-		fmt.Printf("all dependencies removed")
-	}
+	_, _ = KillByDependency(client, testDependantKey)
+	fmt.Printf("all dependencies removed")
 	// Output:all dependencies removed
 }
 
@@ -202,54 +200,54 @@ func TestDependencyManagement(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Set a key with two dependent keys
-		err = Set(conn, "test-set-dep", testStringValue, "dependent-1", "dependent-2")
+		err = SetRaw(conn, "test-set-dep", testStringValue, "dependent-1", "dependent-2")
 		assert.NoError(t, err)
 
 		// Test for dependent key 1
 		var ok bool
-		ok, err = SetIsMember(conn, "depend:dependent-1", "test-set-dep")
+		ok, err = SetIsMemberRaw(conn, "depend:dependent-1", "test-set-dep")
 		assert.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Test for dependent key 2
-		ok, err = SetIsMember(conn, "depend:dependent-2", "test-set-dep")
+		ok, err = SetIsMemberRaw(conn, "depend:dependent-2", "test-set-dep")
 		assert.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Kill a dependent key
 		var total int
-		total, err = Delete(conn, "dependent-1")
+		total, err = DeleteRaw(conn, "dependent-1")
 		assert.NoError(t, err)
 		assert.Equal(t, 2, total)
 
 		// Test for main key
 		var found bool
-		found, err = Exists(conn, "test-set-dep")
+		found, err = ExistsRaw(conn, "test-set-dep")
 		assert.NoError(t, err)
 		assert.Equal(t, false, found)
 
 		// Test for dependency relation
-		found, err = Exists(conn, "depend:dependent-1")
+		found, err = ExistsRaw(conn, "depend:dependent-1")
 		assert.NoError(t, err)
 		assert.Equal(t, false, found)
 
 		// Test for dependency relation 2
-		found, err = SetIsMember(conn, "depend:dependent-2", "test-set-dep")
+		found, err = SetIsMemberRaw(conn, "depend:dependent-2", "test-set-dep")
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
 
 		// Kill all dependent keys
-		total, err = KillByDependency(conn, "dependent-1", "dependent-2")
+		total, err = KillByDependencyRaw(conn, "dependent-1", "dependent-2")
 		assert.NoError(t, err)
 		assert.Equal(t, 1, total)
 
 		// Test for dependency relation
-		found, err = Exists(conn, "depend:dependent-2")
+		found, err = ExistsRaw(conn, "depend:dependent-2")
 		assert.NoError(t, err)
 		assert.Equal(t, false, found)
 
 		// Test for main key
-		found, err = Exists(conn, "test-set-dep")
+		found, err = ExistsRaw(conn, "test-set-dep")
 		assert.NoError(t, err)
 		assert.Equal(t, false, found)
 	})
@@ -284,41 +282,41 @@ func TestHashMapDependencyManagement(t *testing.T) {
 		}
 
 		// Set a key with two dependent keys
-		err = HashMapSet(conn, "test-hash-map-dependency", pairs, "test-hash-map-depend-1", "test-hash-map-depend-2")
+		err = HashMapSetRaw(conn, "test-hash-map-dependency", pairs, "test-hash-map-depend-1", "test-hash-map-depend-2")
 		assert.NoError(t, err)
 
 		// Test get
 		var val string
-		val, err = HashGet(conn, "test-hash-map-dependency", "pair-1")
+		val, err = HashGetRaw(conn, "test-hash-map-dependency", "pair-1")
 		assert.NoError(t, err)
 		assert.Equal(t, "pair-1-value", val)
 
 		// Test get values
 		var values []string
-		values, err = HashMapGet(conn, "test-hash-map-dependency", "pair-1", "pair-2")
+		values, err = HashMapGetRaw(conn, "test-hash-map-dependency", "pair-1", "pair-2")
 		assert.NoError(t, err)
 		assert.Equal(t, 2, len(values))
 
 		// Test for dependent key 1
 		var ok bool
-		ok, err = SetIsMember(conn, "depend:test-hash-map-depend-1", "test-hash-map-dependency")
+		ok, err = SetIsMemberRaw(conn, "depend:test-hash-map-depend-1", "test-hash-map-dependency")
 		assert.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Test for dependent key 2
-		ok, err = SetIsMember(conn, "depend:test-hash-map-depend-2", "test-hash-map-dependency")
+		ok, err = SetIsMemberRaw(conn, "depend:test-hash-map-depend-2", "test-hash-map-dependency")
 		assert.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Kill a dependent key
 		var total int
-		total, err = Delete(conn, "test-hash-map-depend-2")
+		total, err = DeleteRaw(conn, "test-hash-map-depend-2")
 		assert.NoError(t, err)
 		assert.Equal(t, 2, total)
 
 		// Test for main key
 		var found bool
-		found, err = Exists(conn, "test-hash-map-dependency")
+		found, err = ExistsRaw(conn, "test-hash-map-dependency")
 		assert.NoError(t, err)
 		assert.Equal(t, false, found)
 	})

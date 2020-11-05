@@ -15,15 +15,11 @@ func main() {
 		log.Fatalf("error occurred: %s", err.Error())
 	}
 
-	// Get a connection (close pool and connection after)
-	conn := client.GetConnection()
-	defer client.CloseAll(conn)
-
 	// Run command
-	_ = cache.Set(conn, "test-key", "test-value")
+	_ = cache.Set(client, "test-key", "test-value")
 
 	// Get
-	val, _ := cache.Get(conn, "test-key")
+	val, _ := cache.Get(client, "test-key")
 	if !strings.EqualFold(val, "test-value") {
 		log.Fatal("error getting value")
 	}

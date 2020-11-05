@@ -48,10 +48,10 @@ func TestSetAdd(t *testing.T) {
 					}
 					commands = append(commands, conn.Command(executeCommand))
 
-					err := SetAdd(conn, test.setName, test.member, test.dependencies...)
+					err := SetAddRaw(conn, test.setName, test.member, test.dependencies...)
 					assert.NoError(t, err)
 				} else {
-					err := SetAdd(conn, test.setName, test.member, test.dependencies...)
+					err := SetAddRaw(conn, test.setName, test.member, test.dependencies...)
 					assert.NoError(t, err)
 				}
 
@@ -78,12 +78,12 @@ func TestSetAdd(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetAdd(conn, testKey, testStringValue)
+		err = SetAddRaw(conn, testKey, testStringValue)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
-		found, err = SetIsMember(conn, testKey, testStringValue)
+		found, err = SetIsMemberRaw(conn, testKey, testStringValue)
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
@@ -92,16 +92,16 @@ func TestSetAdd(t *testing.T) {
 // ExampleSetAdd is an example of the method SetAdd()
 func ExampleSetAdd() {
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Set the key/value
-	_ = SetAdd(conn, testKey, testStringValue, testDependantKey)
+	_ = SetAdd(client, testKey, testStringValue, testDependantKey)
 
 	// Fire the command
-	_, _ = SetIsMember(conn, testKey, testStringValue)
+	_, _ = SetIsMember(client, testKey, testStringValue)
 	fmt.Printf("found member: %v", testStringValue)
 	// Output:found member: test-string-value
 }
@@ -144,7 +144,7 @@ func TestSetAddMany(t *testing.T) {
 				// The main command to test
 				commands = append(commands, conn.Command(addToSetCommand, args...))
 
-				err := SetAddMany(conn, test.setName, test.members...)
+				err := SetAddManyRaw(conn, test.setName, test.members...)
 				assert.NoError(t, err)
 
 				for _, c := range commands {
@@ -170,12 +170,12 @@ func TestSetAddMany(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetAddMany(conn, testKey, testStringValue, testStringValue+"2")
+		err = SetAddMany(client, testKey, testStringValue, testStringValue+"2")
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
-		found, err = SetIsMember(conn, testKey, testStringValue+"2")
+		found, err = SetIsMember(client, testKey, testStringValue+"2")
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
@@ -184,16 +184,16 @@ func TestSetAddMany(t *testing.T) {
 // ExampleSetAddMany is an example of the method SetAddMany()
 func ExampleSetAddMany() {
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Set the key/value
-	_ = SetAddMany(conn, testKey, testStringValue, testStringValue+"2")
+	_ = SetAddMany(client, testKey, testStringValue, testStringValue+"2")
 
 	// Fire the command
-	_, _ = SetIsMember(conn, testKey, testStringValue+"2")
+	_, _ = SetIsMember(client, testKey, testStringValue+"2")
 	fmt.Printf("found member: %v", testStringValue+"2")
 	// Output:found member: test-string-value2
 }
@@ -228,7 +228,7 @@ func TestSetRemoveMember(t *testing.T) {
 				// The main command to test
 				commands = append(commands, conn.Command(removeMemberCommand, test.setName, test.member))
 
-				err := SetRemoveMember(conn, test.setName, test.member)
+				err := SetRemoveMember(client, test.setName, test.member)
 				assert.NoError(t, err)
 
 				for _, c := range commands {
@@ -254,21 +254,21 @@ func TestSetRemoveMember(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetAdd(conn, testKey, testStringValue)
+		err = SetAddRaw(conn, testKey, testStringValue)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
-		found, err = SetIsMember(conn, testKey, testStringValue)
+		found, err = SetIsMemberRaw(conn, testKey, testStringValue)
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
 
 		// Fire the command
-		err = SetRemoveMember(conn, testKey, testStringValue)
+		err = SetRemoveMemberRaw(conn, testKey, testStringValue)
 		assert.NoError(t, err)
 
 		// Check that the command worked
-		found, err = SetIsMember(conn, testKey, testStringValue)
+		found, err = SetIsMemberRaw(conn, testKey, testStringValue)
 		assert.NoError(t, err)
 		assert.Equal(t, false, found)
 	})
@@ -277,16 +277,16 @@ func TestSetRemoveMember(t *testing.T) {
 // ExampleSetRemoveMember is an example of the method SetRemoveMember()
 func ExampleSetRemoveMember() {
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Set the key/value
-	_ = SetAddMany(conn, testKey, testStringValue, testStringValue+"2")
+	_ = SetAddMany(client, testKey, testStringValue, testStringValue+"2")
 
 	// Fire the command
-	_ = SetRemoveMember(conn, testKey, testStringValue+"2")
+	_ = SetRemoveMember(client, testKey, testStringValue+"2")
 	fmt.Printf("removed member: %v", testStringValue+"2")
 	// Output:removed member: test-string-value2
 }
@@ -319,7 +319,7 @@ func TestSetIsMember(t *testing.T) {
 				// The main command to test
 				isCmd := conn.Command(isMemberCommand, test.setName, test.member).Expect(interface{}(test.expectedFound))
 
-				found, err := SetIsMember(conn, test.setName, test.member)
+				found, err := SetIsMemberRaw(conn, test.setName, test.member)
 				assert.NoError(t, err)
 				assert.Equal(t, test.expectedFound > 0, found)
 				assert.Equal(t, true, isCmd.Called)
@@ -343,12 +343,12 @@ func TestSetIsMember(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetAdd(conn, testKey, testStringValue)
+		err = SetAdd(client, testKey, testStringValue)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
-		found, err = SetIsMember(conn, testKey, testStringValue)
+		found, err = SetIsMember(client, testKey, testStringValue)
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
@@ -357,16 +357,16 @@ func TestSetIsMember(t *testing.T) {
 // ExampleSetIsMember is an example of the method SetIsMember()
 func ExampleSetIsMember() {
 	// Load a mocked redis for testing/examples
-	client, conn := loadMockRedis()
+	client, _ := loadMockRedis()
 
 	// Close connections at end of request
-	defer client.CloseAll(conn)
+	defer client.Close()
 
 	// Set the key/value
-	_ = SetAddMany(conn, testKey, testStringValue, testStringValue+"2")
+	_ = SetAddMany(client, testKey, testStringValue, testStringValue+"2")
 
 	// Fire the command
-	_, _ = SetIsMember(conn, testKey, testStringValue+"2")
+	_, _ = SetIsMember(client, testKey, testStringValue+"2")
 	fmt.Printf("found member: %v", testStringValue+"2")
 	// Output:found member: test-string-value2
 }

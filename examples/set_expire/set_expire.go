@@ -15,10 +15,6 @@ func main() {
 		log.Fatalf("error occurred: %s", err.Error())
 	}
 
-	// Get a connection (close pool and connection after)
-	conn := client.GetConnection()
-	defer client.CloseAll(conn)
-
 	// Run command
-	_ = cache.SetExp(conn, "test-key", "test-value", 10*time.Minute)
+	_ = cache.SetExp(client, "test-key", "test-value", 10*time.Minute)
 }

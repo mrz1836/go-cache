@@ -14,12 +14,8 @@ func main() {
 		log.Fatalf("error occurred: %s", err.Error())
 	}
 
-	// Get a connection (close pool and connection after)
-	conn := client.GetConnection()
-	defer client.CloseAll(conn)
-
 	// Write a lock
-	_, err = cache.WriteLock(conn, "test-lock", "test-secret", int64(10))
+	_, err = cache.WriteLock(client, "test-lock", "test-secret", int64(10))
 	if err != nil {
 		log.Fatalf("error occurred: %s", err.Error())
 	}
@@ -27,7 +23,7 @@ func main() {
 	log.Println("lock created successfully")
 
 	// Release a lock
-	_, err = cache.ReleaseLock(conn, "test-lock", "test-secret")
+	_, err = cache.ReleaseLock(client, "test-lock", "test-secret")
 	if err != nil {
 		log.Fatalf("error occurred: %s", err.Error())
 	}

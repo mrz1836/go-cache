@@ -14,19 +14,15 @@ func main() {
 		log.Fatalf("error occurred: %s", err.Error())
 	}
 
-	// Get a connection (close pool and connection after)
-	conn := client.GetConnection()
-	defer client.CloseAll(conn)
-
 	// Run command
-	err = cache.Set(conn, "test-key", "test-value", "dependent-key-of-test-key")
+	err = cache.Set(client, "test-key", "test-value", "dependent-key-of-test-key")
 	if err != nil {
 		log.Fatalf("error occurred: %s", err.Error())
 	}
 
 	// Delete
 	var total int
-	total, err = cache.Delete(conn, "test-key")
+	total, err = cache.Delete(client, "test-key")
 	if err != nil {
 		log.Fatalf("error occurred: %s", err.Error())
 	} else if total != 1 {

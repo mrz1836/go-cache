@@ -17,10 +17,6 @@ func main() {
 	// Pool is ready
 	log.Println("client & pool created")
 
-	// Get a connection (close pool and connection after)
-	conn := client.GetConnection()
-	defer client.CloseAll(conn)
-
 	// Do something with the connection
-	_ = cache.Set(conn, "test-key", "test-value")
+	_ = cache.Set(client, "test-key", "test-value")
 }

@@ -336,10 +336,9 @@ linters:
     - govet
     - gosec
     - bodyclose
-    - golint
+    - revive
     - unconvert
     - dupl
-    - maligned
     - misspell
     - dogsled
     - prealloc
@@ -406,10 +405,10 @@ issues:
   exclude-use-default: false
 
   # The default value is false. If set to true exclude and exclude-rules
-  # regular expressions become case sensitive.
+  # regular expressions become case-sensitive.
   exclude-case-sensitive: false
 
-  # The list of ids of default excludes to include or disable. By default it's empty.
+  # The list of ids of default excludes to include or disable. By default, it's empty.
   include:
     - EXC0002 # disable excluding of issues about comments from golint
 

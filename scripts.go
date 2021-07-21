@@ -52,11 +52,11 @@ local number_of_keys = table.getn(ARGV)
 local all_keys = {}
 for _, key in ipairs(ARGV) do
 	table.insert(all_keys, key)
-	local set = redis.call("SMEMBERS", key)
+	local set = redis.call("` + membersCommand + `", key)
 	for _, v in ipairs(set) do
 	  table.insert(all_keys, v)
 	end
 end
-return redis.call("DEL", unpack(all_keys))
+return redis.call("` + deleteCommand + `", unpack(all_keys))
 --@end=lua@
 `

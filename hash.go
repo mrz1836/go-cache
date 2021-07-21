@@ -140,7 +140,7 @@ func HashMapSetExpRaw(conn redis.Conn, hashName string, pairs [][2]interface{},
 		return err
 	}
 
-	// Fire the expire command
+	// Fire the "expire" command
 	if _, err := conn.Do(expireCommand, hashName, int64(ttl.Seconds())); err != nil {
 		return err
 	}

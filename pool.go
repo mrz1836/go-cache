@@ -34,7 +34,7 @@ func (c *Client) CloseAll(conn redis.Conn) redis.Conn {
 }
 
 // GetConnection will return a connection from the pool. (convenience method)
-// The connection must be closed when done with use to return it to the pool
+// The connection must be closed when done and return it to the pool
 func (c *Client) GetConnection() redis.Conn {
 	return c.Pool.Get()
 }
@@ -53,7 +53,8 @@ func CloseConnection(conn redis.Conn) redis.Conn {
 }
 
 // Connect creates a new connection pool connected to the specified url
-// URL Format: redis://localhost:6379
+//
+// Format of URL: redis://localhost:6379
 func Connect(redisURL string, maxActiveConnections, idleConnections, maxConnLifetime, idleTimeout int,
 	dependencyMode bool, options ...redis.DialOption) (client *Client, err error) {
 
@@ -95,9 +96,10 @@ func Connect(redisURL string, maxActiveConnections, idleConnections, maxConnLife
 }
 
 // ConnectToURL connects via REDIS_URL and returns a single connection
-// Preferred method is Connect() to create a pool
-// Source: github.com/soveran/redisurl
-// URL Format: redis://localhost:6379
+//
+// Preferred method is "Connect()" to create a pool
+// Source: "github.com/soveran/redisurl"
+// Format of URL: redis://localhost:6379
 func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.Conn, err error) {
 
 	// Parse the URL

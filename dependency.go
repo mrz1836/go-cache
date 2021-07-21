@@ -68,7 +68,7 @@ func KillByDependencyRaw(conn redis.Conn, keys ...string) (total int, err error)
 		return
 	}
 
-	// Fire the delete
+	// Fire the delete command
 	var deleted int
 	if deleted, err = redis.Int(conn.Do(deleteCommand, deleteArgs...)); err != nil {
 		return

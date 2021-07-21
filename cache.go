@@ -35,6 +35,7 @@ const (
 	listPushCommand      string = "RPUSH"
 	listRangeCommand     string = "LRANGE"
 	loadCommand          string = "LOAD"
+	membersCommand       string = "SMEMBERS"
 	multiCommand         string = "MULTI"
 	pingCommand          string = "PING"
 	removeMemberCommand  string = "SREM"

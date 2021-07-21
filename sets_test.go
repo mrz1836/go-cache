@@ -370,3 +370,57 @@ func ExampleSetIsMember() {
 	fmt.Printf("found member: %v", testStringValue+"2")
 	// Output:found member: test-string-value2
 }
+
+// TestSetMembers will test the method SetMembers()
+func TestSetMembers(t *testing.T) {
+
+	t.Run("get members using mocked redis", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
+
+		var tests = []struct {
+			testCase      string
+			setName       interface{}
+			expectedFound []interface{}
+		}{
+			{"valid set and members", testKey, []interface{}{"one", "two"}},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+				conn.Clear()
+
+				// The main command to test
+				cmd := conn.Command(membersCommand, test.setName).Expect(test.expectedFound)
+
+				found, err := SetMembersRaw(conn, test.setName)
+				assert.NoError(t, err)
+				assert.Equal(t, 2, len(found))
+				assert.Equal(t, "one", found[0])
+				assert.Equal(t, "two", found[1])
+				assert.Equal(t, true, cmd.Called)
+			})
+		}
+	})
+
+}
+
+// ExampleSetMembers is an example of the method SetMembers()
+func ExampleSetMembers() {
+	// Load a mocked redis for testing/examples
+	client, _ := loadMockRedis()
+
+	// Close connections at end of request
+	defer client.Close()
+
+	// Set the key/value
+	_ = SetAddMany(client, testKey, testStringValue, testStringValue)
+
+	// Fire the command
+	_, _ = SetMembers(client, testKey)
+	fmt.Printf("found members: [%v]", testStringValue)
+	// Output:found members: [test-string-value]
+}

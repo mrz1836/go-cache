@@ -49,7 +49,7 @@ func SetAddManyRaw(conn redis.Conn, setName string, members ...interface{}) (err
 		args[i+1] = key
 	}
 
-	// Fire the delete
+	// Fire the delete command
 	_, err = conn.Do(addToSetCommand, args...)
 	return
 }
@@ -89,4 +89,22 @@ func SetRemoveMember(client *Client, set, member interface{}) error {
 func SetRemoveMemberRaw(conn redis.Conn, set, member interface{}) (err error) {
 	_, err = conn.Do(removeMemberCommand, set, member)
 	return
+}
+
+// SetMembers will fetch all members in the list
+// Creates a new connection and closes connection at end of function call
+//
+// Custom connections use method: SetMembersRaw()
+func SetMembers(client *Client, set interface{}) ([]string, error) {
+	conn := client.GetConnection()
+	defer client.CloseConnection(conn)
+	return SetMembersRaw(conn, set)
+}
+
+// SetMembersRaw will fetch all members in the list
+// Uses existing connection (does not close connection)
+//
+// Spec: https://redis.io/commands/smembers
+func SetMembersRaw(conn redis.Conn, set interface{}) ([]string, error) {
+	return redis.Strings(conn.Do(membersCommand, set))
 }

@@ -16,12 +16,12 @@ import (
 const (
 	testDependantKey         = "test-dependant-key-name"
 	testHashName             = "test-hash-name"
-	testIdleTimeout          = 240
+	testIdleTimeout          = 240 * time.Second
 	testKey                  = "test-key-name"
 	testKillDependencyHash   = "a648f768f57e73e2497ccaa113d5ad9e731c5cd8"
 	testLocalConnectionURL   = "redis://localhost:6379"
 	testMaxActiveConnections = 0
-	testMaxConnLifetime      = 0
+	testMaxConnLifetime      = 60 * time.Second
 	testMaxIdleConnections   = 10
 	testStringValue          = "test-string-value"
 )
@@ -33,7 +33,7 @@ func loadMockRedis() (client *Client, conn *redigomock.Conn) {
 		DependencyScriptSha: "",
 		Pool: &redis.Pool{
 			Dial:            func() (redis.Conn, error) { return conn, nil },
-			IdleTimeout:     time.Duration(testIdleTimeout) * time.Second,
+			IdleTimeout:     testIdleTimeout,
 			MaxActive:       testMaxActiveConnections,
 			MaxConnLifetime: testMaxConnLifetime,
 			MaxIdle:         testMaxIdleConnections,

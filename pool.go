@@ -55,7 +55,7 @@ func CloseConnection(conn redis.Conn) redis.Conn {
 // Connect creates a new connection pool connected to the specified url
 //
 // Format of URL: redis://localhost:6379
-func Connect(redisURL string, maxActiveConnections, idleConnections, maxConnLifetime, idleTimeout int,
+func Connect(redisURL string, maxActiveConnections, idleConnections int, maxConnLifetime, idleTimeout time.Duration,
 	dependencyMode bool, options ...redis.DialOption) (client *Client, err error) {
 
 	// Required param for dial
@@ -68,9 +68,9 @@ func Connect(redisURL string, maxActiveConnections, idleConnections, maxConnLife
 	client = &Client{
 		Pool: &redis.Pool{
 			Dial:            buildDialer(redisURL, options...),
-			IdleTimeout:     time.Duration(idleTimeout) * time.Second,
+			IdleTimeout:     idleTimeout,
 			MaxActive:       maxActiveConnections,
-			MaxConnLifetime: time.Duration(maxConnLifetime) * time.Second,
+			MaxConnLifetime: maxConnLifetime,
 			MaxIdle:         idleConnections,
 			TestOnBorrow: func(c redis.Conn, t time.Time) error {
 				if time.Since(t) < time.Minute {

@@ -111,7 +111,7 @@ func TestRegisterScript(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				setCmd := conn.Command(scriptCommand, loadCommand, test.script).Expect(test.expectedSha)
+				setCmd := conn.Command(ScriptCommand, LoadCommand, test.script).Expect(test.expectedSha)
 
 				val, err := RegisterScriptRaw(client, conn, test.script)
 				assert.NoError(t, err)

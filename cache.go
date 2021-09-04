@@ -15,34 +15,34 @@ import (
 
 // Package constants (commands)
 const (
-	addToSetCommand      string = "SADD"
-	allKeysCommand       string = "*"
-	authCommand          string = "AUTH"
-	deleteCommand        string = "DEL"
-	dependencyPrefix     string = "depend:"
-	evalCommand          string = "EVALSHA"
-	executeCommand       string = "EXEC"
-	existsCommand        string = "EXISTS"
-	expireCommand        string = "EXPIRE"
-	flushAllCommand      string = "FLUSHALL"
-	getCommand           string = "GET"
-	hashGetCommand       string = "HGET"
-	hashKeySetCommand    string = "HSET"
-	hashMapGetCommand    string = "HMGET"
-	hashMapSetCommand    string = "HMSET"
-	isMemberCommand      string = "SISMEMBER"
-	keysCommand          string = "KEYS"
-	listPushCommand      string = "RPUSH"
-	listRangeCommand     string = "LRANGE"
-	loadCommand          string = "LOAD"
-	membersCommand       string = "SMEMBERS"
-	multiCommand         string = "MULTI"
-	pingCommand          string = "PING"
-	removeMemberCommand  string = "SREM"
-	scriptCommand        string = "SCRIPT"
-	selectCommand        string = "SELECT"
-	setCommand           string = "SET"
-	setExpirationCommand string = "SETEX"
+	AddToSetCommand      string = "SADD"
+	AllKeysCommand       string = "*"
+	AuthCommand          string = "AUTH"
+	DeleteCommand        string = "DEL"
+	DependencyPrefix     string = "depend:"
+	EvalCommand          string = "EVALSHA"
+	ExecuteCommand       string = "EXEC"
+	ExistsCommand        string = "EXISTS"
+	ExpireCommand        string = "EXPIRE"
+	FlushAllCommand      string = "FLUSHALL"
+	GetCommand           string = "GET"
+	HashGetCommand       string = "HGET"
+	HashKeySetCommand    string = "HSET"
+	HashMapGetCommand    string = "HMGET"
+	HashMapSetCommand    string = "HMSET"
+	IsMemberCommand      string = "SISMEMBER"
+	KeysCommand          string = "KEYS"
+	ListPushCommand      string = "RPUSH"
+	ListRangeCommand     string = "LRANGE"
+	LoadCommand          string = "LOAD"
+	MembersCommand       string = "SMEMBERS"
+	MultiCommand         string = "MULTI"
+	PingCommand          string = "PING"
+	RemoveMemberCommand  string = "SREM"
+	ScriptCommand        string = "SCRIPT"
+	SelectCommand        string = "SELECT"
+	SetCommand           string = "SET"
+	SetExpirationCommand string = "SETEX"
 )
 
 // Get gets a key from redis in string format
@@ -60,7 +60,7 @@ func Get(client *Client, key string) (string, error) {
 //
 // Spec: https://redis.io/commands/get
 func GetRaw(conn redis.Conn, key string) (string, error) {
-	return redis.String(conn.Do(getCommand, key))
+	return redis.String(conn.Do(GetCommand, key))
 }
 
 // GetBytes gets a key from redis formatted in bytes
@@ -78,7 +78,7 @@ func GetBytes(client *Client, key string) ([]byte, error) {
 //
 // Spec: https://redis.io/commands/get
 func GetBytesRaw(conn redis.Conn, key string) ([]byte, error) {
-	return redis.Bytes(conn.Do(getCommand, key))
+	return redis.Bytes(conn.Do(GetCommand, key))
 }
 
 // GetList returns a []string stored in redis list
@@ -99,7 +99,7 @@ func GetListRaw(conn redis.Conn, key string) (list []string, err error) {
 
 	// This command takes two parameters specifying the range: 0 start, -1 is the end of the list
 	var values []interface{}
-	if values, err = redis.Values(conn.Do(listRangeCommand, key, 0, -1)); err != nil {
+	if values, err = redis.Values(conn.Do(ListRangeCommand, key, 0, -1)); err != nil {
 		return
 	}
 
@@ -134,7 +134,7 @@ func SetListRaw(conn redis.Conn, key string, slice []string) (err error) {
 	}
 
 	// Fire the set command
-	_, err = conn.Do(listPushCommand, args...)
+	_, err = conn.Do(ListPushCommand, args...)
 	return
 }
 
@@ -153,7 +153,7 @@ func GetAllKeys(client *Client) (keys []string, err error) {
 //
 // Spec: https://redis.io/commands/keys
 func GetAllKeysRaw(conn redis.Conn) (keys []string, err error) {
-	return redis.Strings(conn.Do(keysCommand, allKeysCommand))
+	return redis.Strings(conn.Do(KeysCommand, AllKeysCommand))
 }
 
 // Set will set the key in redis and keep a reference to each dependency
@@ -173,7 +173,7 @@ func Set(client *Client, key string, value interface{}, dependencies ...string) 
 //
 // Spec: https://redis.io/commands/set
 func SetRaw(conn redis.Conn, key string, value interface{}, dependencies ...string) error {
-	if _, err := conn.Do(setCommand, key, value); err != nil {
+	if _, err := conn.Do(SetCommand, key, value); err != nil {
 		return err
 	}
 
@@ -197,7 +197,7 @@ func SetExp(client *Client, key string, value interface{}, ttl time.Duration, de
 //
 // Spec: https://redis.io/commands/setex
 func SetExpRaw(conn redis.Conn, key string, value interface{}, ttl time.Duration, dependencies ...string) error {
-	if _, err := conn.Do(setExpirationCommand, key, int64(ttl.Seconds()), value); err != nil {
+	if _, err := conn.Do(SetExpirationCommand, key, int64(ttl.Seconds()), value); err != nil {
 		return err
 	}
 
@@ -219,7 +219,7 @@ func Exists(client *Client, key string) (bool, error) {
 //
 // Spec: https://redis.io/commands/exists
 func ExistsRaw(conn redis.Conn, key string) (bool, error) {
-	return redis.Bool(conn.Do(existsCommand, key))
+	return redis.Bool(conn.Do(ExistsCommand, key))
 }
 
 // Expire sets the expiration for a given key
@@ -237,7 +237,7 @@ func Expire(client *Client, key string, duration time.Duration) error {
 //
 // Spec: https://redis.io/commands/expire
 func ExpireRaw(conn redis.Conn, key string, duration time.Duration) (err error) {
-	_, err = conn.Do(expireCommand, key, int64(duration.Seconds()))
+	_, err = conn.Do(ExpireCommand, key, int64(duration.Seconds()))
 	return
 }
 
@@ -257,7 +257,7 @@ func DeleteWithoutDependency(client *Client, keys ...string) (int, error) {
 // Spec: https://redis.io/commands/del
 func DeleteWithoutDependencyRaw(conn redis.Conn, keys ...string) (total int, err error) {
 	for _, key := range keys {
-		if _, err = conn.Do(deleteCommand, key); err != nil {
+		if _, err = conn.Do(DeleteCommand, key); err != nil {
 			return
 		}
 		total++
@@ -283,7 +283,7 @@ func DestroyCache(client *Client) error {
 //
 // Spec: https://redis.io/commands/flushall
 func DestroyCacheRaw(conn redis.Conn) (err error) {
-	_, err = conn.Do(flushAllCommand)
+	_, err = conn.Do(FlushAllCommand)
 	return
 }
 

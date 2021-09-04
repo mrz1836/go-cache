@@ -17,7 +17,7 @@ func SetAdd(client *Client, setName, member interface{}, dependencies ...string)
 //
 // Spec: https://redis.io/commands/sadd
 func SetAddRaw(conn redis.Conn, setName, member interface{}, dependencies ...string) error {
-	if _, err := conn.Do(addToSetCommand, setName, member); err != nil {
+	if _, err := conn.Do(AddToSetCommand, setName, member); err != nil {
 		return err
 	}
 
@@ -50,7 +50,7 @@ func SetAddManyRaw(conn redis.Conn, setName string, members ...interface{}) (err
 	}
 
 	// Fire the delete command
-	_, err = conn.Do(addToSetCommand, args...)
+	_, err = conn.Do(AddToSetCommand, args...)
 	return
 }
 
@@ -69,7 +69,7 @@ func SetIsMember(client *Client, set, member interface{}) (bool, error) {
 //
 // Spec: https://redis.io/commands/sismember
 func SetIsMemberRaw(conn redis.Conn, set, member interface{}) (bool, error) {
-	return redis.Bool(conn.Do(isMemberCommand, set, member))
+	return redis.Bool(conn.Do(IsMemberCommand, set, member))
 }
 
 // SetRemoveMember removes the member from the set
@@ -87,7 +87,7 @@ func SetRemoveMember(client *Client, set, member interface{}) error {
 //
 // Spec: https://redis.io/commands/srem
 func SetRemoveMemberRaw(conn redis.Conn, set, member interface{}) (err error) {
-	_, err = conn.Do(removeMemberCommand, set, member)
+	_, err = conn.Do(RemoveMemberCommand, set, member)
 	return
 }
 
@@ -106,5 +106,5 @@ func SetMembers(client *Client, set interface{}) ([]string, error) {
 //
 // Spec: https://redis.io/commands/smembers
 func SetMembersRaw(conn redis.Conn, set interface{}) ([]string, error) {
-	return redis.Strings(conn.Do(membersCommand, set))
+	return redis.Strings(conn.Do(MembersCommand, set))
 }

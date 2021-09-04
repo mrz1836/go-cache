@@ -35,13 +35,14 @@ func (c *Client) CloseAll(conn redis.Conn) redis.Conn {
 }
 
 // GetConnection will return a connection from the pool. (convenience method)
-// The connection must be closed when done and return it to the pool
+// The connection must be closed when you're finished
+// Deprecated: use GetConnectionWithContext()
 func (c *Client) GetConnection() redis.Conn {
 	return c.Pool.Get()
 }
 
 // GetConnectionWithContext will return a connection from the pool. (convenience method)
-// The connection must be closed when done and return it to the pool
+// The connection must be closed when you're finished
 func (c *Client) GetConnectionWithContext(ctx context.Context) (redis.Conn, error) {
 	return c.Pool.GetContext(ctx)
 }
@@ -83,7 +84,7 @@ func Connect(redisURL string, maxActiveConnections, idleConnections int, maxConn
 				if time.Since(t) < time.Minute {
 					return nil
 				}
-				_, doErr := c.Do(pingCommand)
+				_, doErr := c.Do(PingCommand)
 				return doErr
 			},
 		},
@@ -123,7 +124,7 @@ func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.
 	// Attempt authentication if needed
 	if redisURL.User != nil {
 		if password, ok := redisURL.User.Password(); ok {
-			if _, err = conn.Do(authCommand, password); err != nil {
+			if _, err = conn.Do(AuthCommand, password); err != nil {
 				conn = nil
 				return
 			}
@@ -132,7 +133,7 @@ func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.
 
 	// Fire a select on DB
 	if len(redisURL.Path) > 1 {
-		_, err = conn.Do(selectCommand, strings.TrimPrefix(redisURL.Path, "/"))
+		_, err = conn.Do(SelectCommand, strings.TrimPrefix(redisURL.Path, "/"))
 	}
 
 	return

@@ -368,7 +368,7 @@ func TestConnectToURL(t *testing.T) {
 
 		// Try to ping
 		var pong string
-		pong, err = redis.String(c.Do(pingCommand))
+		pong, err = redis.String(c.Do(PingCommand))
 		assert.NoError(t, err)
 		assert.Equal(t, "PONG", pong)
 	})
@@ -385,7 +385,7 @@ func TestConnectToURL(t *testing.T) {
 
 		// Try to ping
 		var pong string
-		pong, err = redis.String(c.Do(pingCommand))
+		pong, err = redis.String(c.Do(PingCommand))
 		assert.NoError(t, err)
 		assert.Equal(t, "PONG", pong)
 	})

@@ -41,7 +41,7 @@ func loadMockRedis() (client *Client, conn *redigomock.Conn) {
 				if time.Since(t) < time.Minute {
 					return nil
 				}
-				_, doErr := c.Do(pingCommand)
+				_, doErr := c.Do(PingCommand)
 				return doErr
 			},
 		},
@@ -105,15 +105,15 @@ func TestSet(t *testing.T) {
 				var commands []*redigomock.Cmd
 
 				// The main command to test
-				commands = append(commands, conn.Command(setCommand, test.key, test.value).Expect(test.value))
+				commands = append(commands, conn.Command(SetCommand, test.key, test.value).Expect(test.value))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					commands = append(commands, conn.Command(multiCommand))
+					commands = append(commands, conn.Command(MultiCommand))
 					for _, dep := range test.dependencies {
-						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.key))
+						commands = append(commands, conn.Command(AddToSetCommand, DependencyPrefix+dep, test.key))
 					}
-					commands = append(commands, conn.Command(executeCommand))
+					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := Set(client, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
@@ -219,15 +219,15 @@ func TestSetExp(t *testing.T) {
 				var commands []*redigomock.Cmd
 
 				// The main command to test
-				commands = append(commands, conn.Command(setExpirationCommand, test.key, int64(test.expiration.Seconds()), test.value).Expect(test.value))
+				commands = append(commands, conn.Command(SetExpirationCommand, test.key, int64(test.expiration.Seconds()), test.value).Expect(test.value))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					commands = append(commands, conn.Command(multiCommand))
+					commands = append(commands, conn.Command(MultiCommand))
 					for _, dep := range test.dependencies {
-						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.key))
+						commands = append(commands, conn.Command(AddToSetCommand, DependencyPrefix+dep, test.key))
 					}
-					commands = append(commands, conn.Command(executeCommand))
+					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := SetExp(client, test.key, test.value, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
@@ -321,7 +321,7 @@ func TestGet(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				getCmd := conn.Command(getCommand, test.key).Expect(test.value)
+				getCmd := conn.Command(GetCommand, test.key).Expect(test.value)
 
 				val, err := Get(client, test.key)
 				assert.NoError(t, err)
@@ -402,7 +402,7 @@ func TestGetBytes(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				getCmd := conn.Command(getCommand, test.key).Expect([]byte(test.value))
+				getCmd := conn.Command(GetCommand, test.key).Expect([]byte(test.value))
 
 				val, err := GetBytes(client, test.key)
 				assert.NoError(t, err)
@@ -470,7 +470,7 @@ func TestGetAllKeys(t *testing.T) {
 		conn.Clear()
 
 		// The main command to test
-		getCmd := conn.Command(keysCommand, allKeysCommand).Expect([]interface{}{[]byte(testKey)})
+		getCmd := conn.Command(KeysCommand, AllKeysCommand).Expect([]interface{}{[]byte(testKey)})
 
 		val, err := GetAllKeys(client)
 		assert.NoError(t, err)
@@ -538,7 +538,7 @@ func TestExists(t *testing.T) {
 		// todo: add table tests
 
 		// The main command to test
-		existsCmd := conn.Command(existsCommand, testKey).Expect(interface{}(int64(1)))
+		existsCmd := conn.Command(ExistsCommand, testKey).Expect(interface{}(int64(1)))
 
 		val, err := Exists(client, testKey)
 		assert.NoError(t, err)
@@ -616,7 +616,7 @@ func TestExpire(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				expireCmd := conn.Command(expireCommand, test.key, int64(test.expiration.Seconds()))
+				expireCmd := conn.Command(ExpireCommand, test.key, int64(test.expiration.Seconds()))
 
 				err := Expire(client, test.key, test.expiration)
 				assert.NoError(t, err)
@@ -699,7 +699,7 @@ func TestDestroyCache(t *testing.T) {
 		conn.Clear()
 
 		// The main command to test
-		destroyCmd := conn.Command(flushAllCommand)
+		destroyCmd := conn.Command(FlushAllCommand)
 
 		err := DestroyCache(client)
 		assert.NoError(t, err)
@@ -802,7 +802,7 @@ func TestGetList(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				getCmd := conn.Command(listRangeCommand, test.key, 0, -1).Expect(test.expectedList)
+				getCmd := conn.Command(ListRangeCommand, test.key, 0, -1).Expect(test.expectedList)
 
 				list, err := GetList(client, test.key)
 				assert.NoError(t, err)
@@ -902,7 +902,7 @@ func TestSetList(t *testing.T) {
 				}
 
 				// The main command to test
-				setCmd := conn.Command(listPushCommand, args...)
+				setCmd := conn.Command(ListPushCommand, args...)
 
 				err := SetList(client, test.key, test.inputList)
 				assert.NoError(t, err)
@@ -994,7 +994,7 @@ func TestDeleteWithoutDependency(t *testing.T) {
 				// The main command to test
 				var commands []*redigomock.Cmd
 				for _, key := range test.keys {
-					cmd := conn.Command(deleteCommand, key)
+					cmd := conn.Command(DeleteCommand, key)
 					commands = append(commands, cmd)
 				}
 
@@ -1114,15 +1114,15 @@ func TestSetToJSON(t *testing.T) {
 				var commands []*redigomock.Cmd
 
 				// The main command to test
-				commands = append(commands, conn.Command(setCommand, test.key, string(responseBytes)))
+				commands = append(commands, conn.Command(SetCommand, test.key, string(responseBytes)))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					commands = append(commands, conn.Command(multiCommand))
+					commands = append(commands, conn.Command(MultiCommand))
 					for _, dep := range test.dependencies {
-						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.key))
+						commands = append(commands, conn.Command(AddToSetCommand, DependencyPrefix+dep, test.key))
 					}
-					commands = append(commands, conn.Command(executeCommand))
+					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err = SetToJSONRaw(conn, test.key, test.modelData, 0, test.dependencies...)
 					assert.NoError(t, err)
@@ -1192,15 +1192,15 @@ func TestSetToJSON(t *testing.T) {
 				var commands []*redigomock.Cmd
 
 				// The main command to test
-				commands = append(commands, conn.Command(setExpirationCommand, test.key, int64(test.expiration.Seconds()), string(responseBytes)))
+				commands = append(commands, conn.Command(SetExpirationCommand, test.key, int64(test.expiration.Seconds()), string(responseBytes)))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					commands = append(commands, conn.Command(multiCommand))
+					commands = append(commands, conn.Command(MultiCommand))
 					for _, dep := range test.dependencies {
-						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.key))
+						commands = append(commands, conn.Command(AddToSetCommand, DependencyPrefix+dep, test.key))
 					}
-					commands = append(commands, conn.Command(executeCommand))
+					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err = SetToJSONRaw(conn, test.key, test.modelData, test.expiration, test.dependencies...)
 					assert.NoError(t, err)

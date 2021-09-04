@@ -38,15 +38,15 @@ func TestSetAdd(t *testing.T) {
 				var commands []*redigomock.Cmd
 
 				// The main command to test
-				commands = append(commands, conn.Command(addToSetCommand, test.setName, test.member))
+				commands = append(commands, conn.Command(AddToSetCommand, test.setName, test.member))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					commands = append(commands, conn.Command(multiCommand))
+					commands = append(commands, conn.Command(MultiCommand))
 					for _, dep := range test.dependencies {
-						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.setName))
+						commands = append(commands, conn.Command(AddToSetCommand, DependencyPrefix+dep, test.setName))
 					}
-					commands = append(commands, conn.Command(executeCommand))
+					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := SetAddRaw(conn, test.setName, test.member, test.dependencies...)
 					assert.NoError(t, err)
@@ -142,7 +142,7 @@ func TestSetAddMany(t *testing.T) {
 				}
 
 				// The main command to test
-				commands = append(commands, conn.Command(addToSetCommand, args...))
+				commands = append(commands, conn.Command(AddToSetCommand, args...))
 
 				err := SetAddManyRaw(conn, test.setName, test.members...)
 				assert.NoError(t, err)
@@ -226,7 +226,7 @@ func TestSetRemoveMember(t *testing.T) {
 				var commands []*redigomock.Cmd
 
 				// The main command to test
-				commands = append(commands, conn.Command(removeMemberCommand, test.setName, test.member))
+				commands = append(commands, conn.Command(RemoveMemberCommand, test.setName, test.member))
 
 				err := SetRemoveMember(client, test.setName, test.member)
 				assert.NoError(t, err)
@@ -317,7 +317,7 @@ func TestSetIsMember(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				isCmd := conn.Command(isMemberCommand, test.setName, test.member).Expect(interface{}(test.expectedFound))
+				isCmd := conn.Command(IsMemberCommand, test.setName, test.member).Expect(interface{}(test.expectedFound))
 
 				found, err := SetIsMemberRaw(conn, test.setName, test.member)
 				assert.NoError(t, err)
@@ -394,7 +394,7 @@ func TestSetMembers(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				cmd := conn.Command(membersCommand, test.setName).Expect(test.expectedFound)
+				cmd := conn.Command(MembersCommand, test.setName).Expect(test.expectedFound)
 
 				found, err := SetMembersRaw(conn, test.setName)
 				assert.NoError(t, err)

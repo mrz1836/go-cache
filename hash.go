@@ -23,7 +23,7 @@ func HashSet(client *Client, hashName, hashKey string, value interface{}, depend
 //
 // Spec: https://redis.io/commands/hset
 func HashSetRaw(conn redis.Conn, hashName, hashKey string, value interface{}, dependencies ...string) error {
-	if _, err := conn.Do(hashKeySetCommand, hashName, hashKey, value); err != nil {
+	if _, err := conn.Do(HashKeySetCommand, hashName, hashKey, value); err != nil {
 		return err
 	}
 
@@ -45,7 +45,7 @@ func HashGet(client *Client, hash, key string) (string, error) {
 //
 // Spec: https://redis.io/commands/hget
 func HashGetRaw(conn redis.Conn, hash, key string) (string, error) {
-	return redis.String(conn.Do(hashGetCommand, hash, key))
+	return redis.String(conn.Do(HashGetCommand, hash, key))
 }
 
 // HashMapGet gets values from a hash map for corresponding keys
@@ -68,7 +68,7 @@ func HashMapGetRaw(conn redis.Conn, hashName string, keys ...interface{}) ([]str
 	keys = append([]interface{}{hashName}, keys...)
 
 	// Fire the command with all keys
-	return redis.Strings(conn.Do(hashMapGetCommand, keys...))
+	return redis.Strings(conn.Do(HashMapGetCommand, keys...))
 }
 
 // HashMapSet will set the hashKey to the value in the specified hashName and link a
@@ -98,7 +98,7 @@ func HashMapSetRaw(conn redis.Conn, hashName string, pairs [][2]interface{}, dep
 	}
 
 	// Set the hash map
-	if _, err := conn.Do(hashMapSetCommand, args...); err != nil {
+	if _, err := conn.Do(HashMapSetCommand, args...); err != nil {
 		return err
 	}
 
@@ -136,12 +136,12 @@ func HashMapSetExpRaw(conn redis.Conn, hashName string, pairs [][2]interface{},
 	}
 
 	// Set the hash map
-	if _, err := conn.Do(hashMapSetCommand, args...); err != nil {
+	if _, err := conn.Do(HashMapSetCommand, args...); err != nil {
 		return err
 	}
 
 	// Fire the "expire" command
-	if _, err := conn.Do(expireCommand, hashName, int64(ttl.Seconds())); err != nil {
+	if _, err := conn.Do(ExpireCommand, hashName, int64(ttl.Seconds())); err != nil {
 		return err
 	}
 

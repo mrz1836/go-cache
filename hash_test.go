@@ -44,15 +44,15 @@ func TestHashSet(t *testing.T) {
 				var commands []*redigomock.Cmd
 
 				// The main command to test
-				commands = append(commands, conn.Command(hashKeySetCommand, test.hashName, test.key, test.value).Expect(test.value))
+				commands = append(commands, conn.Command(HashKeySetCommand, test.hashName, test.key, test.value).Expect(test.value))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					commands = append(commands, conn.Command(multiCommand))
+					commands = append(commands, conn.Command(MultiCommand))
 					for _, dep := range test.dependencies {
-						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.hashName))
+						commands = append(commands, conn.Command(AddToSetCommand, DependencyPrefix+dep, test.hashName))
 					}
-					commands = append(commands, conn.Command(executeCommand))
+					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := HashSetRaw(conn, test.hashName, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
@@ -138,7 +138,7 @@ func TestHashGet(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				getCmd := conn.Command(hashGetCommand, test.hashName, test.key).Expect(test.value)
+				getCmd := conn.Command(HashGetCommand, test.hashName, test.key).Expect(test.value)
 
 				val, err := HashGetRaw(conn, test.hashName, test.key)
 				assert.NoError(t, err)
@@ -247,15 +247,15 @@ func TestHashMapSet(t *testing.T) {
 				var commands []*redigomock.Cmd
 
 				// The main command to test
-				commands = append(commands, conn.Command(hashMapSetCommand, args...))
+				commands = append(commands, conn.Command(HashMapSetCommand, args...))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					commands = append(commands, conn.Command(multiCommand))
+					commands = append(commands, conn.Command(MultiCommand))
 					for _, dep := range test.dependencies {
-						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.hashName))
+						commands = append(commands, conn.Command(AddToSetCommand, DependencyPrefix+dep, test.hashName))
 					}
-					commands = append(commands, conn.Command(executeCommand))
+					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := HashMapSetRaw(conn, test.hashName, test.pairs, test.dependencies...)
 					assert.NoError(t, err)
@@ -396,16 +396,16 @@ func TestHashMapSetExp(t *testing.T) {
 				var commands []*redigomock.Cmd
 
 				// The main command to test
-				commands = append(commands, conn.Command(hashMapSetCommand, args...))
-				commands = append(commands, conn.Command(expireCommand, test.hashName, int64(test.expiration.Seconds())))
+				commands = append(commands, conn.Command(HashMapSetCommand, args...))
+				commands = append(commands, conn.Command(ExpireCommand, test.hashName, int64(test.expiration.Seconds())))
 
 				// Loop for each dependency
 				if len(test.dependencies) > 0 {
-					commands = append(commands, conn.Command(multiCommand))
+					commands = append(commands, conn.Command(MultiCommand))
 					for _, dep := range test.dependencies {
-						commands = append(commands, conn.Command(addToSetCommand, dependencyPrefix+dep, test.hashName))
+						commands = append(commands, conn.Command(AddToSetCommand, DependencyPrefix+dep, test.hashName))
 					}
-					commands = append(commands, conn.Command(executeCommand))
+					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := HashMapSetExp(client, test.hashName, test.pairs, test.expiration, test.dependencies...)
 					assert.NoError(t, err)

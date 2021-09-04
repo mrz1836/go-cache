@@ -32,7 +32,7 @@ func RegisterScript(client *Client, script string) (string, error) {
 //
 // Spec: https://redis.io/commands/script-load
 func RegisterScriptRaw(client *Client, conn redis.Conn, script string) (sha string, err error) {
-	if sha, err = redis.String(conn.Do(scriptCommand, loadCommand, script)); err != nil {
+	if sha, err = redis.String(conn.Do(ScriptCommand, LoadCommand, script)); err != nil {
 		return
 	}
 	client.ScriptsLoaded = append(client.ScriptsLoaded, sha)
@@ -52,11 +52,11 @@ local number_of_keys = table.getn(ARGV)
 local all_keys = {}
 for _, key in ipairs(ARGV) do
 	table.insert(all_keys, key)
-	local set = redis.call("` + membersCommand + `", key)
+	local set = redis.call("` + MembersCommand + `", key)
 	for _, v in ipairs(set) do
 	  table.insert(all_keys, v)
 	end
 end
-return redis.call("` + deleteCommand + `", unpack(all_keys))
+return redis.call("` + DeleteCommand + `", unpack(all_keys))
 --@end=lua@
 `

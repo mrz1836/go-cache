@@ -205,12 +205,12 @@ func TestDependencyManagement(t *testing.T) {
 
 		// Test for dependent key 1
 		var ok bool
-		ok, err = SetIsMemberRaw(conn, "depend:dependent-1", "test-set-dep")
+		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"dependent-1", "test-set-dep")
 		assert.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Test for dependent key 2
-		ok, err = SetIsMemberRaw(conn, "depend:dependent-2", "test-set-dep")
+		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"dependent-2", "test-set-dep")
 		assert.NoError(t, err)
 		assert.Equal(t, true, ok)
 
@@ -227,12 +227,12 @@ func TestDependencyManagement(t *testing.T) {
 		assert.Equal(t, false, found)
 
 		// Test for dependency relation
-		found, err = ExistsRaw(conn, "depend:dependent-1")
+		found, err = ExistsRaw(conn, DependencyPrefix+"dependent-1")
 		assert.NoError(t, err)
 		assert.Equal(t, false, found)
 
 		// Test for dependency relation 2
-		found, err = SetIsMemberRaw(conn, "depend:dependent-2", "test-set-dep")
+		found, err = SetIsMemberRaw(conn, DependencyPrefix+"dependent-2", "test-set-dep")
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
 
@@ -242,7 +242,7 @@ func TestDependencyManagement(t *testing.T) {
 		assert.Equal(t, 1, total)
 
 		// Test for dependency relation
-		found, err = ExistsRaw(conn, "depend:dependent-2")
+		found, err = ExistsRaw(conn, DependencyPrefix+"dependent-2")
 		assert.NoError(t, err)
 		assert.Equal(t, false, found)
 
@@ -299,12 +299,12 @@ func TestHashMapDependencyManagement(t *testing.T) {
 
 		// Test for dependent key 1
 		var ok bool
-		ok, err = SetIsMemberRaw(conn, "depend:test-hash-map-depend-1", "test-hash-map-dependency")
+		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"test-hash-map-depend-1", "test-hash-map-dependency")
 		assert.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Test for dependent key 2
-		ok, err = SetIsMemberRaw(conn, "depend:test-hash-map-depend-2", "test-hash-map-dependency")
+		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"test-hash-map-depend-2", "test-hash-map-dependency")
 		assert.NoError(t, err)
 		assert.Equal(t, true, ok)
 

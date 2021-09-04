@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -9,8 +10,11 @@ import (
 
 func main() {
 
+	ctx := context.Background()
+
 	// Create a new client and pool
 	client, err := cache.Connect(
+		ctx,
 		"redis://localhost:6379",
 		0,
 		10,
@@ -23,9 +27,9 @@ func main() {
 	}
 
 	// Run command
-	_ = cache.Set(client, "test-key", "test-value")
+	_ = cache.Set(ctx, client, "test-key", "test-value")
 
 	// Exists
-	found, _ := cache.Exists(client, "test-key")
+	found, _ := cache.Exists(ctx, client, "test-key")
 	log.Printf("found: %v", found)
 }

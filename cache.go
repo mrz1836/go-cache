@@ -7,6 +7,7 @@
 package cache
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -49,8 +50,11 @@ const (
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: GetRaw()
-func Get(client *Client, key string) (string, error) {
-	conn := client.GetConnection()
+func Get(ctx context.Context, client *Client, key string) (string, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return "", err
+	}
 	defer client.CloseConnection(conn)
 	return GetRaw(conn, key)
 }
@@ -67,8 +71,11 @@ func GetRaw(conn redis.Conn, key string) (string, error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: GetBytesRaw()
-func GetBytes(client *Client, key string) ([]byte, error) {
-	conn := client.GetConnection()
+func GetBytes(ctx context.Context, client *Client, key string) ([]byte, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	defer client.CloseConnection(conn)
 	return GetBytesRaw(conn, key)
 }
@@ -85,8 +92,11 @@ func GetBytesRaw(conn redis.Conn, key string) ([]byte, error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: GetListRaw()
-func GetList(client *Client, key string) ([]string, error) {
-	conn := client.GetConnection()
+func GetList(ctx context.Context, client *Client, key string) ([]string, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	defer client.CloseConnection(conn)
 	return GetListRaw(conn, key)
 }
@@ -112,8 +122,11 @@ func GetListRaw(conn redis.Conn, key string) (list []string, err error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: SetListRaw()
-func SetList(client *Client, key string, slice []string) error {
-	conn := client.GetConnection()
+func SetList(ctx context.Context, client *Client, key string, slice []string) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return SetListRaw(conn, key, slice)
 }
@@ -142,8 +155,12 @@ func SetListRaw(conn redis.Conn, key string, slice []string) (err error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: GetAllKeysRaw()
-func GetAllKeys(client *Client) (keys []string, err error) {
-	conn := client.GetConnection()
+func GetAllKeys(ctx context.Context, client *Client) (keys []string, err error) {
+	var conn redis.Conn
+	conn, err = client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	defer client.CloseConnection(conn)
 	return GetAllKeysRaw(conn)
 }
@@ -161,8 +178,12 @@ func GetAllKeysRaw(conn redis.Conn) (keys []string, err error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: SetRaw()
-func Set(client *Client, key string, value interface{}, dependencies ...string) error {
-	conn := client.GetConnection()
+func Set(ctx context.Context, client *Client, key string,
+	value interface{}, dependencies ...string) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return SetRaw(conn, key, value, dependencies...)
 }
@@ -185,8 +206,12 @@ func SetRaw(conn redis.Conn, key string, value interface{}, dependencies ...stri
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: SetExpRaw()
-func SetExp(client *Client, key string, value interface{}, ttl time.Duration, dependencies ...string) error {
-	conn := client.GetConnection()
+func SetExp(ctx context.Context, client *Client, key string, value interface{},
+	ttl time.Duration, dependencies ...string) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return SetExpRaw(conn, key, value, ttl, dependencies...)
 }
@@ -196,7 +221,8 @@ func SetExp(client *Client, key string, value interface{}, ttl time.Duration, de
 // Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/setex
-func SetExpRaw(conn redis.Conn, key string, value interface{}, ttl time.Duration, dependencies ...string) error {
+func SetExpRaw(conn redis.Conn, key string, value interface{},
+	ttl time.Duration, dependencies ...string) error {
 	if _, err := conn.Do(SetExpirationCommand, key, int64(ttl.Seconds()), value); err != nil {
 		return err
 	}
@@ -208,8 +234,11 @@ func SetExpRaw(conn redis.Conn, key string, value interface{}, ttl time.Duration
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: ExistsRaw()
-func Exists(client *Client, key string) (bool, error) {
-	conn := client.GetConnection()
+func Exists(ctx context.Context, client *Client, key string) (bool, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return false, err
+	}
 	defer client.CloseConnection(conn)
 	return ExistsRaw(conn, key)
 }
@@ -226,8 +255,11 @@ func ExistsRaw(conn redis.Conn, key string) (bool, error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: ExpireRaw()
-func Expire(client *Client, key string, duration time.Duration) error {
-	conn := client.GetConnection()
+func Expire(ctx context.Context, client *Client, key string, duration time.Duration) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return ExpireRaw(conn, key, duration)
 }
@@ -245,8 +277,11 @@ func ExpireRaw(conn redis.Conn, key string, duration time.Duration) (err error) 
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: DeleteWithoutDependencyRaw()
-func DeleteWithoutDependency(client *Client, keys ...string) (int, error) {
-	conn := client.GetConnection()
+func DeleteWithoutDependency(ctx context.Context, client *Client, keys ...string) (int, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return 0, err
+	}
 	defer client.CloseConnection(conn)
 	return DeleteWithoutDependencyRaw(conn, keys...)
 }
@@ -271,8 +306,11 @@ func DeleteWithoutDependencyRaw(conn redis.Conn, keys ...string) (total int, err
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: DestroyCacheRaw()
-func DestroyCache(client *Client) error {
-	conn := client.GetConnection()
+func DestroyCache(ctx context.Context, client *Client) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return DestroyCacheRaw(conn)
 }
@@ -291,9 +329,12 @@ func DestroyCacheRaw(conn redis.Conn) (err error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: SetToJSONRaw()
-func SetToJSON(client *Client, keyName string, modelData interface{},
+func SetToJSON(ctx context.Context, client *Client, keyName string, modelData interface{},
 	ttl time.Duration, dependencies ...string) error {
-	conn := client.GetConnection()
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return SetToJSONRaw(conn, keyName, modelData, ttl, dependencies...)
 }

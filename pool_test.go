@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -16,6 +17,7 @@ func TestConnect(t *testing.T) {
 		t.Parallel()
 
 		client, err := Connect(
+			context.Background(),
 			testLocalConnectionURL,
 			testMaxActiveConnections,
 			testMaxIdleConnections,
@@ -39,6 +41,7 @@ func TestConnect(t *testing.T) {
 		}
 
 		client, err := Connect(
+			context.Background(),
 			testLocalConnectionURL,
 			testMaxActiveConnections,
 			testMaxIdleConnections,
@@ -60,6 +63,7 @@ func TestConnect(t *testing.T) {
 		t.Parallel()
 
 		client, err := Connect(
+			context.Background(),
 			testLocalConnectionURL,
 			testMaxActiveConnections,
 			testMaxIdleConnections,
@@ -82,6 +86,7 @@ func TestConnect(t *testing.T) {
 		t.Parallel()
 
 		client, err := Connect(
+			context.Background(),
 			"",
 			testMaxActiveConnections,
 			testMaxIdleConnections,
@@ -98,6 +103,7 @@ func TestConnect(t *testing.T) {
 func ExampleConnect() {
 
 	client, _ := Connect(
+		context.Background(),
 		testLocalConnectionURL,
 		testMaxActiveConnections,
 		testMaxIdleConnections,
@@ -160,6 +166,7 @@ func TestClient_GetConnection(t *testing.T) {
 		}
 
 		client, err := Connect(
+			context.Background(),
 			testLocalConnectionURL,
 			testMaxActiveConnections,
 			testMaxIdleConnections,
@@ -171,8 +178,10 @@ func TestClient_GetConnection(t *testing.T) {
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
-		conn := client.GetConnection()
+		var conn redis.Conn
+		conn, err = client.GetConnectionWithContext(context.Background())
 		assert.NotNil(t, conn)
+		assert.NoError(t, err)
 
 		client.Close()
 		assert.Nil(t, client.Pool)
@@ -183,6 +192,7 @@ func TestClient_GetConnection(t *testing.T) {
 func ExampleClient_GetConnection() {
 
 	client, _ := Connect(
+		context.Background(),
 		testLocalConnectionURL,
 		testMaxActiveConnections,
 		testMaxIdleConnections,
@@ -191,7 +201,7 @@ func ExampleClient_GetConnection() {
 		false,
 	)
 
-	conn := client.GetConnection()
+	conn, _ := client.GetConnectionWithContext(context.Background())
 	defer client.CloseAll(conn)
 	if conn != nil {
 		fmt.Printf("got a connection")
@@ -216,6 +226,7 @@ func TestClient_CloseConnection(t *testing.T) {
 		}
 
 		client, err := Connect(
+			context.Background(),
 			testLocalConnectionURL,
 			testMaxActiveConnections,
 			testMaxIdleConnections,
@@ -227,8 +238,10 @@ func TestClient_CloseConnection(t *testing.T) {
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
-		conn := client.GetConnection()
+		var conn redis.Conn
+		conn, err = client.GetConnectionWithContext(context.Background())
 		assert.NotNil(t, conn)
+		assert.NoError(t, err)
 
 		conn = client.CloseConnection(conn)
 		assert.Nil(t, conn)
@@ -270,6 +283,7 @@ func TestClient_CloseAll(t *testing.T) {
 		}
 
 		client, err := Connect(
+			context.Background(),
 			testLocalConnectionURL,
 			testMaxActiveConnections,
 			testMaxIdleConnections,
@@ -281,8 +295,10 @@ func TestClient_CloseAll(t *testing.T) {
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
-		conn := client.GetConnection()
+		var conn redis.Conn
+		conn, err = client.GetConnectionWithContext(context.Background())
 		assert.NotNil(t, conn)
+		assert.NoError(t, err)
 
 		conn = client.CloseAll(conn)
 		assert.Nil(t, conn)

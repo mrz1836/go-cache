@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -54,6 +55,7 @@ func loadMockRedis() (client *Client, conn *redigomock.Conn) {
 // loadRealRedis will load a real redis connection
 func loadRealRedis() (client *Client, conn redis.Conn, err error) {
 	client, err = Connect(
+		context.Background(),
 		testLocalConnectionURL,
 		testMaxActiveConnections,
 		testMaxIdleConnections,
@@ -65,7 +67,7 @@ func loadRealRedis() (client *Client, conn redis.Conn, err error) {
 		return
 	}
 
-	conn = client.GetConnection()
+	conn, err = client.GetConnectionWithContext(context.Background())
 	return
 }
 
@@ -79,6 +81,8 @@ func TestSet(t *testing.T) {
 
 	t.Run("set command using mocked redis", func(t *testing.T) {
 		t.Parallel()
+
+		ctx := context.Background()
 
 		// Load redis
 		client, conn := loadMockRedis()
@@ -115,10 +119,10 @@ func TestSet(t *testing.T) {
 					}
 					commands = append(commands, conn.Command(ExecuteCommand))
 
-					err := Set(client, test.key, test.value, test.dependencies...)
+					err := Set(ctx, client, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
 				} else {
-					err := Set(client, test.key, test.value, test.dependencies...)
+					err := Set(ctx, client, test.key, test.value, test.dependencies...)
 					assert.NoError(t, err)
 				}
 
@@ -162,12 +166,12 @@ func TestSet(t *testing.T) {
 				assert.NoError(t, err)
 
 				// Run command
-				err = Set(client, test.key, test.value, test.dependencies...)
+				err = Set(context.Background(), client, test.key, test.value, test.dependencies...)
 				assert.NoError(t, err)
 
 				// Validate via getting the data from redis
 				var testVal string
-				testVal, err = Get(client, test.key)
+				testVal, err = Get(context.Background(), client, test.key)
 				assert.NoError(t, err)
 				assert.Equal(t, test.value, testVal)
 			})
@@ -185,7 +189,7 @@ func ExampleSet() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = Set(client, testKey, testStringValue, testDependantKey)
+	_ = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 	fmt.Printf("set: %s value: %s dep key: %s", testKey, testStringValue, testDependantKey)
 	// Output:set: test-key-name value: test-string-value dep key: test-dependant-key-name
 }
@@ -229,10 +233,10 @@ func TestSetExp(t *testing.T) {
 					}
 					commands = append(commands, conn.Command(ExecuteCommand))
 
-					err := SetExp(client, test.key, test.value, test.expiration, test.dependencies...)
+					err := SetExp(context.Background(), client, test.key, test.value, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
 				} else {
-					err := SetExp(client, test.key, test.value, test.expiration, test.dependencies...)
+					err := SetExp(context.Background(), client, test.key, test.value, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
 				}
 
@@ -259,12 +263,12 @@ func TestSetExp(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetExp(client, testKey, testStringValue, 2*time.Second, testDependantKey)
+		err = SetExp(context.Background(), client, testKey, testStringValue, 2*time.Second, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
-		testVal, err = Get(client, testKey)
+		testVal, err = Get(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 
@@ -273,7 +277,7 @@ func TestSetExp(t *testing.T) {
 		time.Sleep(time.Second * 3)
 
 		// Check that the key is expired
-		testVal, err = Get(client, testKey)
+		testVal, err = Get(context.Background(), client, testKey)
 		assert.Error(t, err)
 		assert.Equal(t, "", testVal)
 		assert.Equal(t, redis.ErrNil, err)
@@ -289,7 +293,7 @@ func ExampleSetExp() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = SetExp(client, testKey, testStringValue, 2*time.Minute, testDependantKey)
+	_ = SetExp(context.Background(), client, testKey, testStringValue, 2*time.Minute, testDependantKey)
 	fmt.Printf("set: %s value: %s exp: %v dep key: %s", testKey, testStringValue, 2*time.Minute, testDependantKey)
 	// Output:set: test-key-name value: test-string-value exp: 2m0s dep key: test-dependant-key-name
 }
@@ -323,7 +327,7 @@ func TestGet(t *testing.T) {
 				// The main command to test
 				getCmd := conn.Command(GetCommand, test.key).Expect(test.value)
 
-				val, err := Get(client, test.key)
+				val, err := Get(context.Background(), client, test.key)
 				assert.NoError(t, err)
 				assert.Equal(t, true, getCmd.Called)
 				assert.Equal(t, test.value, val)
@@ -347,12 +351,12 @@ func TestGet(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = Set(client, testKey, testStringValue, testDependantKey)
+		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
-		testVal, err = Get(client, testKey)
+		testVal, err = Get(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
@@ -367,10 +371,10 @@ func ExampleGet() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = Set(client, testKey, testStringValue, testDependantKey)
+	_ = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 
 	// Get the value
-	_, _ = Get(client, testKey)
+	_, _ = Get(context.Background(), client, testKey)
 	fmt.Printf("got value: %s", testStringValue)
 	// Output:got value: test-string-value
 }
@@ -404,7 +408,7 @@ func TestGetBytes(t *testing.T) {
 				// The main command to test
 				getCmd := conn.Command(GetCommand, test.key).Expect([]byte(test.value))
 
-				val, err := GetBytes(client, test.key)
+				val, err := GetBytes(context.Background(), client, test.key)
 				assert.NoError(t, err)
 				assert.Equal(t, true, getCmd.Called)
 				assert.Equal(t, []byte(test.value), val)
@@ -428,12 +432,12 @@ func TestGetBytes(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = Set(client, testKey, testStringValue, testDependantKey)
+		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var testVal []byte
-		testVal, err = GetBytes(client, testKey)
+		testVal, err = GetBytes(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, []byte(testStringValue), testVal)
 	})
@@ -448,10 +452,10 @@ func ExampleGetBytes() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = Set(client, testKey, testStringValue, testDependantKey)
+	_ = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 
 	// Get the value
-	_, _ = GetBytes(client, testKey)
+	_, _ = GetBytes(context.Background(), client, testKey)
 	fmt.Printf("got value: %s", testStringValue)
 	// Output:got value: test-string-value
 }
@@ -472,7 +476,7 @@ func TestGetAllKeys(t *testing.T) {
 		// The main command to test
 		getCmd := conn.Command(KeysCommand, AllKeysCommand).Expect([]interface{}{[]byte(testKey)})
 
-		val, err := GetAllKeys(client)
+		val, err := GetAllKeys(context.Background(), client)
 		assert.NoError(t, err)
 		assert.Equal(t, true, getCmd.Called)
 		assert.Equal(t, []string{testKey}, val)
@@ -494,12 +498,12 @@ func TestGetAllKeys(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = Set(client, testKey, testStringValue, testDependantKey)
+		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var keys []string
-		keys, err = GetAllKeys(client)
+		keys, err = GetAllKeys(context.Background(), client)
 		assert.NoError(t, err)
 		assert.Equal(t, 2, len(keys))
 	})
@@ -514,10 +518,10 @@ func ExampleGetAllKeys() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = Set(client, testKey, testStringValue, testDependantKey)
+	_ = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 
 	// Get the keys
-	_, _ = GetAllKeys(client)
+	_, _ = GetAllKeys(context.Background(), client)
 	fmt.Printf("found keys: %d", len([]string{testKey, testDependantKey}))
 	// Output:found keys: 2
 }
@@ -540,7 +544,7 @@ func TestExists(t *testing.T) {
 		// The main command to test
 		existsCmd := conn.Command(ExistsCommand, testKey).Expect(interface{}(int64(1)))
 
-		val, err := Exists(client, testKey)
+		val, err := Exists(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, true, existsCmd.Called)
 		assert.Equal(t, true, val)
@@ -562,12 +566,12 @@ func TestExists(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = Set(client, testKey, testStringValue, testDependantKey)
+		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
-		found, err = Exists(client, testKey)
+		found, err = Exists(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
@@ -582,10 +586,10 @@ func ExampleExists() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = Set(client, testKey, testStringValue, testDependantKey)
+	_ = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 
 	// Get the value
-	_, _ = Exists(client, testKey)
+	_, _ = Exists(context.Background(), client, testKey)
 	fmt.Print("key exists")
 	// Output:key exists
 }
@@ -618,7 +622,7 @@ func TestExpire(t *testing.T) {
 				// The main command to test
 				expireCmd := conn.Command(ExpireCommand, test.key, int64(test.expiration.Seconds()))
 
-				err := Expire(client, test.key, test.expiration)
+				err := Expire(context.Background(), client, test.key, test.expiration)
 				assert.NoError(t, err)
 				assert.Equal(t, true, expireCmd.Called)
 			})
@@ -641,17 +645,17 @@ func TestExpire(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetExp(client, testKey, testStringValue, 5*time.Second, testDependantKey)
+		err = SetExp(context.Background(), client, testKey, testStringValue, 5*time.Second, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
-		testVal, err = Get(client, testKey)
+		testVal, err = Get(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 
 		// Expire
-		err = Expire(client, testKey, 1*time.Second)
+		err = Expire(context.Background(), client, testKey, 1*time.Second)
 		if err != nil {
 			t.Fatal(err.Error())
 		}
@@ -661,7 +665,7 @@ func TestExpire(t *testing.T) {
 		time.Sleep(time.Second * 2)
 
 		// Check that the key is expired
-		testVal, err = Get(client, testKey)
+		testVal, err = Get(context.Background(), client, testKey)
 		assert.Error(t, err)
 		assert.Equal(t, redis.ErrNil, err)
 		assert.Equal(t, "", testVal)
@@ -677,10 +681,10 @@ func ExampleExpire() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = Set(client, testKey, testStringValue, testDependantKey)
+	_ = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 
 	// Fire the command
-	_ = Expire(client, testKey, 1*time.Minute)
+	_ = Expire(context.Background(), client, testKey, 1*time.Minute)
 	fmt.Printf("expiration on key: %s set for: %v", testKey, 1*time.Minute)
 	// Output:expiration on key: test-key-name set for: 1m0s
 }
@@ -701,7 +705,7 @@ func TestDestroyCache(t *testing.T) {
 		// The main command to test
 		destroyCmd := conn.Command(FlushAllCommand)
 
-		err := DestroyCache(client)
+		err := DestroyCache(context.Background(), client)
 		assert.NoError(t, err)
 		assert.Equal(t, true, destroyCmd.Called)
 	})
@@ -722,21 +726,21 @@ func TestDestroyCache(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = Set(client, testKey, testStringValue, testDependantKey)
+		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Test getting a value
 		var val string
-		val, err = Get(client, testKey)
+		val, err = Get(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, val, testStringValue)
 
 		// Check that the command worked
-		err = DestroyCache(client)
+		err = DestroyCache(context.Background(), client)
 		assert.NoError(t, err)
 
 		// Value should not exist
-		val, err = Get(client, testKey)
+		val, err = Get(context.Background(), client, testKey)
 		assert.Error(t, err)
 		assert.Equal(t, err, redis.ErrNil)
 		assert.Equal(t, val, "")
@@ -752,7 +756,7 @@ func ExampleDestroyCache() {
 	defer client.Close()
 
 	// Fire the command
-	_ = DestroyCache(client)
+	_ = DestroyCache(context.Background(), client)
 	fmt.Print("cache destroyed")
 	// Output:cache destroyed
 }
@@ -804,7 +808,7 @@ func TestGetList(t *testing.T) {
 				// The main command to test
 				getCmd := conn.Command(ListRangeCommand, test.key, 0, -1).Expect(test.expectedList)
 
-				list, err := GetList(client, test.key)
+				list, err := GetList(context.Background(), client, test.key)
 				assert.NoError(t, err)
 				assert.Equal(t, true, getCmd.Called)
 				assert.Equal(t, test.expectedStringList, list)
@@ -828,12 +832,12 @@ func TestGetList(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetList(client, testKey, []string{testStringValue})
+		err = SetList(context.Background(), client, testKey, []string{testStringValue})
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var list []string
-		list, err = GetList(client, testKey)
+		list, err = GetList(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, []string{testStringValue}, list)
 	})
@@ -848,10 +852,10 @@ func ExampleGetList() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = SetList(client, testKey, []string{testStringValue})
+	_ = SetList(context.Background(), client, testKey, []string{testStringValue})
 
 	// Fire the command
-	_, _ = GetList(client, testKey)
+	_, _ = GetList(context.Background(), client, testKey)
 	fmt.Printf("got list: %v", []string{testStringValue})
 	// Output:got list: [test-string-value]
 }
@@ -904,7 +908,7 @@ func TestSetList(t *testing.T) {
 				// The main command to test
 				setCmd := conn.Command(ListPushCommand, args...)
 
-				err := SetList(client, test.key, test.inputList)
+				err := SetList(context.Background(), client, test.key, test.inputList)
 				assert.NoError(t, err)
 				assert.Equal(t, true, setCmd.Called)
 			})
@@ -927,12 +931,12 @@ func TestSetList(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetList(client, testKey, []string{testStringValue})
+		err = SetList(context.Background(), client, testKey, []string{testStringValue})
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var list []string
-		list, err = GetList(client, testKey)
+		list, err = GetList(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, []string{testStringValue}, list)
 	})
@@ -947,10 +951,10 @@ func ExampleSetList() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = SetList(client, testKey, []string{testStringValue})
+	_ = SetList(context.Background(), client, testKey, []string{testStringValue})
 
 	// Fire the command
-	_, _ = GetList(client, testKey)
+	_, _ = GetList(context.Background(), client, testKey)
 	fmt.Printf("got list: %v", []string{testStringValue})
 	// Output:got list: [test-string-value]
 }
@@ -998,7 +1002,7 @@ func TestDeleteWithoutDependency(t *testing.T) {
 					commands = append(commands, cmd)
 				}
 
-				total, err := DeleteWithoutDependency(client, test.keys...)
+				total, err := DeleteWithoutDependency(context.Background(), client, test.keys...)
 				assert.NoError(t, err)
 				assert.Equal(t, test.totalDeleted, total)
 				for _, c := range commands {
@@ -1024,18 +1028,18 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Set a key
-		err = Set(client, testKey, testStringValue, testDependantKey)
+		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Fire the command
 		var total int
-		total, err = DeleteWithoutDependency(client, testKey)
+		total, err = DeleteWithoutDependency(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, total)
 
 		// Check that the command worked
 		var val string
-		val, err = Get(client, testKey)
+		val, err = Get(context.Background(), client, testKey)
 		assert.Error(t, err)
 		assert.Equal(t, redis.ErrNil, err)
 		assert.Equal(t, "", val)
@@ -1051,11 +1055,11 @@ func ExampleDeleteWithoutDependency() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = Set(client, testKey, testStringValue)
-	_ = Set(client, testKey+"2", testStringValue)
+	_ = Set(context.Background(), client, testKey, testStringValue)
+	_ = Set(context.Background(), client, testKey+"2", testStringValue)
 
 	// Delete keys
-	_, _ = DeleteWithoutDependency(client, testKey, testKey+"2")
+	_, _ = DeleteWithoutDependency(context.Background(), client, testKey, testKey+"2")
 	fmt.Printf("deleted keys: %d", 2)
 	// Output:deleted keys: 2
 }
@@ -1239,7 +1243,7 @@ func TestSetToJSON(t *testing.T) {
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
-				err := SetToJSON(client, test.key, test.modelData, 0, test.dependencies...)
+				err := SetToJSON(context.Background(), client, test.key, test.modelData, 0, test.dependencies...)
 				assert.Error(t, err)
 			})
 		}

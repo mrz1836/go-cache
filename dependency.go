@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"errors"
 
 	"github.com/gomodule/redigo/redis"
@@ -10,8 +11,12 @@ import (
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: DeleteRaw()
-func Delete(client *Client, keys ...string) (total int, err error) {
-	conn := client.GetConnection()
+func Delete(ctx context.Context, client *Client, keys ...string) (total int, err error) {
+	var conn redis.Conn
+	conn, err = client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return
+	}
 	defer client.CloseConnection(conn)
 	return DeleteRaw(conn, keys...)
 }
@@ -31,8 +36,11 @@ func DeleteRaw(conn redis.Conn, keys ...string) (total int, err error) {
 // Commands used:
 // https://redis.io/commands/eval
 // https://redis.io/commands/del
-func KillByDependency(client *Client, keys ...string) (int, error) {
-	conn := client.GetConnection()
+func KillByDependency(ctx context.Context, client *Client, keys ...string) (int, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return 0, err
+	}
 	defer client.CloseConnection(conn)
 	return KillByDependencyRaw(conn, keys...)
 }

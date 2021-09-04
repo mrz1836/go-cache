@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -98,10 +99,10 @@ func ExampleSetAdd() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = SetAdd(client, testKey, testStringValue, testDependantKey)
+	_ = SetAdd(context.Background(), client, testKey, testStringValue, testDependantKey)
 
 	// Fire the command
-	_, _ = SetIsMember(client, testKey, testStringValue)
+	_, _ = SetIsMember(context.Background(), client, testKey, testStringValue)
 	fmt.Printf("found member: %v", testStringValue)
 	// Output:found member: test-string-value
 }
@@ -170,12 +171,12 @@ func TestSetAddMany(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetAddMany(client, testKey, testStringValue, testStringValue+"2")
+		err = SetAddMany(context.Background(), client, testKey, testStringValue, testStringValue+"2")
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
-		found, err = SetIsMember(client, testKey, testStringValue+"2")
+		found, err = SetIsMember(context.Background(), client, testKey, testStringValue+"2")
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
@@ -190,10 +191,10 @@ func ExampleSetAddMany() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = SetAddMany(client, testKey, testStringValue, testStringValue+"2")
+	_ = SetAddMany(context.Background(), client, testKey, testStringValue, testStringValue+"2")
 
 	// Fire the command
-	_, _ = SetIsMember(client, testKey, testStringValue+"2")
+	_, _ = SetIsMember(context.Background(), client, testKey, testStringValue+"2")
 	fmt.Printf("found member: %v", testStringValue+"2")
 	// Output:found member: test-string-value2
 }
@@ -228,7 +229,7 @@ func TestSetRemoveMember(t *testing.T) {
 				// The main command to test
 				commands = append(commands, conn.Command(RemoveMemberCommand, test.setName, test.member))
 
-				err := SetRemoveMember(client, test.setName, test.member)
+				err := SetRemoveMember(context.Background(), client, test.setName, test.member)
 				assert.NoError(t, err)
 
 				for _, c := range commands {
@@ -283,10 +284,10 @@ func ExampleSetRemoveMember() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = SetAddMany(client, testKey, testStringValue, testStringValue+"2")
+	_ = SetAddMany(context.Background(), client, testKey, testStringValue, testStringValue+"2")
 
 	// Fire the command
-	_ = SetRemoveMember(client, testKey, testStringValue+"2")
+	_ = SetRemoveMember(context.Background(), client, testKey, testStringValue+"2")
 	fmt.Printf("removed member: %v", testStringValue+"2")
 	// Output:removed member: test-string-value2
 }
@@ -343,12 +344,12 @@ func TestSetIsMember(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = SetAdd(client, testKey, testStringValue)
+		err = SetAdd(context.Background(), client, testKey, testStringValue)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
-		found, err = SetIsMember(client, testKey, testStringValue)
+		found, err = SetIsMember(context.Background(), client, testKey, testStringValue)
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
@@ -363,10 +364,10 @@ func ExampleSetIsMember() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = SetAddMany(client, testKey, testStringValue, testStringValue+"2")
+	_ = SetAddMany(context.Background(), client, testKey, testStringValue, testStringValue+"2")
 
 	// Fire the command
-	_, _ = SetIsMember(client, testKey, testStringValue+"2")
+	_, _ = SetIsMember(context.Background(), client, testKey, testStringValue+"2")
 	fmt.Printf("found member: %v", testStringValue+"2")
 	// Output:found member: test-string-value2
 }
@@ -417,10 +418,10 @@ func ExampleSetMembers() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = SetAddMany(client, testKey, testStringValue, testStringValue)
+	_ = SetAddMany(context.Background(), client, testKey, testStringValue, testStringValue)
 
 	// Fire the command
-	_, _ = SetMembers(client, testKey)
+	_, _ = SetMembers(context.Background(), client, testKey)
 	fmt.Printf("found members: [%v]", testStringValue)
 	// Output:found members: [test-string-value]
 }

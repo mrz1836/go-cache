@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ func TestClient_RegisterScripts(t *testing.T) {
 		}
 
 		client, err := Connect(
+			context.Background(),
 			testLocalConnectionURL,
 			testMaxActiveConnections,
 			testMaxIdleConnections,
@@ -31,7 +33,7 @@ func TestClient_RegisterScripts(t *testing.T) {
 		defer client.Close()
 
 		// Run register
-		err = client.RegisterScripts()
+		err = client.RegisterScripts(context.Background())
 		assert.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
 		assert.Equal(t, 1, len(client.ScriptsLoaded))
@@ -43,6 +45,7 @@ func TestClient_RegisterScripts(t *testing.T) {
 		}
 
 		client, err := Connect(
+			context.Background(),
 			testLocalConnectionURL,
 			testMaxActiveConnections,
 			testMaxIdleConnections,
@@ -58,13 +61,13 @@ func TestClient_RegisterScripts(t *testing.T) {
 		defer client.Close()
 
 		// Run register
-		err = client.RegisterScripts()
+		err = client.RegisterScripts(context.Background())
 		assert.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
 		assert.Equal(t, 1, len(client.ScriptsLoaded))
 
 		// Run again (should skip)
-		err = client.RegisterScripts()
+		err = client.RegisterScripts(context.Background())
 		assert.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
 		assert.Equal(t, 1, len(client.ScriptsLoaded))
@@ -81,7 +84,7 @@ func ExampleClient_RegisterScripts() {
 	defer client.CloseAll(conn)
 
 	// Register known scripts
-	_ = client.RegisterScripts()
+	_ = client.RegisterScripts(context.Background())
 
 	fmt.Printf("scripts registered")
 	// Output:scripts registered
@@ -138,22 +141,22 @@ func TestRegisterScript(t *testing.T) {
 
 		// Fire the command
 		var sha string
-		sha, err = RegisterScript(client, killByDependencyLua)
+		sha, err = RegisterScript(context.Background(), client, killByDependencyLua)
 		assert.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, sha)
 
 		// Another script
-		sha, err = RegisterScript(client, `return redis.call("get", KEYS[1])`)
+		sha, err = RegisterScript(context.Background(), client, `return redis.call("get", KEYS[1])`)
 		assert.NoError(t, err)
 		assert.Equal(t, "a5260dd66ce02462c5b5231c727b3f7772c0bcc5", sha)
 
 		// Another script
-		sha, err = RegisterScript(client, lockScript)
+		sha, err = RegisterScript(context.Background(), client, lockScript)
 		assert.NoError(t, err)
 		assert.Equal(t, "e60d96cbb3894dc682fafae2980ad674822f99e1", sha)
 
 		// Another script
-		sha, err = RegisterScript(client, releaseLockScript)
+		sha, err = RegisterScript(context.Background(), client, releaseLockScript)
 		assert.NoError(t, err)
 		assert.Equal(t, "3271ffa78c3ca6743c9dc476ff6cae55a9cd3cb4", sha)
 	})
@@ -175,7 +178,7 @@ func TestRegisterScript(t *testing.T) {
 
 		// Fire the command
 		var sha string
-		sha, err = RegisterScript(client, "invalid script")
+		sha, err = RegisterScript(context.Background(), client, "invalid script")
 		assert.Error(t, err)
 		assert.Equal(t, "", sha)
 	})
@@ -191,7 +194,7 @@ func ExampleRegisterScript() {
 	defer client.Close()
 
 	// Register known scripts
-	_, _ = RegisterScript(client, killByDependencyLua)
+	_, _ = RegisterScript(context.Background(), client, killByDependencyLua)
 
 	fmt.Printf("registered: %s", testKillDependencyHash)
 	// Output:registered: a648f768f57e73e2497ccaa113d5ad9e731c5cd8

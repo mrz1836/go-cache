@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -10,8 +11,11 @@ import (
 
 func main() {
 
+	ctx := context.Background()
+
 	// Create a new client and pool
 	client, err := cache.Connect(
+		ctx,
 		"redis://localhost:6379",
 		0,
 		10,
@@ -24,10 +28,10 @@ func main() {
 	}
 
 	// Run command
-	_ = cache.Set(client, "test-key", "test-value")
+	_ = cache.Set(ctx, client, "test-key", "test-value")
 
 	// Get
-	val, _ := cache.Get(client, "test-key")
+	val, _ := cache.Get(ctx, client, "test-key")
 	if !strings.EqualFold(val, "test-value") {
 		log.Fatal("error getting value")
 	}

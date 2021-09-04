@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -84,12 +85,12 @@ func TestHashSet(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = HashSet(client, testHashName, testKey, testStringValue, testDependantKey)
+		err = HashSet(context.Background(), client, testHashName, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
-		testVal, err = HashGet(client, testHashName, testKey)
+		testVal, err = HashGet(context.Background(), client, testHashName, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
@@ -104,7 +105,7 @@ func ExampleHashSet() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = HashSet(client, testHashName, testKey, testStringValue, testDependantKey)
+	_ = HashSet(context.Background(), client, testHashName, testKey, testStringValue, testDependantKey)
 	fmt.Printf("set: %s:%s value: %s dep key: %s", testHashName, testKey, testStringValue, testDependantKey)
 	// Output:set: test-hash-name:test-key-name value: test-string-value dep key: test-dependant-key-name
 }
@@ -164,12 +165,12 @@ func TestHashGet(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Fire the command
-		err = HashSet(client, testHashName, testKey, testStringValue, testDependantKey)
+		err = HashSet(context.Background(), client, testHashName, testKey, testStringValue, testDependantKey)
 		assert.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
-		testVal, err = HashGet(client, testHashName, testKey)
+		testVal, err = HashGet(context.Background(), client, testHashName, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
@@ -184,10 +185,10 @@ func ExampleHashGet() {
 	defer client.Close()
 
 	// Set the key/value
-	_ = HashSet(client, testHashName, testKey, testStringValue, testDependantKey)
+	_ = HashSet(context.Background(), client, testHashName, testKey, testStringValue, testDependantKey)
 
 	// Get the value
-	_, _ = HashGet(client, testHashName, testKey)
+	_, _ = HashGet(context.Background(), client, testHashName, testKey)
 	fmt.Printf("got value: %s", testStringValue)
 	// Output:got value: test-string-value
 }
@@ -334,7 +335,7 @@ func ExampleHashMapSet() {
 	}
 
 	// Set the hash map
-	_ = HashMapSet(client, testHashName, pairs, testDependantKey)
+	_ = HashMapSet(context.Background(), client, testHashName, pairs, testDependantKey)
 	fmt.Printf("set: %s pairs: %d dep key: %s", testHashName, len(pairs), testDependantKey)
 	// Output:set: test-hash-name pairs: 3 dep key: test-dependant-key-name
 }
@@ -407,10 +408,10 @@ func TestHashMapSetExp(t *testing.T) {
 					}
 					commands = append(commands, conn.Command(ExecuteCommand))
 
-					err := HashMapSetExp(client, test.hashName, test.pairs, test.expiration, test.dependencies...)
+					err := HashMapSetExp(context.Background(), client, test.hashName, test.pairs, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
 				} else {
-					err := HashMapSetExp(client, test.hashName, test.pairs, test.expiration, test.dependencies...)
+					err := HashMapSetExp(context.Background(), client, test.hashName, test.pairs, test.expiration, test.dependencies...)
 					assert.NoError(t, err)
 				}
 
@@ -492,7 +493,7 @@ func ExampleHashMapSetExp() {
 	}
 
 	// Set the hash map
-	_ = HashMapSetExp(client, testHashName, pairs, 5*time.Second, testDependantKey)
+	_ = HashMapSetExp(context.Background(), client, testHashName, pairs, 5*time.Second, testDependantKey)
 	fmt.Printf("set: %s pairs: %d dep key: %s exp: %v", testHashName, len(pairs), testDependantKey, 5*time.Second)
 	// Output:set: test-hash-name pairs: 3 dep key: test-dependant-key-name exp: 5s
 }

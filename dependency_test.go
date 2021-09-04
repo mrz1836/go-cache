@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestDelete(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Test no keys
-		_, err = Delete(client)
+		_, err = Delete(context.Background(), client)
 		assert.NoError(t, err)
 	})
 
@@ -49,7 +50,7 @@ func TestDelete(t *testing.T) {
 
 		// Test one key
 		var total int
-		total, err = Delete(client, testKey)
+		total, err = Delete(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -71,7 +72,7 @@ func TestDelete(t *testing.T) {
 
 		// Test multiple keys
 		var total int
-		total, err = Delete(client, testKey, "key2", "key3")
+		total, err = Delete(context.Background(), client, testKey, "key2", "key3")
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -87,7 +88,7 @@ func ExampleDelete() {
 	defer client.CloseAll(conn)
 
 	// Run command
-	_, _ = Delete(client, testDependantKey)
+	_, _ = Delete(context.Background(), client, testDependantKey)
 	if conn != nil {
 		fmt.Printf("all dependencies deleted")
 	}
@@ -115,7 +116,7 @@ func TestKillByDependency(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Test no keys
-		_, err = KillByDependency(client)
+		_, err = KillByDependency(context.Background(), client)
 		assert.NoError(t, err)
 	})
 
@@ -136,7 +137,7 @@ func TestKillByDependency(t *testing.T) {
 
 		// Test one key
 		var total int
-		total, err = KillByDependency(client, testKey)
+		total, err = KillByDependency(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -158,7 +159,7 @@ func TestKillByDependency(t *testing.T) {
 
 		// Test multiple keys
 		var total int
-		total, err = KillByDependency(client, testKey, "key2", "key3")
+		total, err = KillByDependency(context.Background(), client, testKey, "key2", "key3")
 		assert.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -174,7 +175,7 @@ func ExampleKillByDependency() {
 	defer client.Close()
 
 	// Run command
-	_, _ = KillByDependency(client, testDependantKey)
+	_, _ = KillByDependency(context.Background(), client, testDependantKey)
 	fmt.Printf("all dependencies removed")
 	// Output:all dependencies removed
 }

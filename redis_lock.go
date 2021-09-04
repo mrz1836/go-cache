@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"errors"
 
 	"github.com/gomodule/redigo/redis"
@@ -36,8 +37,11 @@ end
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: WriteLockRaw()
-func WriteLock(client *Client, name, secret string, ttl int64) (bool, error) {
-	conn := client.GetConnection()
+func WriteLock(ctx context.Context, client *Client, name, secret string, ttl int64) (bool, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return false, err
+	}
 	defer client.CloseConnection(conn)
 	return WriteLockRaw(conn, name, secret, ttl)
 }
@@ -58,8 +62,11 @@ func WriteLockRaw(conn redis.Conn, name, secret string, ttl int64) (bool, error)
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: ReleaseLockRaw()
-func ReleaseLock(client *Client, name, secret string) (bool, error) {
-	conn := client.GetConnection()
+func ReleaseLock(ctx context.Context, client *Client, name, secret string) (bool, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return false, err
+	}
 	defer client.CloseConnection(conn)
 	return ReleaseLockRaw(conn, name, secret)
 }

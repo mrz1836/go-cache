@@ -39,9 +39,10 @@ View the generated [documentation](https://pkg.go.dev/github.com/mrz1836/go-cach
 [![GoDoc](https://godoc.org/github.com/mrz1836/go-cache?status.svg&style=flat)](https://pkg.go.dev/github.com/mrz1836/go-cache?tab=doc)
 
 ### Features
-- Cache Dependencies Between Keys (toggle functionality)
-- Connect via URL
 - Better Pool Management & Creation
+- Get Connection with Context
+- Cache Dependencies Between Keys (toggle functionality)
+- Connect via URL (deprecated)
 - Test Coverage (mock redis & real redis)
 - Register Scripts
 - Helper Methods (Get, Set, HashGet, etc)
@@ -102,6 +103,7 @@ vet                  Run the Go vet application
 <br/>
 
 - Gary Burd's [Redigo](https://github.com/gomodule/redigo)
+- Rafael Justo's [redigomock](https://github.com/rafaeljusto/redigomock)
 </details>
 
 <br/>
@@ -141,9 +143,9 @@ View the [examples](examples)
 <br/>
 
 ## Maintainers
-| [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) | [<img src="https://github.com/kayleg.png" height="50" alt="MrZ" />](https://github.com/kayleg) |
-|:---:|:---:|
-| [MrZ](https://github.com/mrz1836) | [kayleg](https://github.com/kayleg) |
+| [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
+|:---:|
+| [MrZ](https://github.com/mrz1836) |
 
 <br/>
 

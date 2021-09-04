@@ -63,7 +63,9 @@ func CloseConnection(conn redis.Conn) redis.Conn {
 // Connect creates a new connection pool connected to the specified url
 //
 // Format of URL: redis://localhost:6379
-func Connect(redisURL string, maxActiveConnections, idleConnections int, maxConnLifetime, idleTimeout time.Duration,
+func Connect(ctx context.Context, redisURL string,
+	maxActiveConnections, idleConnections int,
+	maxConnLifetime, idleTimeout time.Duration,
 	dependencyMode bool, options ...redis.DialOption) (client *Client, err error) {
 
 	// Required param for dial
@@ -97,7 +99,7 @@ func Connect(redisURL string, maxActiveConnections, idleConnections int, maxConn
 
 	// Register scripts if enabled
 	if dependencyMode {
-		err = client.RegisterScripts()
+		err = client.RegisterScripts(ctx)
 	}
 
 	return
@@ -105,6 +107,7 @@ func Connect(redisURL string, maxActiveConnections, idleConnections int, maxConn
 
 // ConnectToURL connects via REDIS_URL and returns a single connection
 //
+// Deprecated: use Connect()
 // Preferred method is "Connect()" to create a pool
 // Source: "github.com/soveran/redisurl"
 // Format of URL: redis://localhost:6379

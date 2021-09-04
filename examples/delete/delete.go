@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -9,8 +10,11 @@ import (
 
 func main() {
 
+	ctx := context.Background()
+
 	// Create a new client and pool
 	client, err := cache.Connect(
+		ctx,
 		"redis://localhost:6379",
 		0,
 		10,
@@ -23,14 +27,14 @@ func main() {
 	}
 
 	// Run command
-	err = cache.Set(client, "test-key", "test-value", "dependent-key-of-test-key")
+	err = cache.Set(ctx, client, "test-key", "test-value", "dependent-key-of-test-key")
 	if err != nil {
 		log.Fatalf("error occurred: %s", err.Error())
 	}
 
 	// Delete
 	var total int
-	total, err = cache.Delete(client, "test-key")
+	total, err = cache.Delete(ctx, client, "test-key")
 	if err != nil {
 		log.Fatalf("error occurred: %s", err.Error())
 	} else if total != 1 {

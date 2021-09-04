@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -9,8 +10,11 @@ import (
 
 func main() {
 
+	ctx := context.Background()
+
 	// Create a new client and pool
 	client, err := cache.Connect(
+		ctx,
 		"redis://localhost:6379",
 		0,
 		10,
@@ -23,5 +27,5 @@ func main() {
 	}
 
 	// Run command
-	_ = cache.SetExp(client, "test-key", "test-value", 10*time.Minute)
+	_ = cache.SetExp(ctx, client, "test-key", "test-value", 10*time.Minute)
 }

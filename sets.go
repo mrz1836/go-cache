@@ -1,13 +1,20 @@
 package cache
 
-import "github.com/gomodule/redigo/redis"
+import (
+	"context"
+
+	"github.com/gomodule/redigo/redis"
+)
 
 // SetAdd will add the member to the Set and link a reference to each dependency for the entire Set
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: SetAddRaw()
-func SetAdd(client *Client, setName, member interface{}, dependencies ...string) error {
-	conn := client.GetConnection()
+func SetAdd(ctx context.Context, client *Client, setName, member interface{}, dependencies ...string) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return SetAddRaw(conn, setName, member, dependencies...)
 }
@@ -28,8 +35,11 @@ func SetAddRaw(conn redis.Conn, setName, member interface{}, dependencies ...str
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: SetAddManyRaw()
-func SetAddMany(client *Client, setName string, members ...interface{}) (err error) {
-	conn := client.GetConnection()
+func SetAddMany(ctx context.Context, client *Client, setName string, members ...interface{}) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return SetAddManyRaw(conn, setName, members...)
 }
@@ -58,8 +68,11 @@ func SetAddManyRaw(conn redis.Conn, setName string, members ...interface{}) (err
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: SetIsMemberRaw()
-func SetIsMember(client *Client, set, member interface{}) (bool, error) {
-	conn := client.GetConnection()
+func SetIsMember(ctx context.Context, client *Client, set, member interface{}) (bool, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return false, err
+	}
 	defer client.CloseConnection(conn)
 	return SetIsMemberRaw(conn, set, member)
 }
@@ -76,8 +89,11 @@ func SetIsMemberRaw(conn redis.Conn, set, member interface{}) (bool, error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: SetRemoveMemberRaw()
-func SetRemoveMember(client *Client, set, member interface{}) error {
-	conn := client.GetConnection()
+func SetRemoveMember(ctx context.Context, client *Client, set, member interface{}) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return SetRemoveMemberRaw(conn, set, member)
 }
@@ -95,8 +111,11 @@ func SetRemoveMemberRaw(conn redis.Conn, set, member interface{}) (err error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: SetMembersRaw()
-func SetMembers(client *Client, set interface{}) ([]string, error) {
-	conn := client.GetConnection()
+func SetMembers(ctx context.Context, client *Client, set interface{}) ([]string, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	defer client.CloseConnection(conn)
 	return SetMembersRaw(conn, set)
 }

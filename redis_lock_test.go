@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -30,7 +31,7 @@ func TestWriteLock(t *testing.T) {
 
 		// Write a lock
 		var locked bool
-		locked, err = WriteLock(client, "d  `!$-()my-key", "d d d", int64(0))
+		locked, err = WriteLock(context.Background(), client, "d  `!$-()my-key", "d d d", int64(0))
 		assert.Error(t, err)
 		assert.Equal(t, false, locked)
 	})
@@ -151,7 +152,7 @@ func ExampleWriteLock() {
 	defer client.Close()
 
 	// Write a lock
-	_, _ = WriteLock(client, "test-lock", "test-secret", int64(10))
+	_, _ = WriteLock(context.Background(), client, "test-lock", "test-secret", int64(10))
 
 	fmt.Printf("lock created")
 	// Output:lock created
@@ -259,7 +260,7 @@ func ExampleReleaseLock() {
 	defer client.Close()
 
 	// Release a lock
-	_, _ = ReleaseLock(client, "test-lock", "test-secret")
+	_, _ = ReleaseLock(context.Background(), client, "test-lock", "test-secret")
 
 	fmt.Printf("lock released")
 	// Output:lock released

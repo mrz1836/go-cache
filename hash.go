@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -11,8 +12,12 @@ import (
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: HashSetRaw()
-func HashSet(client *Client, hashName, hashKey string, value interface{}, dependencies ...string) error {
-	conn := client.GetConnection()
+func HashSet(ctx context.Context, client *Client, hashName, hashKey string,
+	value interface{}, dependencies ...string) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return HashSetRaw(conn, hashName, hashKey, value, dependencies...)
 }
@@ -34,8 +39,11 @@ func HashSetRaw(conn redis.Conn, hashName, hashKey string, value interface{}, de
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: HashGetRaw()
-func HashGet(client *Client, hash, key string) (string, error) {
-	conn := client.GetConnection()
+func HashGet(ctx context.Context, client *Client, hash, key string) (string, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return "", err
+	}
 	defer client.CloseConnection(conn)
 	return HashGetRaw(conn, hash, key)
 }
@@ -52,8 +60,11 @@ func HashGetRaw(conn redis.Conn, hash, key string) (string, error) {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: HashMapGetRaw()
-func HashMapGet(client *Client, hashName string, keys ...interface{}) ([]string, error) {
-	conn := client.GetConnection()
+func HashMapGet(ctx context.Context, client *Client, hashName string, keys ...interface{}) ([]string, error) {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	defer client.CloseConnection(conn)
 	return HashMapGetRaw(conn, hashName, keys)
 }
@@ -76,8 +87,12 @@ func HashMapGetRaw(conn redis.Conn, hashName string, keys ...interface{}) ([]str
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: HashMapSetRaw()
-func HashMapSet(client *Client, hashName string, pairs [][2]interface{}, dependencies ...string) error {
-	conn := client.GetConnection()
+func HashMapSet(ctx context.Context, client *Client, hashName string,
+	pairs [][2]interface{}, dependencies ...string) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return HashMapSetRaw(conn, hashName, pairs, dependencies...)
 }
@@ -111,9 +126,12 @@ func HashMapSetRaw(conn redis.Conn, hashName string, pairs [][2]interface{}, dep
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: HashMapSetExpRaw()
-func HashMapSetExp(client *Client, hashName string, pairs [][2]interface{},
+func HashMapSetExp(ctx context.Context, client *Client, hashName string, pairs [][2]interface{},
 	ttl time.Duration, dependencies ...string) error {
-	conn := client.GetConnection()
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
 	defer client.CloseConnection(conn)
 	return HashMapSetExpRaw(conn, hashName, pairs, ttl, dependencies...)
 }

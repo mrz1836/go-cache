@@ -62,6 +62,7 @@ func loadRealRedis() (client *Client, conn redis.Conn, err error) {
 		testMaxConnLifetime,
 		testIdleTimeout,
 		true,
+		false,
 	)
 	if err != nil {
 		return

@@ -24,6 +24,30 @@ func TestConnect(t *testing.T) {
 			testMaxConnLifetime,
 			testIdleTimeout,
 			false,
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+		assert.Equal(t, "", client.DependencyScriptSha)
+		assert.Equal(t, 0, len(client.ScriptsLoaded))
+
+		// Close
+		client.Close()
+	})
+
+	t.Run("valid connection, new relic enabled", func(t *testing.T) {
+		t.Parallel()
+
+		client, err := Connect(
+			context.Background(),
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+			true,
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
@@ -48,6 +72,7 @@ func TestConnect(t *testing.T) {
 			testMaxConnLifetime,
 			testIdleTimeout,
 			true,
+			false,
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
@@ -69,6 +94,7 @@ func TestConnect(t *testing.T) {
 			testMaxIdleConnections,
 			testMaxConnLifetime,
 			testIdleTimeout,
+			false,
 			false,
 			redis.DialKeepAlive(10*time.Second),
 		)
@@ -93,6 +119,7 @@ func TestConnect(t *testing.T) {
 			testMaxConnLifetime,
 			testIdleTimeout,
 			false,
+			false,
 		)
 		assert.Error(t, err)
 		assert.Nil(t, client)
@@ -109,6 +136,7 @@ func ExampleConnect() {
 		testMaxIdleConnections,
 		testMaxConnLifetime,
 		testIdleTimeout,
+		false,
 		false,
 	)
 
@@ -173,6 +201,7 @@ func TestClient_GetConnection(t *testing.T) {
 			testMaxConnLifetime,
 			testIdleTimeout,
 			false,
+			false,
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
@@ -198,6 +227,7 @@ func ExampleClient_GetConnection() {
 		testMaxIdleConnections,
 		testMaxConnLifetime,
 		testIdleTimeout,
+		false,
 		false,
 	)
 
@@ -232,6 +262,7 @@ func TestClient_CloseConnection(t *testing.T) {
 			testMaxIdleConnections,
 			testMaxConnLifetime,
 			testIdleTimeout,
+			false,
 			false,
 		)
 		assert.NoError(t, err)
@@ -289,6 +320,7 @@ func TestClient_CloseAll(t *testing.T) {
 			testMaxIdleConnections,
 			testMaxConnLifetime,
 			testIdleTimeout,
+			false,
 			false,
 		)
 		assert.NoError(t, err)

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"errors"
 	"net/url"
 	"os"
@@ -37,6 +38,12 @@ func (c *Client) CloseAll(conn redis.Conn) redis.Conn {
 // The connection must be closed when done and return it to the pool
 func (c *Client) GetConnection() redis.Conn {
 	return c.Pool.Get()
+}
+
+// GetConnectionWithContext will return a connection from the pool. (convenience method)
+// The connection must be closed when done and return it to the pool
+func (c *Client) GetConnectionWithContext(ctx context.Context) (redis.Conn, error) {
+	return c.Pool.GetContext(ctx)
 }
 
 // CloseConnection will close a previously open connection

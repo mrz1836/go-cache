@@ -7,18 +7,19 @@ import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
+type wrappedConn struct {
+	redis.Conn
+	txn *newrelic.Transaction
+	cfg *Config
+}
+
+// wrapConn will wrap a connection with NewRelic support
 func wrapConn(c redis.Conn, txn *newrelic.Transaction, cfg *Config) redis.Conn {
 	return &wrappedConn{
 		Conn: c,
 		txn:  txn,
 		cfg:  cfg,
 	}
-}
-
-type wrappedConn struct {
-	redis.Conn
-	txn *newrelic.Transaction
-	cfg *Config
 }
 
 // Do is a wrapper for the standard method
@@ -59,6 +60,7 @@ func (c *wrappedConn) Receive() (interface{}, error) {
 	return c.Conn.Receive()
 }
 
+// createSegment will create a new datastore segment for NewRelic
 func (c *wrappedConn) createSegment(cmdName string) *newrelic.DatastoreSegment {
 	return &newrelic.DatastoreSegment{
 		DatabaseName: c.cfg.DBName,

@@ -9,12 +9,12 @@ import (
 
 // Pool is an interface for representing a pool of Redis connections
 type Pool interface {
-	GetContext(ctx context.Context) (redis.Conn, error)
-	Get() redis.Conn
-	Close() error
-	Stats() redis.PoolStats
 	ActiveCount() int
+	Close() error
+	Get() redis.Conn
+	GetContext(ctx context.Context) (redis.Conn, error)
 	IdleCount() int
+	Stats() redis.PoolStats
 }
 
 // Wrap will wrap the existing pool
@@ -44,10 +44,12 @@ func (p *wrappedPool) GetContext(ctx context.Context) (conn redis.Conn, err erro
 	return
 }
 
+// Get will get a connection from the pool
 func (p *wrappedPool) Get() redis.Conn {
 	return p.Pool.Get()
 }
 
+// Close will close the pool
 func (p *wrappedPool) Close() error {
 	return p.Pool.Close()
 }

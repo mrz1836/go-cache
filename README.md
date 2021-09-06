@@ -42,11 +42,12 @@ View the generated [documentation](https://pkg.go.dev/github.com/mrz1836/go-cach
 - Better Pool Management & Creation
 - Get Connection with Context
 - Cache Dependencies Between Keys (toggle functionality)
-- Connect via URL (deprecated)
+- [NewRelic](https://newrelic.com) automatic segment support
 - Test Coverage (mock redis & real redis)
 - Register Scripts
 - Helper Methods (Get, Set, HashGet, etc)
 - Basic Lock/Release (from [bgentry lock.go](https://gist.github.com/bgentry/6105288))
+- Connect via URL (deprecated)
 
 <details>
 <summary><strong><code>Library Deployment</code></strong></summary>
@@ -108,6 +109,7 @@ vet                  Run the Go vet application
 
 - Gary Burd's [Redigo](https://github.com/gomodule/redigo)
 - Rafael Justo's [redigomock](https://github.com/rafaeljusto/redigomock)
+- NewRelic's [go-agent](https://github.com/newrelic/go-agent)
 </details>
 
 <br/>
@@ -161,6 +163,8 @@ All kinds of contributions are welcome :raised_hands:!
 The most basic way to show your support is to star :star2: the project, or to raise issues :speech_balloon:. 
 You can also support this project by [becoming a sponsor on GitHub](https://github.com/sponsors/mrz1836) :clap: 
 or by making a [**bitcoin donation**](https://mrz1818.com/?tab=tips&utm_source=github&utm_medium=sponsor-link&utm_campaign=go-cache&utm_term=go-cache&utm_content=go-cache) to ensure this journey continues indefinitely! :rocket:
+
+[![Stars](https://img.shields.io/github/stars/mrz1836/go-cache?label=Please%20like%20us&style=social)](https://github.com/mrz1836/go-cache/stargazers)
 
 <br/>
 

@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"errors"
+	"net"
 	"net/url"
 	"os"
 	"os/signal"
@@ -94,8 +95,18 @@ func Connect(ctx context.Context, redisURL string,
 
 	// Wrap if NewRelic is enabled
 	if newRelicEnabled {
+		var host, database, port string
+		if host, database, port, err = extractURL(redisURL); err != nil {
+			return
+		}
+
 		client = &Client{
-			Pool:          nrredis.Wrap(&redisPool),
+			Pool: nrredis.Wrap(
+				&redisPool,
+				nrredis.WithDBName(database),
+				nrredis.WithHost(host),
+				nrredis.WithPortPathOrID(port),
+			),
 			ScriptsLoaded: nil,
 		}
 	} else {
@@ -173,4 +184,23 @@ func cleanUp(pool nrredis.Pool) {
 		_ = pool.Close()
 		os.Exit(0)
 	}(pool)
+}
+
+// extractURL will extract the parts of the redis url
+func extractURL(redisURL string) (host, database, port string, err error) {
+
+	// Parse the URL
+	var u *url.URL
+	if u, err = url.Parse(redisURL); err != nil {
+		return
+	}
+
+	// Split the host and port
+	if host, port, err = net.SplitHostPort(u.Host); err != nil {
+		return
+	}
+
+	// Set the database
+	database = strings.Replace(u.RequestURI(), "/", "", -1)
+	return
 }

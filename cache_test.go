@@ -72,6 +72,26 @@ func loadRealRedis() (client *Client, conn redis.Conn, err error) {
 	return
 }
 
+// loadRealRedisWithNewRelic will load a real redis connection (new relic enabled)
+func loadRealRedisWithNewRelic() (client *Client, conn redis.Conn, err error) {
+	client, err = Connect(
+		context.Background(),
+		testLocalConnectionURL,
+		testMaxActiveConnections,
+		testMaxIdleConnections,
+		testMaxConnLifetime,
+		testIdleTimeout,
+		true,
+		true,
+	)
+	if err != nil {
+		return
+	}
+
+	conn, err = client.GetConnectionWithContext(context.Background())
+	return
+}
+
 // clearRealRedis will clear a real redis db
 func clearRealRedis(conn redis.Conn) error {
 	return DestroyCacheRaw(conn)
@@ -142,6 +162,51 @@ func TestSet(t *testing.T) {
 
 		// Load redis
 		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		var tests = []struct {
+			testCase     string
+			key          string
+			value        string
+			dependencies []string
+		}{
+			{"key with dependencies", testKey, testStringValue, []string{testDependantKey}},
+			{"key with no dependencies", testKey, testStringValue, []string{""}},
+			{"key with empty value", testKey, "", []string{""}},
+			{"key with spaces", "key name", "some val", []string{""}},
+			{"key with symbols", ".key name;!()\\", "", []string{""}},
+			{"key with symbols and value as symbols", ".key name;!()\\", `\ / ; [ ] { }!`, []string{""}},
+		}
+		for _, test := range tests {
+			t.Run(test.testCase, func(t *testing.T) {
+
+				// Start with a fresh db
+				err = clearRealRedis(conn)
+				assert.NoError(t, err)
+
+				// Run command
+				err = Set(context.Background(), client, test.key, test.value, test.dependencies...)
+				assert.NoError(t, err)
+
+				// Validate via getting the data from redis
+				var testVal string
+				testVal, err = Get(context.Background(), client, test.key)
+				assert.NoError(t, err)
+				assert.Equal(t, test.value, testVal)
+			})
+		}
+	})
+
+	t.Run("set command using real redis (new relic)", func(t *testing.T) {
+
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedisWithNewRelic()
 		assert.NotNil(t, client)
 		assert.NoError(t, err)
 		defer client.CloseAll(conn)
@@ -361,6 +426,32 @@ func TestGet(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
+
+	t.Run("get command using real redis (new relic)", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedisWithNewRelic()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Check that the command worked
+		var testVal string
+		testVal, err = Get(context.Background(), client, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, testStringValue, testVal)
+	})
 }
 
 // ExampleGet is an example of the method Get()
@@ -442,6 +533,32 @@ func TestGetBytes(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, []byte(testStringValue), testVal)
 	})
+
+	t.Run("get bytes command using real redis (new relic)", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedisWithNewRelic()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Check that the command worked
+		var testVal []byte
+		testVal, err = GetBytes(context.Background(), client, testKey)
+		assert.NoError(t, err)
+		assert.Equal(t, []byte(testStringValue), testVal)
+	})
 }
 
 // ExampleGetBytes is an example of the method GetBytes()
@@ -490,6 +607,32 @@ func TestGetAllKeys(t *testing.T) {
 
 		// Load redis
 		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
+		assert.NoError(t, err)
+
+		// Check that the command worked
+		var keys []string
+		keys, err = GetAllKeys(context.Background(), client)
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(keys))
+	})
+
+	t.Run("get all keys command using real redis (new relic)", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedisWithNewRelic()
 		assert.NotNil(t, client)
 		assert.NoError(t, err)
 		defer client.CloseAll(conn)

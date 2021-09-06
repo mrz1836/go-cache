@@ -7,6 +7,7 @@ type Config struct {
 	PortPathOrID string
 }
 
+// createConfig will create the config based on the provided options
 func createConfig(opts []Option) *Config {
 	cfg := &Config{}
 	for _, f := range opts {

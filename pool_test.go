@@ -207,6 +207,85 @@ func TestClient_GetConnection(t *testing.T) {
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
+		conn := client.GetConnection()
+		assert.NotNil(t, conn)
+
+		client.Close()
+		assert.Nil(t, client.Pool)
+	})
+}
+
+// ExampleClient_GetConnection is an example of the method GetConnection()
+func ExampleClient_GetConnection() {
+
+	client, _ := Connect(
+		context.Background(),
+		testLocalConnectionURL,
+		testMaxActiveConnections,
+		testMaxIdleConnections,
+		testMaxConnLifetime,
+		testIdleTimeout,
+		false,
+		false,
+	)
+
+	conn := client.GetConnection()
+	defer client.CloseAll(conn)
+	if conn != nil {
+		fmt.Printf("got a connection")
+	}
+	// Output:got a connection
+}
+
+// TestClient_GetConnectionWithContext tests the method GetConnectionWithContext()
+func TestClient_GetConnectionWithContext(t *testing.T) {
+	t.Run("get a connection", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, err := Connect(
+			context.Background(),
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+
+		var conn redis.Conn
+		conn, err = client.GetConnectionWithContext(context.Background())
+		assert.NotNil(t, conn)
+		assert.NoError(t, err)
+
+		client.Close()
+		assert.Nil(t, client.Pool)
+	})
+
+	t.Run("get a connection (new relic wrapped)", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, err := Connect(
+			context.Background(),
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+			true,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+
 		var conn redis.Conn
 		conn, err = client.GetConnectionWithContext(context.Background())
 		assert.NotNil(t, conn)
@@ -217,8 +296,8 @@ func TestClient_GetConnection(t *testing.T) {
 	})
 }
 
-// ExampleClient_GetConnection is an example of the method GetConnection()
-func ExampleClient_GetConnection() {
+// ExampleClient_GetConnectionWithContext is an example of the method GetConnectionWithContext()
+func ExampleClient_GetConnectionWithContext() {
 
 	client, _ := Connect(
 		context.Background(),
@@ -322,6 +401,34 @@ func TestClient_CloseAll(t *testing.T) {
 			testIdleTimeout,
 			false,
 			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.Pool)
+
+		var conn redis.Conn
+		conn, err = client.GetConnectionWithContext(context.Background())
+		assert.NotNil(t, conn)
+		assert.NoError(t, err)
+
+		conn = client.CloseAll(conn)
+		assert.Nil(t, conn)
+	})
+
+	t.Run("close an active connection (new relic)", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, err := Connect(
+			context.Background(),
+			testLocalConnectionURL,
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+			true,
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
@@ -449,4 +556,26 @@ func ExampleConnectToURL() {
 
 	fmt.Printf("connected")
 	// Output:connected
+}
+
+// TestExtractRedisURL will test the method extractURL()
+func TestExtractRedisURL(t *testing.T) {
+	t.Run("test extraction (redis://HOST[:PORT]/DATABASE)", func(t *testing.T) {
+
+		str := "redis://localhost:6379/default_db"
+		host, database, port, err := extractURL(str)
+		assert.NoError(t, err)
+		assert.Equal(t, "localhost", host)
+		assert.Equal(t, "default_db", database)
+		assert.Equal(t, "6379", port)
+	})
+
+	// todo: all types of redis URLs
+
+	/*
+		redis://HOST[:PORT][?db=DATABASE[&password=PASSWORD]]
+		redis://HOST[:PORT][?password=PASSWORD[&db=DATABASE]]
+		redis://[:PASSWORD@]HOST[:PORT][/DATABASE]
+		redis://[:PASSWORD@]HOST[:PORT][?db=DATABASE]
+	*/
 }

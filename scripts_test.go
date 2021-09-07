@@ -24,6 +24,7 @@ func TestClient_RegisterScripts(t *testing.T) {
 			testMaxConnLifetime,
 			testIdleTimeout,
 			false,
+			false,
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
@@ -51,6 +52,7 @@ func TestClient_RegisterScripts(t *testing.T) {
 			testMaxIdleConnections,
 			testMaxConnLifetime,
 			testIdleTimeout,
+			false,
 			false,
 		)
 		assert.NoError(t, err)

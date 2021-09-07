@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"errors"
+	"net"
 	"net/url"
 	"os"
 	"os/signal"
@@ -11,13 +12,15 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/mrz1836/go-cache/nrredis"
 )
 
 // Client is used to store the redis.Pool and additional fields/information
 type Client struct {
-	DependencyScriptSha string      // Stored SHA of the script after loaded
-	Pool                *redis.Pool // Redis pool for the client (get connections)
-	ScriptsLoaded       []string    // List of scripts that have been loaded
+	DependencyScriptSha string // Stored SHA of the script after loaded
+	// Pool                *redis.Pool // Redis pool for the client (get connections)
+	Pool          nrredis.Pool // Redis pool for the client (get connections)
+	ScriptsLoaded []string     // List of scripts that have been loaded
 }
 
 // Close closes the connection pool
@@ -44,7 +47,10 @@ func (c *Client) GetConnection() redis.Conn {
 // GetConnectionWithContext will return a connection from the pool. (convenience method)
 // The connection must be closed when you're finished
 func (c *Client) GetConnectionWithContext(ctx context.Context) (redis.Conn, error) {
-	return c.Pool.GetContext(ctx)
+	if c.Pool != nil {
+		return c.Pool.GetContext(ctx)
+	}
+	return nil, errors.New("redis pool is nil")
 }
 
 // CloseConnection will close a previously open connection
@@ -66,7 +72,7 @@ func CloseConnection(conn redis.Conn) redis.Conn {
 func Connect(ctx context.Context, redisURL string,
 	maxActiveConnections, idleConnections int,
 	maxConnLifetime, idleTimeout time.Duration,
-	dependencyMode bool, options ...redis.DialOption) (client *Client, err error) {
+	dependencyMode, newRelicEnabled bool, options ...redis.DialOption) (client *Client, err error) {
 
 	// Required param for dial
 	if len(redisURL) == 0 {
@@ -74,24 +80,43 @@ func Connect(ctx context.Context, redisURL string,
 		return
 	}
 
-	// Create a new redis client (pool)
-	client = &Client{
-		Pool: &redis.Pool{
-			Dial:            buildDialer(redisURL, options...),
-			IdleTimeout:     idleTimeout,
-			MaxActive:       maxActiveConnections,
-			MaxConnLifetime: maxConnLifetime,
-			MaxIdle:         idleConnections,
-			TestOnBorrow: func(c redis.Conn, t time.Time) error {
-				if time.Since(t) < time.Minute {
-					return nil
-				}
-				_, doErr := c.Do(PingCommand)
-				return doErr
-			},
+	// Create the pool
+	redisPool := redis.Pool{
+		Dial:            buildDialer(redisURL, options...),
+		IdleTimeout:     idleTimeout,
+		MaxActive:       maxActiveConnections,
+		MaxConnLifetime: maxConnLifetime,
+		MaxIdle:         idleConnections,
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			if time.Since(t) < time.Minute {
+				return nil
+			}
+			_, doErr := c.Do(PingCommand)
+			return doErr
 		},
-		ScriptsLoaded:       nil,
-		DependencyScriptSha: "",
+	}
+
+	// Wrap if NewRelic is enabled
+	if newRelicEnabled {
+		var host, database, port string
+		if host, database, port, err = extractURL(redisURL); err != nil {
+			return
+		}
+
+		client = &Client{
+			Pool: nrredis.Wrap(
+				&redisPool,
+				nrredis.WithDBName(database),
+				nrredis.WithHost(host),
+				nrredis.WithPortPathOrID(port),
+			),
+			ScriptsLoaded: nil,
+		}
+	} else {
+		client = &Client{
+			Pool:          &redisPool,
+			ScriptsLoaded: nil,
+		}
 	}
 
 	// Cleanup
@@ -152,14 +177,33 @@ func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, er
 // cleanUp is fired after the pool is created
 // Source: https://github.com/pete911/examples-redigo
 // todo: is this really needed?
-func cleanUp(pool *redis.Pool) {
+func cleanUp(pool nrredis.Pool) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, syscall.SIGTERM)
 	signal.Notify(c, syscall.SIGKILL)
-	go func(pool *redis.Pool) {
+	go func(pool nrredis.Pool) {
 		<-c
 		_ = pool.Close()
 		os.Exit(0)
 	}(pool)
+}
+
+// extractURL will extract the parts of the redis url
+func extractURL(redisURL string) (host, database, port string, err error) {
+
+	// Parse the URL
+	var u *url.URL
+	if u, err = url.Parse(redisURL); err != nil {
+		return
+	}
+
+	// Split the host and port
+	if host, port, err = net.SplitHostPort(u.Host); err != nil {
+		return
+	}
+
+	// Set the database
+	database = strings.Replace(u.RequestURI(), "/", "", -1)
+	return
 }

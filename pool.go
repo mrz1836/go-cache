@@ -47,7 +47,10 @@ func (c *Client) GetConnection() redis.Conn {
 // GetConnectionWithContext will return a connection from the pool. (convenience method)
 // The connection must be closed when you're finished
 func (c *Client) GetConnectionWithContext(ctx context.Context) (redis.Conn, error) {
-	return c.Pool.GetContext(ctx)
+	if c.Pool != nil {
+		return c.Pool.GetContext(ctx)
+	}
+	return nil, errors.New("redis pool is nil")
 }
 
 // CloseConnection will close a previously open connection

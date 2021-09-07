@@ -243,6 +243,18 @@ func TestSet(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("set cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		err := Set(context.TODO(), client, "key", "value")
+		assert.Error(t, err)
+	})
 }
 
 // ExampleSet is an example of the method Set()
@@ -348,6 +360,18 @@ func TestSetExp(t *testing.T) {
 		assert.Equal(t, "", testVal)
 		assert.Equal(t, redis.ErrNil, err)
 	})
+
+	t.Run("set exp cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		err := SetExp(context.TODO(), client, "key", "value", 10*time.Second)
+		assert.Error(t, err)
+	})
 }
 
 // ExampleSetExp is an example of the method SetExp()
@@ -451,6 +475,19 @@ func TestGet(t *testing.T) {
 		testVal, err = Get(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
+	})
+
+	t.Run("get cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		val, err := Get(context.TODO(), client, "123456")
+		assert.Error(t, err)
+		assert.Equal(t, "", val)
 	})
 }
 
@@ -559,6 +596,19 @@ func TestGetBytes(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, []byte(testStringValue), testVal)
 	})
+
+	t.Run("get bytes cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		val, err := GetBytes(context.TODO(), client, "123456")
+		assert.Error(t, err)
+		assert.Equal(t, []byte(nil), val)
+	})
 }
 
 // ExampleGetBytes is an example of the method GetBytes()
@@ -651,6 +701,19 @@ func TestGetAllKeys(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 2, len(keys))
 	})
+
+	t.Run("get all keys cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		val, err := GetAllKeys(context.TODO(), client)
+		assert.Error(t, err)
+		assert.Equal(t, []string(nil), val)
+	})
 }
 
 // ExampleGetAllKeys is an example of the method GetAllKeys()
@@ -718,6 +781,19 @@ func TestExists(t *testing.T) {
 		found, err = Exists(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, true, found)
+	})
+
+	t.Run("exists cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		found, err := Exists(context.TODO(), client, "key")
+		assert.Error(t, err)
+		assert.Equal(t, false, found)
 	})
 }
 
@@ -814,6 +890,18 @@ func TestExpire(t *testing.T) {
 		assert.Equal(t, redis.ErrNil, err)
 		assert.Equal(t, "", testVal)
 	})
+
+	t.Run("expire cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		err := Expire(context.TODO(), client, "key", 10*time.Second)
+		assert.Error(t, err)
+	})
 }
 
 // ExampleExpire is an example of the method Expire()
@@ -888,6 +976,18 @@ func TestDestroyCache(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, err, redis.ErrNil)
 		assert.Equal(t, val, "")
+	})
+
+	t.Run("destroy cache cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		err := DestroyCache(context.TODO(), client)
+		assert.Error(t, err)
 	})
 }
 
@@ -984,6 +1084,19 @@ func TestGetList(t *testing.T) {
 		list, err = GetList(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, []string{testStringValue}, list)
+	})
+
+	t.Run("get list cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		val, err := GetList(context.TODO(), client, "123456")
+		assert.Error(t, err)
+		assert.Equal(t, []string(nil), val)
 	})
 }
 
@@ -1083,6 +1196,18 @@ func TestSetList(t *testing.T) {
 		list, err = GetList(context.Background(), client, testKey)
 		assert.NoError(t, err)
 		assert.Equal(t, []string{testStringValue}, list)
+	})
+
+	t.Run("set list cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		err := SetList(context.TODO(), client, "123456", []string{"test", "test1"})
+		assert.Error(t, err)
 	})
 }
 
@@ -1187,6 +1312,19 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, redis.ErrNil, err)
 		assert.Equal(t, "", val)
+	})
+
+	t.Run("expire cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		total, err := DeleteWithoutDependency(context.TODO(), client, "key")
+		assert.Error(t, err)
+		assert.Equal(t, 0, total)
 	})
 }
 
@@ -1477,5 +1615,17 @@ func TestSetToJSON(t *testing.T) {
 				assert.Equal(t, string(responseBytes), testVal)
 			})
 		}
+	})
+
+	t.Run("set to json cmd, trigger context err", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		client.CloseAll(conn)
+
+		err := SetToJSON(context.TODO(), client, "123456", nil, 10*time.Second)
+		assert.Error(t, err)
 	})
 }

@@ -170,4 +170,4 @@ or by making a [**bitcoin donation**](https://mrz1818.com/?tab=tips&utm_source=g
 
 ## License
 
-![License](https://img.shields.io/github/license/mrz1836/go-cache.svg?style=flat)
+[![License](https://img.shields.io/github/license/mrz1836/go-cache.svg?style=flat)](LICENSE)

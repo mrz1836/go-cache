@@ -570,6 +570,20 @@ func TestExtractRedisURL(t *testing.T) {
 		assert.Equal(t, "6379", port)
 	})
 
+	t.Run("test bad url", func(t *testing.T) {
+
+		str := "http://a b.com/"
+		_, _, _, err := extractURL(str)
+		assert.Error(t, err)
+	})
+
+	t.Run("test missing port", func(t *testing.T) {
+
+		str := "redis://localhost::[bar]baz/default_db"
+		_, _, _, err := extractURL(str)
+		assert.Error(t, err)
+	})
+
 	// todo: all types of redis URLs
 
 	/*

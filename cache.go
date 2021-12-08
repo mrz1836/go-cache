@@ -356,3 +356,26 @@ func SetToJSONRaw(conn redis.Conn, keyName string, modelData interface{},
 	}
 	return
 }
+
+// Ping is a basic Ping->Pong method to determine connection
+// Creates a new connection and closes connection at end of function call
+//
+// Uses methods: Ping()
+func Ping(ctx context.Context, client *Client) error {
+	conn, err := client.GetConnectionWithContext(ctx)
+	if err != nil {
+		return err
+	}
+	defer client.CloseConnection(conn)
+	return PingRaw(conn)
+}
+
+// PingRaw is a basic Ping->Pong method to determine connection
+// Uses existing connection (does not close connection)
+//
+// Uses methods: Ping()
+func PingRaw(conn redis.Conn) (err error) {
+	// "PONG" is returned on success
+	_, err = conn.Do(PingCommand)
+	return
+}

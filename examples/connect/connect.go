@@ -30,6 +30,11 @@ func main() {
 	// Pool is ready
 	log.Println("client & pool created")
 
+	// Test the connection
+	if err = cache.Ping(ctx, client); err != nil {
+		log.Fatalf("ping failed - connection error: %s", err.Error())
+	}
+
 	// Do something with the connection
 	_ = cache.Set(ctx, client, "test-key", "test-value")
 }

@@ -1629,3 +1629,84 @@ func TestSetToJSON(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+// TestPing is testing the method Ping()
+func TestPing(t *testing.T) {
+
+	t.Run("ping command using mocked redis", func(t *testing.T) {
+		t.Parallel()
+
+		// Load redis
+		client, conn := loadMockRedis()
+		assert.NotNil(t, client)
+		defer client.CloseAll(conn)
+
+		conn.Clear()
+
+		// The main command to test
+		pingCmd := conn.Command(PingCommand).Expect(interface{}("PONG"))
+
+		err := Ping(context.Background(), client)
+		assert.NoError(t, err)
+		assert.Equal(t, true, pingCmd.Called)
+	})
+
+	t.Run("ping command using real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis
+		client, conn, err := loadRealRedis()
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		// Start with a fresh db
+		err = clearRealRedis(conn)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = Ping(context.Background(), client)
+		assert.NoError(t, err)
+	})
+
+	t.Run("ping command using bad redis connection", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		// Load redis with bad url connection string
+		client, err := Connect(
+			context.Background(),
+			"redis://localbadhost:3422",
+			testMaxActiveConnections,
+			testMaxIdleConnections,
+			testMaxConnLifetime,
+			testIdleTimeout,
+			false,
+			false,
+		)
+
+		assert.NotNil(t, client)
+		assert.NoError(t, err)
+
+		// Fire the command
+		err = Ping(context.Background(), client)
+		assert.Error(t, err)
+	})
+}
+
+// ExamplePing is an example of the method Ping()
+func ExamplePing() {
+	// Load a mocked redis for testing/examples
+	client, _ := loadMockRedis()
+
+	// Close connections at end of request
+	defer client.Close()
+
+	// Fire the command
+	_ = Ping(context.Background(), client)
+	fmt.Printf("ping->pong")
+	// Output:ping->pong
+}

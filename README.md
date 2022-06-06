@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/mrz1836/go-cache/branch/master/graph/badge.svg)](https://codecov.io/gh/mrz1836/go-cache)
 [![Go](https://img.shields.io/github/go-mod/go-version/mrz1836/go-cache)](https://golang.org/)
 <br>
-[![Mergify Status](https://img.shields.io/endpoint.svg?url=https://gh.mergify.io/badges/mrz1836/go-cache&style=flat&v=1)](https://mergify.io)
+[![Mergify Status](https://img.shields.io/endpoint.svg?url=https://api.mergify.com/v1/badges/mrz1836/go-cache&style=flat&v=1)](https://mergify.io)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/mrz1836/go-cache)
 [![Sponsor](https://img.shields.io/badge/sponsor-MrZ-181717.svg?logo=github&style=flat&v=3)](https://github.com/sponsors/mrz1836)
 [![Donate](https://img.shields.io/badge/donate-bitcoin-ff9900.svg?logo=bitcoin&style=flat)](https://mrz1818.com/?tab=tips&utm_source=github&utm_medium=sponsor-link&utm_campaign=go-cache&utm_term=go-cache&utm_content=go-cache)

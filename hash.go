@@ -66,7 +66,7 @@ func HashMapGet(ctx context.Context, client *Client, hashName string, keys ...in
 		return nil, err
 	}
 	defer client.CloseConnection(conn)
-	return HashMapGetRaw(conn, hashName, keys)
+	return HashMapGetRaw(conn, hashName, keys...)
 }
 
 // HashMapGetRaw gets values from a hash map for corresponding keys

@@ -13,11 +13,16 @@ var ErrLockMismatch = errors.New("key is locked with a different secret")
 // lockScript is the locking script
 const lockScript = `
 local v = redis.call("GET", KEYS[1])
-if v == false or v == ARGV[1]
+if v == false
 then
-	return redis.call("SET", KEYS[1], ARGV[1], "EX", ARGV[2]) and 1
+	return redis.call("SET", KEYS[1], ARGV[1], "NX", "EX", ARGV[2]) and 1
 else
-	return 0
+	if v == ARGV[1]
+	then
+		return redis.call("SET", KEYS[1], ARGV[1], "EX", ARGV[2]) and 1
+	else
+		return 0
+	end
 end
 `
 

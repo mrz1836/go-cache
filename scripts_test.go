@@ -155,7 +155,7 @@ func TestRegisterScript(t *testing.T) {
 		// Another script
 		sha, err = RegisterScript(context.Background(), client, lockScript)
 		assert.NoError(t, err)
-		assert.Equal(t, "e60d96cbb3894dc682fafae2980ad674822f99e1", sha)
+		assert.Equal(t, "7168a6204ea41fc8e23d1c42b1ebdf1ec5abff4f", sha)
 
 		// Another script
 		sha, err = RegisterScript(context.Background(), client, releaseLockScript)

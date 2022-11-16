@@ -82,7 +82,7 @@ func Connect(ctx context.Context, redisURL string,
 
 	// Create the pool
 	redisPool := redis.Pool{
-		Dial:            buildDialer(redisURL, options...), //nolint:contextcheck // Cannot fix this lint issue
+		Dial:            buildDialer(redisURL, options...),
 		IdleTimeout:     idleTimeout,
 		MaxActive:       maxActiveConnections,
 		MaxConnLifetime: maxConnLifetime,

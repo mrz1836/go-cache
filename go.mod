@@ -6,7 +6,7 @@ require (
 	github.com/gomodule/redigo v1.8.9
 	github.com/newrelic/go-agent/v3 v3.20.3
 	github.com/rafaeljusto/redigomock v2.4.0+incompatible
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 )
 
 require (

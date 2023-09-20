@@ -1390,11 +1390,11 @@ func TestSetToJSON(t *testing.T) {
 				[]string{},
 			},
 		}
-		for _, test := range tests {
+		for i, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
 				conn.Clear()
 
-				responseBytes, err := json.Marshal(&test.modelData)
+				responseBytes, err := json.Marshal(tests[i].modelData)
 				assert.NoError(t, err)
 
 				var commands []*redigomock.Cmd
@@ -1468,11 +1468,11 @@ func TestSetToJSON(t *testing.T) {
 				10 * time.Second,
 			},
 		}
-		for _, test := range tests {
+		for i, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
 				conn.Clear()
 
-				responseBytes, err := json.Marshal(&test.modelData)
+				responseBytes, err := json.Marshal(tests[i].modelData)
 				assert.NoError(t, err)
 
 				var commands []*redigomock.Cmd
@@ -1593,7 +1593,7 @@ func TestSetToJSON(t *testing.T) {
 				0,
 			},
 		}
-		for _, test := range tests {
+		for i, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
 
 				// Start with a fresh db
@@ -1601,7 +1601,7 @@ func TestSetToJSON(t *testing.T) {
 				assert.NoError(t, err)
 
 				var responseBytes []byte
-				responseBytes, err = json.Marshal(&test.modelData)
+				responseBytes, err = json.Marshal(tests[i].modelData)
 				assert.NoError(t, err)
 
 				// Run command

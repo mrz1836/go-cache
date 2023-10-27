@@ -320,13 +320,14 @@ linters:
     - sqlclosecheck
     - nolintlint
     - gci
-    - goconst
   disable:
     - gocritic # use this for very opinionated linting
     - whitespace
     - godot
     - testpackage
     - nlreturn
+    - goconst
+    - testifylint
   disable-all: false
   presets:
     - bugs

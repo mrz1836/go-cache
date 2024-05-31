@@ -181,7 +181,7 @@ func cleanUp(pool nrredis.Pool) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, syscall.SIGTERM)
-	signal.Notify(c, syscall.SIGKILL)
+	signal.Notify(c, syscall.SIGKILL) //nolint:staticcheck // ignore
 	go func(pool nrredis.Pool) {
 		<-c
 		_ = pool.Close()

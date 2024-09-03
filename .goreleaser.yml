@@ -40,7 +40,7 @@ builds:
 # Github Release
 # ---------------------------
 release:
-  prerelease: true
+  prerelease: false
   name_template: "Release v{{.Version}}"
 
 # ---------------------------
@@ -50,7 +50,7 @@ announce:
 
   # See more at: https://goreleaser.com/customization/announce/#slack
   slack:
-    enabled: true
+    enabled: false
     message_template: '{{ .ProjectName }} {{ .Tag }} is out! Changelog: https://github.com/mrz1836/{{ .ProjectName }}/releases/tag/{{ .Tag }}'
     channel: '#test_slack'
     # username: ''

@@ -288,13 +288,13 @@ linters:
     - govet
     - gofmt
     - gosec
+    - copyloopvar
     - bodyclose
     - revive
     - unconvert
     - misspell
     - dogsled
     - prealloc
-    - exportloopref
     - exhaustive
     - sqlclosecheck
     - nolintlint
@@ -341,7 +341,7 @@ linters:
     - gomnd # we have too many raw numbers that are not magic
     - gomoddirectives # we use replace as needed
     - nilnil # we do not conform to this
-    - testifylint # need to fix all the asserts
+    - testifylint # Need to fix all the lint issues before enabling
     #- contextcheck # having issues with this
   disable-all: false
   presets:

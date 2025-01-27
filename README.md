@@ -1,13 +1,12 @@
 # go-cache
 > Simple cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
 
-[![Release](https://img.shields.io/github/release-pre/mrz1836/go-cache.svg?logo=github&style=flat&v=1)](https://github.com/mrz1836/go-cache/releases)
+[![Release](https://img.shields.io/github/release/mrz1836/go-cache.svg?logo=github&style=flat&v=1)](https://github.com/mrz1836/go-cache/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/mrz1836/go-cache/run-tests.yml?branch=master&logo=github&v=1)](https://github.com/mrz1836/go-cache/actions)
 [![Report](https://goreportcard.com/badge/github.com/mrz1836/go-cache?style=flat&v=1)](https://goreportcard.com/report/github.com/mrz1836/go-cache)
 [![codecov](https://codecov.io/gh/mrz1836/go-cache/branch/master/graph/badge.svg?v=1)](https://codecov.io/gh/mrz1836/go-cache)
 [![Go](https://img.shields.io/github/go-mod/go-version/mrz1836/go-cache?v=1)](https://golang.org/)
 <br>
-[![Mergify Status](https://img.shields.io/endpoint.svg?url=https://api.mergify.com/v1/badges/mrz1836/go-cache&style=flat&v=1)](https://mergify.io)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod&v=1)](https://gitpod.io/#https://github.com/mrz1836/go-cache)
 [![Sponsor](https://img.shields.io/badge/sponsor-MrZ-181717.svg?logo=github&style=flat&v=1)](https://github.com/sponsors/mrz1836)
 [![Donate](https://img.shields.io/badge/donate-bitcoin-ff9900.svg?logo=bitcoin&style=flat&v=1)](https://mrz1818.com/?tab=tips&utm_source=github&utm_medium=sponsor-link&utm_campaign=go-cache&utm_term=go-cache&utm_content=go-cache)

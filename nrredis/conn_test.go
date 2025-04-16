@@ -44,23 +44,23 @@ func (m *mockConn) Close() error { return nil }
 func (m *mockConn) Err() error { return nil }
 
 // DoWithTimeout executes a command with a timeout.
-func (m *mockConn) DoWithTimeout(timeout int, cmd string, args ...interface{}) (interface{}, error) {
+func (m *mockConn) DoWithTimeout(_ int, _ string, _ ...interface{}) (interface{}, error) {
 	return nil, nil
 }
 
 // SendWithTimeout sends a command with a timeout.
-func (m *mockConn) SendWithTimeout(timeout int, cmd string, args ...interface{}) error {
+func (m *mockConn) SendWithTimeout(_ int, _ string, _ ...interface{}) error {
 	return nil
 }
 
 // ---- Mock Transaction ----
 
-type mockTxn struct{}
+// type mockTxn struct{}
 
 // StartSegment creates a new segment for the transaction.
-func (m *mockTxn) StartSegmentNow() newrelic.SegmentStartTime {
+/*func (m *mockTxn) StartSegmentNow() newrelic.SegmentStartTime {
 	return newrelic.SegmentStartTime{}
-}
+}*/
 
 // ---- Test Helpers ----
 

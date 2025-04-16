@@ -48,7 +48,8 @@
       "gocritic",
       "godot",
       "err113",
-      "testifylint"
+      "testifylint",
+      "nilnil"
     ],
     "enable": [
       "asasalint",
@@ -61,7 +62,6 @@
       "dogsled",
       "recvcheck",
       "godox",
-      "nilnil",
       "nilnesserr",
       "gomoddirectives",
       "durationcheck",

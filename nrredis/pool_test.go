@@ -138,7 +138,7 @@ func TestWrappedPool_GetContext_Error(t *testing.T) {
 	mockP := new(mockPool)
 
 	// Avoid asserting nil through interface conversion, use Run instead
-	mockP.On("GetContext", mock.Anything).Run(func(args mock.Arguments) {
+	mockP.On("GetContext", mock.Anything).Run(func(_ mock.Arguments) {
 		// No need to do anything in here; we simulate the call
 	}).Return((*dummyConn)(nil), errors.New("connection error")) // typed nil with a concrete type
 

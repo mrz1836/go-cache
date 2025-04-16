@@ -1,3 +1,4 @@
+// Package main provides an example of how to get a value from a Redis cache using the go-cache library.
 package main
 
 import (

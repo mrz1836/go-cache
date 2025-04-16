@@ -1,3 +1,4 @@
+// Package main provides an example of how to check if a key exists in a Redis cache using the go-cache library.
 package main
 
 import (

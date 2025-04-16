@@ -1,3 +1,4 @@
+// Package main shows how to set a value in the cache with an expiration time
 package main
 
 import (

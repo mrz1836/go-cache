@@ -1,3 +1,4 @@
+// Package main provides an example of how to connect to a Redis server using the go-cache library.
 package main
 
 import (

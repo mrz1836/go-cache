@@ -1,3 +1,4 @@
+// Package main shows an example of how to create a lock using the go-cache library.
 package main
 
 import (

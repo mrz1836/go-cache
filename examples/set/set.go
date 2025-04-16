@@ -1,3 +1,4 @@
+// Package main shows how to set a value in the cache
 package main
 
 import (

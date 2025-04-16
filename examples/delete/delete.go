@@ -1,3 +1,4 @@
+// Package main provides an example of how to delete a key from a Redis server using the go-cache library.
 package main
 
 import (

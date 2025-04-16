@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestClient_RegisterScripts tests the method RegisterScripts()
@@ -26,7 +27,7 @@ func TestClient_RegisterScripts(t *testing.T) {
 			false,
 			false,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 		assert.Equal(t, "", client.DependencyScriptSha)
@@ -35,7 +36,7 @@ func TestClient_RegisterScripts(t *testing.T) {
 
 		// Run register
 		err = client.RegisterScripts(context.Background())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
 		assert.Equal(t, 1, len(client.ScriptsLoaded))
 	})
@@ -55,7 +56,7 @@ func TestClient_RegisterScripts(t *testing.T) {
 			false,
 			false,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 		assert.Equal(t, "", client.DependencyScriptSha)
@@ -64,13 +65,13 @@ func TestClient_RegisterScripts(t *testing.T) {
 
 		// Run register
 		err = client.RegisterScripts(context.Background())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
 		assert.Equal(t, 1, len(client.ScriptsLoaded))
 
 		// Run again (should skip)
 		err = client.RegisterScripts(context.Background())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
 		assert.Equal(t, 1, len(client.ScriptsLoaded))
 	})
@@ -119,7 +120,7 @@ func TestRegisterScript(t *testing.T) {
 				setCmd := conn.Command(ScriptCommand, LoadCommand, test.script).Expect(test.expectedSha)
 
 				val, err := RegisterScriptRaw(client, conn, test.script)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, true, setCmd.Called)
 				assert.Equal(t, test.expectedSha, val)
 			})
@@ -134,32 +135,32 @@ func TestRegisterScript(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		var sha string
 		sha, err = RegisterScript(context.Background(), client, killByDependencyLua)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, sha)
 
 		// Another script
 		sha, err = RegisterScript(context.Background(), client, `return redis.call("get", KEYS[1])`)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "a5260dd66ce02462c5b5231c727b3f7772c0bcc5", sha)
 
 		// Another script
 		sha, err = RegisterScript(context.Background(), client, lockScript)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "7168a6204ea41fc8e23d1c42b1ebdf1ec5abff4f", sha)
 
 		// Another script
 		sha, err = RegisterScript(context.Background(), client, releaseLockScript)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "3271ffa78c3ca6743c9dc476ff6cae55a9cd3cb4", sha)
 	})
 
@@ -171,17 +172,17 @@ func TestRegisterScript(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		var sha string
 		sha, err = RegisterScript(context.Background(), client, "invalid script")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, "", sha)
 	})
 }

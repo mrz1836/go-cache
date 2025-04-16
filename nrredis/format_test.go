@@ -2,6 +2,7 @@ package nrredis
 
 import "testing"
 
+// TestFormatCommand tests the formatCommand function to ensure it formats Redis commands correctly.
 func TestFormatCommand(t *testing.T) {
 	cases := []struct {
 		cmd  string

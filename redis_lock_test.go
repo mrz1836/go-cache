@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestWriteLock tests the method WriteLock()
@@ -22,17 +23,17 @@ func TestWriteLock(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Write a lock
 		var locked bool
 		locked, err = WriteLock(context.Background(), client, "d  `!$-()my-key", "d d d", int64(0))
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, false, locked)
 	})
 
@@ -44,17 +45,17 @@ func TestWriteLock(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Write a lock
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
 
@@ -66,22 +67,22 @@ func TestWriteLock(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Write a lock
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Attempt to re-lock (should succeed)
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(5))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
 
@@ -93,22 +94,22 @@ func TestWriteLock(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Write a lock
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Attempt to re-lock (should succeed)
 		locked, err = WriteLockRaw(conn, "my-key", "different-secret", int64(5))
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, false, locked)
 	})
 
@@ -120,24 +121,24 @@ func TestWriteLock(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Write a lock
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(1))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		time.Sleep(2 * time.Second)
 
 		// Write new lock
 		locked, err = WriteLockRaw(conn, "my-key", "new-secret", int64(2))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
 }
@@ -171,22 +172,22 @@ func TestReleaseLock(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Write a lock
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Release a lock
 		locked, err = ReleaseLockRaw(conn, "my-key", "the-secret")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
 
@@ -198,27 +199,27 @@ func TestReleaseLock(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Write a lock
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Release a lock
 		locked, err = ReleaseLockRaw(conn, "my-key", "the-secret")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Release a lock (again)
 		locked, err = ReleaseLockRaw(conn, "my-key", "the-secret")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 	})
 
@@ -230,22 +231,22 @@ func TestReleaseLock(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Write a lock
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, locked)
 
 		// Release a lock
 		locked, err = ReleaseLockRaw(conn, "my-key", "wrong-secret")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, false, locked)
 	})
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/rafaeljusto/redigomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestHashSet is testing the method HashSet()
@@ -56,10 +57,10 @@ func TestHashSet(t *testing.T) {
 					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := HashSetRaw(conn, test.hashName, test.key, test.value, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				} else {
 					err := HashSetRaw(conn, test.hashName, test.key, test.value, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				}
 
 				for _, c := range commands {
@@ -77,21 +78,21 @@ func TestHashSet(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = HashSet(context.Background(), client, testHashName, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
 		testVal, err = HashGet(context.Background(), client, testHashName, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
 }
@@ -142,7 +143,7 @@ func TestHashGet(t *testing.T) {
 				getCmd := conn.Command(HashGetCommand, test.hashName, test.key).Expect(test.value)
 
 				val, err := HashGetRaw(conn, test.hashName, test.key)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, true, getCmd.Called)
 				assert.Equal(t, test.value, val)
 			})
@@ -157,21 +158,21 @@ func TestHashGet(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = HashSet(context.Background(), client, testHashName, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
 		testVal, err = HashGet(context.Background(), client, testHashName, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
 }
@@ -259,10 +260,10 @@ func TestHashMapSet(t *testing.T) {
 					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := HashMapSetRaw(conn, test.hashName, test.pairs, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				} else {
 					err := HashMapSetRaw(conn, test.hashName, test.pairs, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				}
 
 				for _, c := range commands {
@@ -280,12 +281,12 @@ func TestHashMapSet(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Create pairs
 		pairs := [][2]interface{}{
@@ -296,17 +297,17 @@ func TestHashMapSet(t *testing.T) {
 
 		// Set the hash map
 		err = HashMapSetRaw(conn, testHashName, pairs, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		var val string
 		val, err = HashGetRaw(conn, testHashName, "pair-1")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "pair-1-value", val)
 
 		// Get a key in the map
 		var values []string
 		values, err = HashMapGetRaw(conn, testHashName, "pair-1", "pair-2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Got two values?
 		assert.Equal(t, 2, len(values))
@@ -409,10 +410,10 @@ func TestHashMapSetExp(t *testing.T) {
 					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := HashMapSetExp(context.Background(), client, test.hashName, test.pairs, test.expiration, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				} else {
 					err := HashMapSetExp(context.Background(), client, test.hashName, test.pairs, test.expiration, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				}
 
 				for _, c := range commands {
@@ -430,12 +431,12 @@ func TestHashMapSetExp(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Create pairs
 		pairs := [][2]interface{}{
@@ -446,17 +447,17 @@ func TestHashMapSetExp(t *testing.T) {
 
 		// Set the hash map
 		err = HashMapSetExpRaw(conn, testHashName, pairs, 2*time.Second, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		var val string
 		val, err = HashGetRaw(conn, testHashName, "pair-1")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "pair-1-value", val)
 
 		// Get a key in the map
 		var values []string
 		values, err = HashMapGetRaw(conn, testHashName, "pair-1", "pair-2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Got two values?
 		assert.Equal(t, 2, len(values))
@@ -472,7 +473,7 @@ func TestHashMapSetExp(t *testing.T) {
 		time.Sleep(time.Second * 3)
 
 		values, err = HashMapGetRaw(conn, testHashName, "pair-1")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, []string{""}, values)
 	})
 }

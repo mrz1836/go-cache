@@ -7,6 +7,7 @@ import (
 
 	"github.com/rafaeljusto/redigomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestSetAdd test the method SetAdd()
@@ -50,10 +51,10 @@ func TestSetAdd(t *testing.T) {
 					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := SetAddRaw(conn, test.setName, test.member, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				} else {
 					err := SetAddRaw(conn, test.setName, test.member, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				}
 
 				for _, c := range commands {
@@ -71,21 +72,21 @@ func TestSetAdd(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = SetAddRaw(conn, testKey, testStringValue)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
 		found, err = SetIsMemberRaw(conn, testKey, testStringValue)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
 }
@@ -146,7 +147,7 @@ func TestSetAddMany(t *testing.T) {
 				commands = append(commands, conn.Command(AddToSetCommand, args...))
 
 				err := SetAddManyRaw(conn, test.setName, test.members...)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				for _, c := range commands {
 					assert.Equal(t, true, c.Called)
@@ -163,21 +164,21 @@ func TestSetAddMany(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = SetAddMany(context.Background(), client, testKey, testStringValue, testStringValue+"2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
 		found, err = SetIsMember(context.Background(), client, testKey, testStringValue+"2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
 }
@@ -230,7 +231,7 @@ func TestSetRemoveMember(t *testing.T) {
 				commands = append(commands, conn.Command(RemoveMemberCommand, test.setName, test.member))
 
 				err := SetRemoveMember(context.Background(), client, test.setName, test.member)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				for _, c := range commands {
 					assert.Equal(t, true, c.Called)
@@ -247,30 +248,30 @@ func TestSetRemoveMember(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = SetAddRaw(conn, testKey, testStringValue)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
 		found, err = SetIsMemberRaw(conn, testKey, testStringValue)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, found)
 
 		// Fire the command
 		err = SetRemoveMemberRaw(conn, testKey, testStringValue)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		found, err = SetIsMemberRaw(conn, testKey, testStringValue)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, false, found)
 	})
 }
@@ -321,7 +322,7 @@ func TestSetIsMember(t *testing.T) {
 				isCmd := conn.Command(IsMemberCommand, test.setName, test.member).Expect(interface{}(test.expectedFound))
 
 				found, err := SetIsMemberRaw(conn, test.setName, test.member)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, test.expectedFound > 0, found)
 				assert.Equal(t, true, isCmd.Called)
 			})
@@ -336,21 +337,21 @@ func TestSetIsMember(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = SetAdd(context.Background(), client, testKey, testStringValue)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
 		found, err = SetIsMember(context.Background(), client, testKey, testStringValue)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
 }
@@ -398,11 +399,11 @@ func TestSetMembers(t *testing.T) {
 				cmd := conn.Command(MembersCommand, test.setName).Expect(test.expectedFound)
 
 				found, err := SetMembersRaw(conn, test.setName)
-				assert.NoError(t, err)
-				assert.Equal(t, 2, len(found))
+				require.NoError(t, err)
+				assert.Len(t, found, 2)
 				assert.Equal(t, "one", found[0])
 				assert.Equal(t, "two", found[1])
-				assert.Equal(t, true, cmd.Called)
+				assert.True(t, cmd.Called)
 			})
 		}
 	})

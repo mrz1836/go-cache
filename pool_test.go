@@ -8,6 +8,7 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestConnect tests the method Connect()
@@ -26,7 +27,7 @@ func TestConnect(t *testing.T) {
 			false,
 			false,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 		assert.Equal(t, "", client.DependencyScriptSha)
@@ -49,7 +50,7 @@ func TestConnect(t *testing.T) {
 			false,
 			true,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 		assert.Equal(t, "", client.DependencyScriptSha)
@@ -74,7 +75,7 @@ func TestConnect(t *testing.T) {
 			true,
 			false,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
@@ -98,7 +99,7 @@ func TestConnect(t *testing.T) {
 			false,
 			redis.DialKeepAlive(10*time.Second),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 		assert.Equal(t, "", client.DependencyScriptSha)
@@ -121,7 +122,7 @@ func TestConnect(t *testing.T) {
 			false,
 			false,
 		)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, client)
 	})
 }
@@ -166,7 +167,7 @@ func TestClient_Close(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 		client.Close()
 		assert.Nil(t, client.Pool)
@@ -203,7 +204,7 @@ func TestClient_GetConnection(t *testing.T) {
 			false,
 			false,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
@@ -254,14 +255,14 @@ func TestClient_GetConnectionWithContext(t *testing.T) {
 			false,
 			false,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
 		var conn redis.Conn
 		conn, err = client.GetConnectionWithContext(context.Background())
 		assert.NotNil(t, conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		client.Close()
 		assert.Nil(t, client.Pool)
@@ -282,14 +283,14 @@ func TestClient_GetConnectionWithContext(t *testing.T) {
 			false,
 			true,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
 		var conn redis.Conn
 		conn, err = client.GetConnectionWithContext(context.Background())
 		assert.NotNil(t, conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		client.Close()
 		assert.Nil(t, client.Pool)
@@ -344,14 +345,14 @@ func TestClient_CloseConnection(t *testing.T) {
 			false,
 			false,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
 		var conn redis.Conn
 		conn, err = client.GetConnectionWithContext(context.Background())
 		assert.NotNil(t, conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		conn = client.CloseConnection(conn)
 		assert.Nil(t, conn)
@@ -402,14 +403,14 @@ func TestClient_CloseAll(t *testing.T) {
 			false,
 			false,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
 		var conn redis.Conn
 		conn, err = client.GetConnectionWithContext(context.Background())
 		assert.NotNil(t, conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		conn = client.CloseAll(conn)
 		assert.Nil(t, conn)
@@ -430,14 +431,14 @@ func TestClient_CloseAll(t *testing.T) {
 			false,
 			true,
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 
 		var conn redis.Conn
 		conn, err = client.GetConnectionWithContext(context.Background())
 		assert.NotNil(t, conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		conn = client.CloseAll(conn)
 		assert.Nil(t, conn)
@@ -466,7 +467,7 @@ func TestConnectToURL(t *testing.T) {
 		t.Parallel()
 
 		c, err := ConnectToURL("redis://user:pass{DEf1=ghi@domain.com")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, c)
 	})
 
@@ -474,7 +475,7 @@ func TestConnectToURL(t *testing.T) {
 		t.Parallel()
 
 		c, err := ConnectToURL("foo.html")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, c)
 	})
 
@@ -482,7 +483,7 @@ func TestConnectToURL(t *testing.T) {
 		t.Parallel()
 
 		c, err := ConnectToURL("redis://doesnotexist.com")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, c)
 	})
 
@@ -490,7 +491,7 @@ func TestConnectToURL(t *testing.T) {
 		t.Parallel()
 
 		c, err := ConnectToURL("redis://doesnotexist.com:6379", redis.DialConnectTimeout(2*time.Second))
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, c)
 	})
 
@@ -498,7 +499,7 @@ func TestConnectToURL(t *testing.T) {
 		t.Parallel()
 
 		c, err := ConnectToURL("redis://user:pass@localhost:6379", redis.DialConnectTimeout(2*time.Second))
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, c)
 	})
 
@@ -506,7 +507,7 @@ func TestConnectToURL(t *testing.T) {
 		t.Parallel()
 
 		c, err := ConnectToURL("redis://localhost:6379/pathDb", redis.DialConnectTimeout(2*time.Second))
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.NotNil(t, c)
 		CloseConnection(c)
 	})
@@ -517,14 +518,14 @@ func TestConnectToURL(t *testing.T) {
 		}
 
 		c, err := ConnectToURL(testLocalConnectionURL)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, c)
 		defer CloseConnection(c)
 
 		// Try to ping
 		var pong string
 		pong, err = redis.String(c.Do(PingCommand))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "PONG", pong)
 	})
 
@@ -534,14 +535,14 @@ func TestConnectToURL(t *testing.T) {
 		}
 
 		c, err := ConnectToURL(testLocalConnectionURL, redis.DialUseTLS(false), redis.DialKeepAlive(3*time.Second))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, c)
 		defer CloseConnection(c)
 
 		// Try to ping
 		var pong string
 		pong, err = redis.String(c.Do(PingCommand))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "PONG", pong)
 	})
 }
@@ -564,7 +565,7 @@ func TestExtractRedisURL(t *testing.T) {
 
 		str := "redis://localhost:6379/default_db"
 		host, database, port, err := extractURL(str)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "localhost", host)
 		assert.Equal(t, "default_db", database)
 		assert.Equal(t, "6379", port)
@@ -574,14 +575,14 @@ func TestExtractRedisURL(t *testing.T) {
 
 		str := "http://a b.com/"
 		_, _, _, err := extractURL(str)
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 
 	t.Run("test missing port", func(t *testing.T) {
 
 		str := "redis://localhost::[bar]baz/default_db"
 		_, _, _, err := extractURL(str)
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 
 	// todo: all types of redis URLs

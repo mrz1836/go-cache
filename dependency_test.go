@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDelete tests the method Delete()
@@ -21,16 +22,16 @@ func TestDelete(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Test no keys
 		_, err = Delete(context.Background(), client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("single key - real redis", func(t *testing.T) {
@@ -41,17 +42,17 @@ func TestDelete(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Test one key
 		var total int
 		total, err = Delete(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
 
@@ -63,17 +64,17 @@ func TestDelete(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Test multiple keys
 		var total int
 		total, err = Delete(context.Background(), client, testKey, "key2", "key3")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
 }
@@ -108,16 +109,16 @@ func TestKillByDependency(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Test no keys
 		_, err = KillByDependency(context.Background(), client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("single key - real redis", func(t *testing.T) {
@@ -128,17 +129,17 @@ func TestKillByDependency(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Test one key
 		var total int
 		total, err = KillByDependency(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
 
@@ -150,17 +151,17 @@ func TestKillByDependency(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Test multiple keys
 		var total int
 		total, err = KillByDependency(context.Background(), client, testKey, "key2", "key3")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 0, total)
 	})
 }
@@ -193,63 +194,63 @@ func TestDependencyManagement(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Set a key with two dependent keys
 		err = SetRaw(conn, "test-set-dep", testStringValue, "dependent-1", "dependent-2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Test for dependent key 1
 		var ok bool
 		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"dependent-1", "test-set-dep")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Test for dependent key 2
 		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"dependent-2", "test-set-dep")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Kill a dependent key
 		var total int
 		total, err = DeleteRaw(conn, "dependent-1")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 2, total)
 
 		// Test for main key
 		var found bool
 		found, err = ExistsRaw(conn, "test-set-dep")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, false, found)
 
 		// Test for dependency relation
 		found, err = ExistsRaw(conn, DependencyPrefix+"dependent-1")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, false, found)
 
 		// Test for dependency relation 2
 		found, err = SetIsMemberRaw(conn, DependencyPrefix+"dependent-2", "test-set-dep")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, found)
 
 		// Kill all dependent keys
 		total, err = KillByDependencyRaw(conn, "dependent-1", "dependent-2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 1, total)
 
 		// Test for dependency relation
 		found, err = ExistsRaw(conn, DependencyPrefix+"dependent-2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, false, found)
 
 		// Test for main key
 		found, err = ExistsRaw(conn, "test-set-dep")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, false, found)
 	})
 
@@ -268,12 +269,12 @@ func TestHashMapDependencyManagement(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Create pairs
 		pairs := [][2]interface{}{
@@ -284,41 +285,41 @@ func TestHashMapDependencyManagement(t *testing.T) {
 
 		// Set a key with two dependent keys
 		err = HashMapSetRaw(conn, "test-hash-map-dependency", pairs, "test-hash-map-depend-1", "test-hash-map-depend-2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Test get
 		var val string
 		val, err = HashGetRaw(conn, "test-hash-map-dependency", "pair-1")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "pair-1-value", val)
 
 		// Test get values
 		var values []string
 		values, err = HashMapGetRaw(conn, "test-hash-map-dependency", "pair-1", "pair-2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 2, len(values))
 
 		// Test for dependent key 1
 		var ok bool
 		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"test-hash-map-depend-1", "test-hash-map-dependency")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Test for dependent key 2
 		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"test-hash-map-depend-2", "test-hash-map-dependency")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, ok)
 
 		// Kill a dependent key
 		var total int
 		total, err = DeleteRaw(conn, "test-hash-map-depend-2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 2, total)
 
 		// Test for main key
 		var found bool
 		found, err = ExistsRaw(conn, "test-hash-map-dependency")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, false, found)
 	})
 }

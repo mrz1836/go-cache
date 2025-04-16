@@ -11,6 +11,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/rafaeljusto/redigomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Testing variables
@@ -141,10 +142,10 @@ func TestSet(t *testing.T) {
 					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := Set(ctx, client, test.key, test.value, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				} else {
 					err := Set(ctx, client, test.key, test.value, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				}
 
 				for _, c := range commands {
@@ -163,7 +164,7 @@ func TestSet(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		var tests = []struct {
@@ -184,16 +185,16 @@ func TestSet(t *testing.T) {
 
 				// Start with a fresh db
 				err = clearRealRedis(conn)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Run command
 				err = Set(context.Background(), client, test.key, test.value, test.dependencies...)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Validate via getting the data from redis
 				var testVal string
 				testVal, err = Get(context.Background(), client, test.key)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, test.value, testVal)
 			})
 		}
@@ -208,7 +209,7 @@ func TestSet(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedisWithNewRelic()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		var tests = []struct {
@@ -229,16 +230,16 @@ func TestSet(t *testing.T) {
 
 				// Start with a fresh db
 				err = clearRealRedis(conn)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Run command
 				err = Set(context.Background(), client, test.key, test.value, test.dependencies...)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Validate via getting the data from redis
 				var testVal string
 				testVal, err = Get(context.Background(), client, test.key)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, test.value, testVal)
 			})
 		}
@@ -253,7 +254,7 @@ func TestSet(t *testing.T) {
 		client.CloseAll(conn)
 
 		err := Set(context.TODO(), client, "key", "value")
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 }
 
@@ -312,10 +313,10 @@ func TestSetExp(t *testing.T) {
 					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err := SetExp(context.Background(), client, test.key, test.value, test.expiration, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				} else {
 					err := SetExp(context.Background(), client, test.key, test.value, test.expiration, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				}
 
 				for _, c := range commands {
@@ -333,21 +334,21 @@ func TestSetExp(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = SetExp(context.Background(), client, testKey, testStringValue, 2*time.Second, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
 		testVal, err = Get(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 
 		// Wait a few seconds and test
@@ -356,7 +357,7 @@ func TestSetExp(t *testing.T) {
 
 		// Check that the key is expired
 		testVal, err = Get(context.Background(), client, testKey)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, "", testVal)
 		assert.Equal(t, redis.ErrNil, err)
 	})
@@ -370,7 +371,7 @@ func TestSetExp(t *testing.T) {
 		client.CloseAll(conn)
 
 		err := SetExp(context.TODO(), client, "key", "value", 10*time.Second)
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 }
 
@@ -418,7 +419,7 @@ func TestGet(t *testing.T) {
 				getCmd := conn.Command(GetCommand, test.key).Expect(test.value)
 
 				val, err := Get(context.Background(), client, test.key)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, true, getCmd.Called)
 				assert.Equal(t, test.value, val)
 			})
@@ -433,21 +434,21 @@ func TestGet(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
 		testVal, err = Get(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
 
@@ -459,21 +460,21 @@ func TestGet(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedisWithNewRelic()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
 		testVal, err = Get(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 	})
 
@@ -486,7 +487,7 @@ func TestGet(t *testing.T) {
 		client.CloseAll(conn)
 
 		val, err := Get(context.TODO(), client, "123456")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, "", val)
 	})
 }
@@ -538,7 +539,7 @@ func TestGetBytes(t *testing.T) {
 				getCmd := conn.Command(GetCommand, test.key).Expect([]byte(test.value))
 
 				val, err := GetBytes(context.Background(), client, test.key)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, true, getCmd.Called)
 				assert.Equal(t, []byte(test.value), val)
 			})
@@ -553,21 +554,21 @@ func TestGetBytes(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var testVal []byte
 		testVal, err = GetBytes(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, []byte(testStringValue), testVal)
 	})
 
@@ -579,21 +580,21 @@ func TestGetBytes(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedisWithNewRelic()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var testVal []byte
 		testVal, err = GetBytes(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, []byte(testStringValue), testVal)
 	})
 
@@ -606,7 +607,7 @@ func TestGetBytes(t *testing.T) {
 		client.CloseAll(conn)
 
 		val, err := GetBytes(context.TODO(), client, "123456")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, []byte(nil), val)
 	})
 }
@@ -645,7 +646,7 @@ func TestGetAllKeys(t *testing.T) {
 		getCmd := conn.Command(KeysCommand, AllKeysCommand).Expect([]interface{}{[]byte(testKey)})
 
 		val, err := GetAllKeys(context.Background(), client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, getCmd.Called)
 		assert.Equal(t, []string{testKey}, val)
 	})
@@ -658,21 +659,21 @@ func TestGetAllKeys(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var keys []string
 		keys, err = GetAllKeys(context.Background(), client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 2, len(keys))
 	})
 
@@ -684,21 +685,21 @@ func TestGetAllKeys(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedisWithNewRelic()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var keys []string
 		keys, err = GetAllKeys(context.Background(), client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 2, len(keys))
 	})
 
@@ -711,7 +712,7 @@ func TestGetAllKeys(t *testing.T) {
 		client.CloseAll(conn)
 
 		val, err := GetAllKeys(context.TODO(), client)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, []string(nil), val)
 	})
 }
@@ -752,7 +753,7 @@ func TestExists(t *testing.T) {
 		existsCmd := conn.Command(ExistsCommand, testKey).Expect(interface{}(int64(1)))
 
 		val, err := Exists(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, existsCmd.Called)
 		assert.Equal(t, true, val)
 	})
@@ -765,21 +766,21 @@ func TestExists(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var found bool
 		found, err = Exists(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, found)
 	})
 
@@ -792,7 +793,7 @@ func TestExists(t *testing.T) {
 		client.CloseAll(conn)
 
 		found, err := Exists(context.TODO(), client, "key")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, false, found)
 	})
 }
@@ -843,7 +844,7 @@ func TestExpire(t *testing.T) {
 				expireCmd := conn.Command(ExpireCommand, test.key, int64(test.expiration.Seconds()))
 
 				err := Expire(context.Background(), client, test.key, test.expiration)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, true, expireCmd.Called)
 			})
 		}
@@ -857,21 +858,21 @@ func TestExpire(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = SetExp(context.Background(), client, testKey, testStringValue, 5*time.Second, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var testVal string
 		testVal, err = Get(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, testStringValue, testVal)
 
 		// Expire
@@ -886,7 +887,7 @@ func TestExpire(t *testing.T) {
 
 		// Check that the key is expired
 		testVal, err = Get(context.Background(), client, testKey)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, redis.ErrNil, err)
 		assert.Equal(t, "", testVal)
 	})
@@ -900,7 +901,7 @@ func TestExpire(t *testing.T) {
 		client.CloseAll(conn)
 
 		err := Expire(context.TODO(), client, "key", 10*time.Second)
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 }
 
@@ -938,7 +939,7 @@ func TestDestroyCache(t *testing.T) {
 		destroyCmd := conn.Command(FlushAllCommand)
 
 		err := DestroyCache(context.Background(), client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, destroyCmd.Called)
 	})
 
@@ -950,30 +951,30 @@ func TestDestroyCache(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Test getting a value
 		var val string
 		val, err = Get(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, val, testStringValue)
 
 		// Check that the command worked
 		err = DestroyCache(context.Background(), client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Value should not exist
 		val, err = Get(context.Background(), client, testKey)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, err, redis.ErrNil)
 		assert.Equal(t, val, "")
 	})
@@ -987,7 +988,7 @@ func TestDestroyCache(t *testing.T) {
 		client.CloseAll(conn)
 
 		err := DestroyCache(context.TODO(), client)
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 }
 
@@ -1053,7 +1054,7 @@ func TestGetList(t *testing.T) {
 				getCmd := conn.Command(ListRangeCommand, test.key, 0, -1).Expect(test.expectedList)
 
 				list, err := GetList(context.Background(), client, test.key)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, true, getCmd.Called)
 				assert.Equal(t, test.expectedStringList, list)
 			})
@@ -1068,21 +1069,21 @@ func TestGetList(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = SetList(context.Background(), client, testKey, []string{testStringValue})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var list []string
 		list, err = GetList(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, []string{testStringValue}, list)
 	})
 
@@ -1095,7 +1096,7 @@ func TestGetList(t *testing.T) {
 		client.CloseAll(conn)
 
 		val, err := GetList(context.TODO(), client, "123456")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, []string(nil), val)
 	})
 }
@@ -1166,7 +1167,7 @@ func TestSetList(t *testing.T) {
 				setCmd := conn.Command(ListPushCommand, args...)
 
 				err := SetList(context.Background(), client, test.key, test.inputList)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, true, setCmd.Called)
 			})
 		}
@@ -1180,21 +1181,21 @@ func TestSetList(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = SetList(context.Background(), client, testKey, []string{testStringValue})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Check that the command worked
 		var list []string
 		list, err = GetList(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, []string{testStringValue}, list)
 	})
 
@@ -1207,7 +1208,7 @@ func TestSetList(t *testing.T) {
 		client.CloseAll(conn)
 
 		err := SetList(context.TODO(), client, "123456", []string{"test", "test1"})
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 }
 
@@ -1272,7 +1273,7 @@ func TestDeleteWithoutDependency(t *testing.T) {
 				}
 
 				total, err := DeleteWithoutDependency(context.Background(), client, test.keys...)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, test.totalDeleted, total)
 				for _, c := range commands {
 					assert.Equal(t, true, c.Called)
@@ -1289,27 +1290,27 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Set a key
 		err = Set(context.Background(), client, testKey, testStringValue, testDependantKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		var total int
 		total, err = DeleteWithoutDependency(context.Background(), client, testKey)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 1, total)
 
 		// Check that the command worked
 		var val string
 		val, err = Get(context.Background(), client, testKey)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, redis.ErrNil, err)
 		assert.Equal(t, "", val)
 	})
@@ -1323,7 +1324,7 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		client.CloseAll(conn)
 
 		total, err := DeleteWithoutDependency(context.TODO(), client, "key")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, 0, total)
 	})
 }
@@ -1395,7 +1396,7 @@ func TestSetToJSON(t *testing.T) {
 				conn.Clear()
 
 				responseBytes, err := json.Marshal(tests[i].modelData)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				var commands []*redigomock.Cmd
 
@@ -1411,10 +1412,10 @@ func TestSetToJSON(t *testing.T) {
 					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err = SetToJSONRaw(conn, test.key, test.modelData, 0, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				} else {
 					err = SetToJSONRaw(conn, test.key, test.modelData, 0, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				}
 
 				for _, c := range commands {
@@ -1473,7 +1474,7 @@ func TestSetToJSON(t *testing.T) {
 				conn.Clear()
 
 				responseBytes, err := json.Marshal(tests[i].modelData)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				var commands []*redigomock.Cmd
 
@@ -1489,10 +1490,10 @@ func TestSetToJSON(t *testing.T) {
 					commands = append(commands, conn.Command(ExecuteCommand))
 
 					err = SetToJSONRaw(conn, test.key, test.modelData, test.expiration, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				} else {
 					err = SetToJSONRaw(conn, test.key, test.modelData, test.expiration, test.dependencies...)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 				}
 
 				for _, c := range commands {
@@ -1526,7 +1527,7 @@ func TestSetToJSON(t *testing.T) {
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
 				err := SetToJSON(context.Background(), client, test.key, test.modelData, 0, test.dependencies...)
-				assert.Error(t, err)
+				require.Error(t, err)
 			})
 		}
 	})
@@ -1540,7 +1541,7 @@ func TestSetToJSON(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		var tests = []struct {
@@ -1598,20 +1599,20 @@ func TestSetToJSON(t *testing.T) {
 
 				// Start with a fresh db
 				err = clearRealRedis(conn)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				var responseBytes []byte
 				responseBytes, err = json.Marshal(tests[i].modelData)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Run command
 				err = SetToJSONRaw(conn, test.key, test.modelData, test.expiration, test.dependencies...)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Validate via getting the data from redis
 				var testVal string
 				testVal, err = GetRaw(conn, test.key)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, string(responseBytes), testVal)
 			})
 		}
@@ -1626,7 +1627,7 @@ func TestSetToJSON(t *testing.T) {
 		client.CloseAll(conn)
 
 		err := SetToJSON(context.TODO(), client, "123456", nil, 10*time.Second)
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 }
 
@@ -1647,7 +1648,7 @@ func TestPing(t *testing.T) {
 		pingCmd := conn.Command(PingCommand).Expect(interface{}("PONG"))
 
 		err := Ping(context.Background(), client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, true, pingCmd.Called)
 	})
 
@@ -1659,16 +1660,16 @@ func TestPing(t *testing.T) {
 		// Load redis
 		client, conn, err := loadRealRedis()
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
 		err = clearRealRedis(conn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Ping(context.Background(), client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("ping command using bad redis connection", func(t *testing.T) {
@@ -1689,11 +1690,11 @@ func TestPing(t *testing.T) {
 		)
 
 		assert.NotNil(t, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Fire the command
 		err = Ping(context.Background(), client)
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 }
 

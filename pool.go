@@ -204,6 +204,6 @@ func extractURL(redisURL string) (host, database, port string, err error) {
 	}
 
 	// Set the database
-	database = strings.Replace(u.RequestURI(), "/", "", -1)
+	database = strings.ReplaceAll(u.RequestURI(), "/", "")
 	return
 }

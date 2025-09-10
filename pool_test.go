@@ -13,7 +13,6 @@ import (
 
 // TestConnect tests the method Connect()
 func TestConnect(t *testing.T) {
-
 	t.Run("valid connection, no dependency mode", func(t *testing.T) {
 		t.Parallel()
 
@@ -129,7 +128,6 @@ func TestConnect(t *testing.T) {
 
 // ExampleConnect is an example of the method Connect()
 func ExampleConnect() {
-
 	client, _ := Connect(
 		context.Background(),
 		testLocalConnectionURL,
@@ -176,7 +174,6 @@ func TestClient_Close(t *testing.T) {
 
 // ExampleClient_Close is an example of the method Close()
 func ExampleClient_Close() {
-
 	// Load a mocked redis for testing/examples
 	client, _ := loadMockRedis()
 
@@ -218,7 +215,6 @@ func TestClient_GetConnection(t *testing.T) {
 
 // ExampleClient_GetConnection is an example of the method GetConnection()
 func ExampleClient_GetConnection() {
-
 	client, _ := Connect(
 		context.Background(),
 		testLocalConnectionURL,
@@ -299,7 +295,6 @@ func TestClient_GetConnectionWithContext(t *testing.T) {
 
 // ExampleClient_GetConnectionWithContext is an example of the method GetConnectionWithContext()
 func ExampleClient_GetConnectionWithContext() {
-
 	client, _ := Connect(
 		context.Background(),
 		testLocalConnectionURL,
@@ -361,7 +356,6 @@ func TestClient_CloseConnection(t *testing.T) {
 
 // ExampleClient_CloseConnection is an example of the method CloseConnection()
 func ExampleClient_CloseConnection() {
-
 	// Load a mocked redis for testing/examples
 	client, conn := loadMockRedis()
 
@@ -447,7 +441,6 @@ func TestClient_CloseAll(t *testing.T) {
 
 // ExampleClient_CloseAll is an example of the method CloseAll()
 func ExampleClient_CloseAll() {
-
 	// Load a mocked redis for testing/examples
 	client, conn := loadMockRedis()
 
@@ -549,7 +542,6 @@ func TestConnectToURL(t *testing.T) {
 
 // ExampleConnectToURL is an example of the method ConnectToURL()
 func ExampleConnectToURL() {
-
 	c, _ := ConnectToURL(testLocalConnectionURL)
 
 	// Close connections at end of request
@@ -562,7 +554,6 @@ func ExampleConnectToURL() {
 // TestExtractRedisURL will test the method extractURL()
 func TestExtractRedisURL(t *testing.T) {
 	t.Run("test extraction (redis://HOST[:PORT]/DATABASE)", func(t *testing.T) {
-
 		str := "redis://localhost:6379/default_db"
 		host, database, port, err := extractURL(str)
 		require.NoError(t, err)
@@ -572,14 +563,12 @@ func TestExtractRedisURL(t *testing.T) {
 	})
 
 	t.Run("test bad url", func(t *testing.T) {
-
 		str := "http://a b.com/"
 		_, _, _, err := extractURL(str)
 		require.Error(t, err)
 	})
 
 	t.Run("test missing port", func(t *testing.T) {
-
 		str := "redis://localhost::[bar]baz/default_db"
 		_, _, _, err := extractURL(str)
 		require.Error(t, err)

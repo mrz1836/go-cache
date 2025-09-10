@@ -10,7 +10,6 @@ import (
 )
 
 func main() {
-
 	ctx := context.Background()
 
 	// Create a new client and pool

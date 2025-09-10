@@ -13,7 +13,6 @@ import (
 
 // TestHashSet is testing the method HashSet()
 func TestHashSet(t *testing.T) {
-
 	t.Run("hash set command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -22,7 +21,7 @@ func TestHashSet(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			hashName     string
 			key          string
@@ -113,7 +112,6 @@ func ExampleHashSet() {
 
 // TestHashGet is testing the method HashGet() =
 func TestHashGet(t *testing.T) {
-
 	t.Run("hash get command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -122,7 +120,7 @@ func TestHashGet(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase string
 			hashName string
 			key      string
@@ -196,7 +194,6 @@ func ExampleHashGet() {
 
 // TestHashMapSet is testing the method HashMapSet()
 func TestHashMapSet(t *testing.T) {
-
 	t.Run("hash map set command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -205,7 +202,7 @@ func TestHashMapSet(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			hashName     string
 			key          string
@@ -343,7 +340,6 @@ func ExampleHashMapSet() {
 
 // TestHashMapSetExp is testing the method HashMapSetExp()
 func TestHashMapSetExp(t *testing.T) {
-
 	t.Run("hash map set exp command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -352,7 +348,7 @@ func TestHashMapSetExp(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			hashName     string
 			key          string

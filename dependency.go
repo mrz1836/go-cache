@@ -52,7 +52,6 @@ func KillByDependency(ctx context.Context, client *Client, keys ...string) (int,
 // https://redis.io/commands/eval
 // https://redis.io/commands/del
 func KillByDependencyRaw(conn redis.Conn, keys ...string) (total int, err error) {
-
 	// Do we have keys to kill?
 	if len(keys) == 0 {
 		return
@@ -93,7 +92,6 @@ func KillByDependencyRaw(conn redis.Conn, keys ...string) (total int, err error)
 // https://redis.io/commands/sadd
 // https://redis.io/commands/exec
 func linkDependencies(conn redis.Conn, key interface{}, dependencies ...string) (err error) {
-
 	// No dependencies given
 	if len(dependencies) == 0 {
 		return

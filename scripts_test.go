@@ -11,7 +11,6 @@ import (
 
 // TestClient_RegisterScripts tests the method RegisterScripts()
 func TestClient_RegisterScripts(t *testing.T) {
-
 	t.Run("valid client - run register", func(t *testing.T) {
 		if testing.Short() {
 			t.Skip("skipping live local redis tests")
@@ -79,7 +78,6 @@ func TestClient_RegisterScripts(t *testing.T) {
 
 // ExampleClient_RegisterScripts is an example of the method RegisterScripts()
 func ExampleClient_RegisterScripts() {
-
 	// Load a mocked redis for testing/examples
 	client, conn := loadMockRedis()
 
@@ -95,7 +93,6 @@ func ExampleClient_RegisterScripts() {
 
 // TestRegisterScript is testing the method RegisterScript()
 func TestRegisterScript(t *testing.T) {
-
 	t.Run("register script command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -104,7 +101,7 @@ func TestRegisterScript(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase    string
 			script      string
 			expectedSha string
@@ -189,7 +186,6 @@ func TestRegisterScript(t *testing.T) {
 
 // ExampleRegisterScript is an example of the method RegisterScript()
 func ExampleRegisterScript() {
-
 	// Load a mocked redis for testing/examples
 	client, _ := loadMockRedis()
 

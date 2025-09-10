@@ -100,7 +100,6 @@ func clearRealRedis(conn redis.Conn) error {
 
 // TestSet is testing the method Set()
 func TestSet(t *testing.T) {
-
 	t.Run("set command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -111,7 +110,7 @@ func TestSet(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			key          string
 			value        string
@@ -156,7 +155,6 @@ func TestSet(t *testing.T) {
 	})
 
 	t.Run("set command using real redis", func(t *testing.T) {
-
 		if testing.Short() {
 			t.Skip("skipping live local redis tests")
 		}
@@ -167,7 +165,7 @@ func TestSet(t *testing.T) {
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			key          string
 			value        string
@@ -182,7 +180,6 @@ func TestSet(t *testing.T) {
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
-
 				// Start with a fresh db
 				err = clearRealRedis(conn)
 				require.NoError(t, err)
@@ -201,7 +198,6 @@ func TestSet(t *testing.T) {
 	})
 
 	t.Run("set command using real redis (new relic)", func(t *testing.T) {
-
 		if testing.Short() {
 			t.Skip("skipping live local redis tests")
 		}
@@ -212,7 +208,7 @@ func TestSet(t *testing.T) {
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			key          string
 			value        string
@@ -227,7 +223,6 @@ func TestSet(t *testing.T) {
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
-
 				// Start with a fresh db
 				err = clearRealRedis(conn)
 				require.NoError(t, err)
@@ -260,7 +255,6 @@ func TestSet(t *testing.T) {
 
 // ExampleSet is an example of the method Set()
 func ExampleSet() {
-
 	// Load a mocked redis for testing/examples
 	client, _ := loadMockRedis()
 
@@ -275,7 +269,6 @@ func ExampleSet() {
 
 // TestSetExp is testing the method SetExp()
 func TestSetExp(t *testing.T) {
-
 	t.Run("set exp command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -284,7 +277,7 @@ func TestSetExp(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			key          string
 			value        string
@@ -391,7 +384,6 @@ func ExampleSetExp() {
 
 // TestGet is testing the method Get()
 func TestGet(t *testing.T) {
-
 	t.Run("get command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -400,7 +392,7 @@ func TestGet(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase string
 			key      string
 			value    interface{}
@@ -511,7 +503,6 @@ func ExampleGet() {
 
 // TestGetBytes is testing the method GetBytes()
 func TestGetBytes(t *testing.T) {
-
 	t.Run("get bytes command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -520,7 +511,7 @@ func TestGetBytes(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase string
 			key      string
 			value    string
@@ -631,7 +622,6 @@ func ExampleGetBytes() {
 
 // TestGetAllKeys is testing the method GetAllKeys()
 func TestGetAllKeys(t *testing.T) {
-
 	t.Run("get all keys command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -736,7 +726,6 @@ func ExampleGetAllKeys() {
 
 // TestExists is testing the method Exists()
 func TestExists(t *testing.T) {
-
 	t.Run("exists command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -817,7 +806,6 @@ func ExampleExists() {
 
 // TestExpire is testing the method Expire()
 func TestExpire(t *testing.T) {
-
 	t.Run("expire command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -826,7 +814,7 @@ func TestExpire(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase   string
 			key        string
 			expiration time.Duration
@@ -924,7 +912,6 @@ func ExampleExpire() {
 
 // TestDestroyCache is testing the method DestroyCache()
 func TestDestroyCache(t *testing.T) {
-
 	t.Run("destroy cache / flush all command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -1008,7 +995,6 @@ func ExampleDestroyCache() {
 
 // TestGetList test the method GetList()
 func TestGetList(t *testing.T) {
-
 	t.Run("get list command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -1017,7 +1003,7 @@ func TestGetList(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase           string
 			key                string
 			inputList          []string
@@ -1120,7 +1106,6 @@ func ExampleGetList() {
 
 // TestSetList test the method SetList()
 func TestSetList(t *testing.T) {
-
 	t.Run("set list command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -1129,7 +1114,7 @@ func TestSetList(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase  string
 			key       string
 			inputList []string
@@ -1231,7 +1216,6 @@ func ExampleSetList() {
 
 // TestDeleteWithoutDependency test the method DeleteWithoutDependency()
 func TestDeleteWithoutDependency(t *testing.T) {
-
 	t.Run("delete without using dependencies using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -1240,7 +1224,7 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			keys         []string
 			totalDeleted int
@@ -1349,7 +1333,6 @@ func ExampleDeleteWithoutDependency() {
 
 // TestSetToJSON is testing the method SetToJSON()
 func TestSetToJSON(t *testing.T) {
-
 	t.Run("set to json command using mocked redis (valid)", func(t *testing.T) {
 		t.Parallel()
 
@@ -1358,36 +1341,40 @@ func TestSetToJSON(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			key          string
 			modelData    interface{}
 			dependencies []string
 		}{
-			{"key with dependencies", testKey, struct {
-				testFieldString string
-				testFieldInt    int
-				testFieldFloat  float64
-				testFieldBool   bool
-			}{
-				testFieldString: "test-value",
-				testFieldInt:    123,
-				testFieldFloat:  123.123,
-				testFieldBool:   true,
-			},
+			{
+				"key with dependencies", testKey,
+				struct {
+					testFieldString string
+					testFieldInt    int
+					testFieldFloat  float64
+					testFieldBool   bool
+				}{
+					testFieldString: "test-value",
+					testFieldInt:    123,
+					testFieldFloat:  123.123,
+					testFieldBool:   true,
+				},
 				[]string{testDependantKey},
 			},
-			{"key with no dependencies", testKey, struct {
-				testFieldString string
-				testFieldInt    int
-				testFieldFloat  float64
-				testFieldBool   bool
-			}{
-				testFieldString: "test-value",
-				testFieldInt:    123,
-				testFieldFloat:  123.123,
-				testFieldBool:   true,
-			},
+			{
+				"key with no dependencies", testKey,
+				struct {
+					testFieldString string
+					testFieldInt    int
+					testFieldFloat  float64
+					testFieldBool   bool
+				}{
+					testFieldString: "test-value",
+					testFieldInt:    123,
+					testFieldFloat:  123.123,
+					testFieldBool:   true,
+				},
 				[]string{},
 			},
 		}
@@ -1433,38 +1420,42 @@ func TestSetToJSON(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			key          string
 			modelData    interface{}
 			dependencies []string
 			expiration   time.Duration
 		}{
-			{"key with dependencies", testKey, struct {
-				testFieldString string
-				testFieldInt    int
-				testFieldFloat  float64
-				testFieldBool   bool
-			}{
-				testFieldString: "test-value",
-				testFieldInt:    123,
-				testFieldFloat:  123.123,
-				testFieldBool:   true,
-			},
+			{
+				"key with dependencies", testKey,
+				struct {
+					testFieldString string
+					testFieldInt    int
+					testFieldFloat  float64
+					testFieldBool   bool
+				}{
+					testFieldString: "test-value",
+					testFieldInt:    123,
+					testFieldFloat:  123.123,
+					testFieldBool:   true,
+				},
 				[]string{testDependantKey},
 				10 * time.Second,
 			},
-			{"key with no dependencies", testKey, struct {
-				testFieldString string
-				testFieldInt    int
-				testFieldFloat  float64
-				testFieldBool   bool
-			}{
-				testFieldString: "test-value",
-				testFieldInt:    123,
-				testFieldFloat:  123.123,
-				testFieldBool:   true,
-			},
+			{
+				"key with no dependencies", testKey,
+				struct {
+					testFieldString string
+					testFieldInt    int
+					testFieldFloat  float64
+					testFieldBool   bool
+				}{
+					testFieldString: "test-value",
+					testFieldInt:    123,
+					testFieldFloat:  123.123,
+					testFieldBool:   true,
+				},
 				[]string{},
 				10 * time.Second,
 			},
@@ -1511,7 +1502,7 @@ func TestSetToJSON(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			key          string
 			modelData    interface{}
@@ -1533,7 +1524,6 @@ func TestSetToJSON(t *testing.T) {
 	})
 
 	t.Run("set to json command using real redis (valid)", func(t *testing.T) {
-
 		if testing.Short() {
 			t.Skip("skipping live local redis tests")
 		}
@@ -1544,59 +1534,64 @@ func TestSetToJSON(t *testing.T) {
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			key          string
 			modelData    interface{}
 			dependencies []string
 			expiration   time.Duration
 		}{
-			{"key with dependencies", testKey, struct {
-				testFieldString string
-				testFieldInt    int
-				testFieldFloat  float64
-				testFieldBool   bool
-			}{
-				testFieldString: "test-value",
-				testFieldInt:    123,
-				testFieldFloat:  123.123,
-				testFieldBool:   true,
-			},
+			{
+				"key with dependencies", testKey,
+				struct {
+					testFieldString string
+					testFieldInt    int
+					testFieldFloat  float64
+					testFieldBool   bool
+				}{
+					testFieldString: "test-value",
+					testFieldInt:    123,
+					testFieldFloat:  123.123,
+					testFieldBool:   true,
+				},
 				[]string{testDependantKey},
 				10 * time.Second,
 			},
-			{"key with no dependencies", testKey, struct {
-				testFieldString string
-				testFieldInt    int
-				testFieldFloat  float64
-				testFieldBool   bool
-			}{
-				testFieldString: "test-value",
-				testFieldInt:    123,
-				testFieldFloat:  123.123,
-				testFieldBool:   true,
-			},
+			{
+				"key with no dependencies", testKey,
+				struct {
+					testFieldString string
+					testFieldInt    int
+					testFieldFloat  float64
+					testFieldBool   bool
+				}{
+					testFieldString: "test-value",
+					testFieldInt:    123,
+					testFieldFloat:  123.123,
+					testFieldBool:   true,
+				},
 				[]string{},
 				10 * time.Second,
 			},
-			{"key with no exp", testKey, struct {
-				testFieldString string
-				testFieldInt    int
-				testFieldFloat  float64
-				testFieldBool   bool
-			}{
-				testFieldString: "test-value",
-				testFieldInt:    123,
-				testFieldFloat:  123.123,
-				testFieldBool:   true,
-			},
+			{
+				"key with no exp", testKey,
+				struct {
+					testFieldString string
+					testFieldInt    int
+					testFieldFloat  float64
+					testFieldBool   bool
+				}{
+					testFieldString: "test-value",
+					testFieldInt:    123,
+					testFieldFloat:  123.123,
+					testFieldBool:   true,
+				},
 				[]string{},
 				0,
 			},
 		}
 		for i, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
-
 				// Start with a fresh db
 				err = clearRealRedis(conn)
 				require.NoError(t, err)
@@ -1633,7 +1628,6 @@ func TestSetToJSON(t *testing.T) {
 
 // TestPing is testing the method Ping()
 func TestPing(t *testing.T) {
-
 	t.Run("ping command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 

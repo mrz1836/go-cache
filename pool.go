@@ -72,8 +72,8 @@ func CloseConnection(conn redis.Conn) redis.Conn {
 func Connect(ctx context.Context, redisURL string,
 	maxActiveConnections, idleConnections int,
 	maxConnLifetime, idleTimeout time.Duration,
-	dependencyMode, newRelicEnabled bool, options ...redis.DialOption) (client *Client, err error) {
-
+	dependencyMode, newRelicEnabled bool, options ...redis.DialOption,
+) (client *Client, err error) {
 	// Required param for dial
 	if len(redisURL) == 0 {
 		err = errors.New("missing required parameter: redisURL")
@@ -137,7 +137,6 @@ func Connect(ctx context.Context, redisURL string,
 // Source: "github.com/soveran/redisurl"
 // Format of URL: redis://localhost:6379
 func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.Conn, err error) {
-
 	// Parse the URL
 	var redisURL *url.URL
 	if redisURL, err = url.Parse(connectToURL); err != nil {
@@ -191,7 +190,6 @@ func cleanUp(pool nrredis.Pool) {
 
 // extractURL will extract the parts of the redis url
 func extractURL(redisURL string) (host, database, port string, err error) {
-
 	// Parse the URL
 	var u *url.URL
 	if u, err = url.Parse(redisURL); err != nil {

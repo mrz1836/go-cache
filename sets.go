@@ -49,7 +49,6 @@ func SetAddMany(ctx context.Context, client *Client, setName string, members ...
 //
 // Spec: https://redis.io/commands/sadd
 func SetAddManyRaw(conn redis.Conn, setName string, members ...interface{}) (err error) {
-
 	// Create the arguments
 	args := make([]interface{}, len(members)+1)
 	args[0] = setName

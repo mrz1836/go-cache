@@ -13,7 +13,8 @@ import (
 //
 // Custom connections use method: HashSetRaw()
 func HashSet(ctx context.Context, client *Client, hashName, hashKey string,
-	value interface{}, dependencies ...string) error {
+	value interface{}, dependencies ...string,
+) error {
 	conn, err := client.GetConnectionWithContext(ctx)
 	if err != nil {
 		return err
@@ -74,7 +75,6 @@ func HashMapGet(ctx context.Context, client *Client, hashName string, keys ...in
 //
 // Spec: https://redis.io/commands/hmget
 func HashMapGetRaw(conn redis.Conn, hashName string, keys ...interface{}) ([]string, error) {
-
 	// Build up the arguments
 	keys = append([]interface{}{hashName}, keys...)
 
@@ -88,7 +88,8 @@ func HashMapGetRaw(conn redis.Conn, hashName string, keys ...interface{}) ([]str
 //
 // Custom connections use method: HashMapSetRaw()
 func HashMapSet(ctx context.Context, client *Client, hashName string,
-	pairs [][2]interface{}, dependencies ...string) error {
+	pairs [][2]interface{}, dependencies ...string,
+) error {
 	conn, err := client.GetConnectionWithContext(ctx)
 	if err != nil {
 		return err
@@ -103,7 +104,6 @@ func HashMapSet(ctx context.Context, client *Client, hashName string,
 //
 // Spec: https://redis.io/commands/hmset
 func HashMapSetRaw(conn redis.Conn, hashName string, pairs [][2]interface{}, dependencies ...string) error {
-
 	// Set the arguments
 	args := make([]interface{}, 0, 2*len(pairs)+1)
 	args = append(args, hashName)
@@ -127,7 +127,8 @@ func HashMapSetRaw(conn redis.Conn, hashName string, pairs [][2]interface{}, dep
 //
 // Custom connections use method: HashMapSetExpRaw()
 func HashMapSetExp(ctx context.Context, client *Client, hashName string, pairs [][2]interface{},
-	ttl time.Duration, dependencies ...string) error {
+	ttl time.Duration, dependencies ...string,
+) error {
 	conn, err := client.GetConnectionWithContext(ctx)
 	if err != nil {
 		return err
@@ -144,8 +145,8 @@ func HashMapSetExp(ctx context.Context, client *Client, hashName string, pairs [
 // https://redis.io/commands/hmset
 // https://redis.io/commands/expire
 func HashMapSetExpRaw(conn redis.Conn, hashName string, pairs [][2]interface{},
-	ttl time.Duration, dependencies ...string) error {
-
+	ttl time.Duration, dependencies ...string,
+) error {
 	// Set the arguments
 	args := make([]interface{}, 0, 2*len(pairs)+1)
 	args = append(args, hashName)

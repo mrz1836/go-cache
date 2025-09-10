@@ -106,7 +106,6 @@ func GetList(ctx context.Context, client *Client, key string) ([]string, error) 
 //
 // Spec: https://redis.io/commands/lrange
 func GetListRaw(conn redis.Conn, key string) (list []string, err error) {
-
 	// This command takes two parameters specifying the range: 0 start, -1 is the end of the list
 	var values []interface{}
 	if values, err = redis.Values(conn.Do(ListRangeCommand, key, 0, -1)); err != nil {
@@ -136,7 +135,6 @@ func SetList(ctx context.Context, client *Client, key string, slice []string) er
 //
 // Spec: https://redis.io/commands/rpush
 func SetListRaw(conn redis.Conn, key string, slice []string) (err error) {
-
 	// Create the arguments
 	args := make([]interface{}, len(slice)+1)
 	args[0] = key
@@ -179,7 +177,8 @@ func GetAllKeysRaw(conn redis.Conn) (keys []string, err error) {
 //
 // Custom connections use method: SetRaw()
 func Set(ctx context.Context, client *Client, key string,
-	value interface{}, dependencies ...string) error {
+	value interface{}, dependencies ...string,
+) error {
 	conn, err := client.GetConnectionWithContext(ctx)
 	if err != nil {
 		return err
@@ -207,7 +206,8 @@ func SetRaw(conn redis.Conn, key string, value interface{}, dependencies ...stri
 //
 // Custom connections use method: SetExpRaw()
 func SetExp(ctx context.Context, client *Client, key string, value interface{},
-	ttl time.Duration, dependencies ...string) error {
+	ttl time.Duration, dependencies ...string,
+) error {
 	conn, err := client.GetConnectionWithContext(ctx)
 	if err != nil {
 		return err
@@ -222,7 +222,8 @@ func SetExp(ctx context.Context, client *Client, key string, value interface{},
 //
 // Spec: https://redis.io/commands/setex
 func SetExpRaw(conn redis.Conn, key string, value interface{},
-	ttl time.Duration, dependencies ...string) error {
+	ttl time.Duration, dependencies ...string,
+) error {
 	if _, err := conn.Do(SetExpirationCommand, key, int64(ttl.Seconds()), value); err != nil {
 		return err
 	}
@@ -330,7 +331,8 @@ func DestroyCacheRaw(conn redis.Conn) (err error) {
 //
 // Custom connections use method: SetToJSONRaw()
 func SetToJSON(ctx context.Context, client *Client, keyName string, modelData interface{},
-	ttl time.Duration, dependencies ...string) error {
+	ttl time.Duration, dependencies ...string,
+) error {
 	conn, err := client.GetConnectionWithContext(ctx)
 	if err != nil {
 		return err
@@ -344,7 +346,8 @@ func SetToJSON(ctx context.Context, client *Client, keyName string, modelData in
 //
 // Uses methods: SetExpRaw() or SetRaw()
 func SetToJSONRaw(conn redis.Conn, keyName string, modelData interface{},
-	ttl time.Duration, dependencies ...string) (err error) {
+	ttl time.Duration, dependencies ...string,
+) (err error) {
 	var responseBytes []byte
 	if responseBytes, err = json.Marshal(&modelData); err != nil {
 		return

@@ -11,7 +11,6 @@ import (
 
 // TestDelete tests the method Delete()
 func TestDelete(t *testing.T) {
-
 	// todo: mock delete
 
 	t.Run("no keys - real redis", func(t *testing.T) {
@@ -81,7 +80,6 @@ func TestDelete(t *testing.T) {
 
 // ExampleDelete is an example of the method Delete()
 func ExampleDelete() {
-
 	// Load a mocked redis for testing/examples
 	client, conn := loadMockRedis()
 
@@ -98,7 +96,6 @@ func ExampleDelete() {
 
 // TestKillByDependency tests the method KillByDependency()
 func TestKillByDependency(t *testing.T) {
-
 	// todo: mock kill by dependency
 
 	t.Run("no keys - real redis", func(t *testing.T) {
@@ -168,7 +165,6 @@ func TestKillByDependency(t *testing.T) {
 
 // ExampleKillByDependency is an example of the method KillByDependency()
 func ExampleKillByDependency() {
-
 	// Load a mocked redis for testing/examples
 	client, _ := loadMockRedis()
 
@@ -183,7 +179,6 @@ func ExampleKillByDependency() {
 
 // TestDependencyManagement tests basic dependency functionality
 func TestDependencyManagement(t *testing.T) {
-
 	// todo: mock all scenarios
 
 	t.Run("set with dependencies - real redis", func(t *testing.T) {
@@ -253,12 +248,10 @@ func TestDependencyManagement(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, false, found)
 	})
-
 }
 
 // TestHashMapDependencyManagement tests HASH map dependency functionality
 func TestHashMapDependencyManagement(t *testing.T) {
-
 	// todo: mock all scenarios
 
 	t.Run("set with dependencies - real redis", func(t *testing.T) {

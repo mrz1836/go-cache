@@ -9,7 +9,6 @@ import (
 // RegisterScripts will register all required scripts for additional functionality
 // This method runs on Connect()
 func (c *Client) RegisterScripts(ctx context.Context) (err error) {
-
 	// Open a new connection
 	var conn redis.Conn
 	conn, err = c.GetConnectionWithContext(ctx)

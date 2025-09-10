@@ -12,7 +12,6 @@ import (
 
 // TestWriteLock tests the method WriteLock()
 func TestWriteLock(t *testing.T) {
-
 	// todo: mock redis write
 
 	t.Run("write lock error - real redis", func(t *testing.T) {
@@ -145,7 +144,6 @@ func TestWriteLock(t *testing.T) {
 
 // ExampleWriteLock is an example of the method WriteLock()
 func ExampleWriteLock() {
-
 	// Load a mocked redis for testing/examples
 	client, _ := loadMockRedis()
 
@@ -161,7 +159,6 @@ func ExampleWriteLock() {
 
 // TestReleaseLock tests the method ReleaseLock()
 func TestReleaseLock(t *testing.T) {
-
 	// todo: mock redis unlock
 
 	t.Run("release lock - real redis", func(t *testing.T) {
@@ -253,7 +250,6 @@ func TestReleaseLock(t *testing.T) {
 
 // ExampleReleaseLock is an example of the method ReleaseLock()
 func ExampleReleaseLock() {
-
 	// Load a mocked redis for testing/examples
 	client, _ := loadMockRedis()
 

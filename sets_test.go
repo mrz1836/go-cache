@@ -12,7 +12,6 @@ import (
 
 // TestSetAdd test the method SetAdd()
 func TestSetAdd(t *testing.T) {
-
 	t.Run("set add command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -21,7 +20,7 @@ func TestSetAdd(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase     string
 			setName      string
 			member       interface{}
@@ -110,7 +109,6 @@ func ExampleSetAdd() {
 
 // TestSetAddMany test the method SetAddMany()
 func TestSetAddMany(t *testing.T) {
-
 	t.Run("set add many command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -119,7 +117,7 @@ func TestSetAddMany(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase string
 			setName  string
 			members  []interface{}
@@ -202,7 +200,6 @@ func ExampleSetAddMany() {
 
 // TestSetRemoveMember test the method SetRemoveMember()
 func TestSetRemoveMember(t *testing.T) {
-
 	t.Run("set remove member command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -211,7 +208,7 @@ func TestSetRemoveMember(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase string
 			setName  string
 			member   interface{}
@@ -295,7 +292,6 @@ func ExampleSetRemoveMember() {
 
 // TestSetIsMember test the method SetIsMember()
 func TestSetIsMember(t *testing.T) {
-
 	t.Run("set is member command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -304,7 +300,7 @@ func TestSetIsMember(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase      string
 			setName       interface{}
 			member        interface{}
@@ -375,7 +371,6 @@ func ExampleSetIsMember() {
 
 // TestSetMembers will test the method SetMembers()
 func TestSetMembers(t *testing.T) {
-
 	t.Run("get members using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -384,7 +379,7 @@ func TestSetMembers(t *testing.T) {
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		var tests = []struct {
+		tests := []struct {
 			testCase      string
 			setName       interface{}
 			expectedFound []interface{}
@@ -407,7 +402,6 @@ func TestSetMembers(t *testing.T) {
 			})
 		}
 	})
-
 }
 
 // ExampleSetMembers is an example of the method SetMembers()

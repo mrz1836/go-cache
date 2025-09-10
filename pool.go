@@ -15,6 +15,12 @@ import (
 	"github.com/mrz1836/go-cache/nrredis"
 )
 
+// Define static errors to avoid dynamic error creation
+var (
+	ErrRedisPoolNil    = errors.New("redis pool is nil")
+	ErrMissingRedisURL = errors.New("missing required parameter: redisURL")
+)
+
 // Client is used to store the redis.Pool and additional fields/information
 type Client struct {
 	DependencyScriptSha string // Stored SHA of the script after loaded
@@ -50,7 +56,7 @@ func (c *Client) GetConnectionWithContext(ctx context.Context) (redis.Conn, erro
 	if c.Pool != nil {
 		return c.Pool.GetContext(ctx)
 	}
-	return nil, errors.New("redis pool is nil")
+	return nil, ErrRedisPoolNil
 }
 
 // CloseConnection will close a previously open connection
@@ -76,8 +82,8 @@ func Connect(ctx context.Context, redisURL string,
 ) (client *Client, err error) {
 	// Required param for dial
 	if len(redisURL) == 0 {
-		err = errors.New("missing required parameter: redisURL")
-		return
+		err = ErrMissingRedisURL
+		return nil, err
 	}
 
 	// Create the pool
@@ -100,7 +106,7 @@ func Connect(ctx context.Context, redisURL string,
 	if newRelicEnabled {
 		var host, database, port string
 		if host, database, port, err = extractURL(redisURL); err != nil {
-			return
+			return nil, err
 		}
 
 		client = &Client{
@@ -127,7 +133,7 @@ func Connect(ctx context.Context, redisURL string,
 		err = client.RegisterScripts(ctx)
 	}
 
-	return
+	return client, err
 }
 
 // ConnectToURL connects via REDIS_URL and returns a single connection

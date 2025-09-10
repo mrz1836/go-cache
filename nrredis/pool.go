@@ -28,6 +28,7 @@ func Wrap(p Pool, opts ...Option) Pool {
 // wrappedPool is a wrapped pool
 type wrappedPool struct {
 	Pool
+
 	cfg *Config
 }
 

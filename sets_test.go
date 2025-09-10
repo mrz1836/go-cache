@@ -57,7 +57,7 @@ func TestSetAdd(t *testing.T) {
 				}
 
 				for _, c := range commands {
-					assert.Equal(t, true, c.Called)
+					assert.True(t, c.Called)
 				}
 			})
 		}
@@ -86,7 +86,7 @@ func TestSetAdd(t *testing.T) {
 		var found bool
 		found, err = SetIsMemberRaw(conn, testKey, testStringValue)
 		require.NoError(t, err)
-		assert.Equal(t, true, found)
+		assert.True(t, found)
 	})
 }
 
@@ -148,7 +148,7 @@ func TestSetAddMany(t *testing.T) {
 				require.NoError(t, err)
 
 				for _, c := range commands {
-					assert.Equal(t, true, c.Called)
+					assert.True(t, c.Called)
 				}
 			})
 		}
@@ -177,7 +177,7 @@ func TestSetAddMany(t *testing.T) {
 		var found bool
 		found, err = SetIsMember(context.Background(), client, testKey, testStringValue+"2")
 		require.NoError(t, err)
-		assert.Equal(t, true, found)
+		assert.True(t, found)
 	})
 }
 
@@ -231,7 +231,7 @@ func TestSetRemoveMember(t *testing.T) {
 				require.NoError(t, err)
 
 				for _, c := range commands {
-					assert.Equal(t, true, c.Called)
+					assert.True(t, c.Called)
 				}
 			})
 		}
@@ -260,7 +260,7 @@ func TestSetRemoveMember(t *testing.T) {
 		var found bool
 		found, err = SetIsMemberRaw(conn, testKey, testStringValue)
 		require.NoError(t, err)
-		assert.Equal(t, true, found)
+		assert.True(t, found)
 
 		// Fire the command
 		err = SetRemoveMemberRaw(conn, testKey, testStringValue)
@@ -269,7 +269,7 @@ func TestSetRemoveMember(t *testing.T) {
 		// Check that the command worked
 		found, err = SetIsMemberRaw(conn, testKey, testStringValue)
 		require.NoError(t, err)
-		assert.Equal(t, false, found)
+		assert.False(t, found)
 	})
 }
 
@@ -320,7 +320,7 @@ func TestSetIsMember(t *testing.T) {
 				found, err := SetIsMemberRaw(conn, test.setName, test.member)
 				require.NoError(t, err)
 				assert.Equal(t, test.expectedFound > 0, found)
-				assert.Equal(t, true, isCmd.Called)
+				assert.True(t, isCmd.Called)
 			})
 		}
 	})
@@ -348,7 +348,7 @@ func TestSetIsMember(t *testing.T) {
 		var found bool
 		found, err = SetIsMember(context.Background(), client, testKey, testStringValue)
 		require.NoError(t, err)
-		assert.Equal(t, true, found)
+		assert.True(t, found)
 	})
 }
 

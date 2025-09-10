@@ -63,7 +63,7 @@ func TestHashSet(t *testing.T) {
 				}
 
 				for _, c := range commands {
-					assert.Equal(t, true, c.Called)
+					assert.True(t, c.Called)
 				}
 			})
 		}
@@ -142,7 +142,7 @@ func TestHashGet(t *testing.T) {
 
 				val, err := HashGetRaw(conn, test.hashName, test.key)
 				require.NoError(t, err)
-				assert.Equal(t, true, getCmd.Called)
+				assert.True(t, getCmd.Called)
 				assert.Equal(t, test.value, val)
 			})
 		}
@@ -264,7 +264,7 @@ func TestHashMapSet(t *testing.T) {
 				}
 
 				for _, c := range commands {
-					assert.Equal(t, true, c.Called)
+					assert.True(t, c.Called)
 				}
 			})
 		}
@@ -307,7 +307,7 @@ func TestHashMapSet(t *testing.T) {
 		require.NoError(t, err)
 
 		// Got two values?
-		assert.Equal(t, 2, len(values))
+		assert.Len(t, values, 2)
 
 		// Test value 1
 		assert.Equal(t, "pair-1-value", values[0])
@@ -413,7 +413,7 @@ func TestHashMapSetExp(t *testing.T) {
 				}
 
 				for _, c := range commands {
-					assert.Equal(t, true, c.Called)
+					assert.True(t, c.Called)
 				}
 			})
 		}
@@ -456,7 +456,7 @@ func TestHashMapSetExp(t *testing.T) {
 		require.NoError(t, err)
 
 		// Got two values?
-		assert.Equal(t, 2, len(values))
+		assert.Len(t, values, 2)
 
 		// Test value 1
 		assert.Equal(t, "pair-1-value", values[0])

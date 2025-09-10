@@ -29,8 +29,8 @@ func TestConnect(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
-		assert.Equal(t, "", client.DependencyScriptSha)
-		assert.Equal(t, 0, len(client.ScriptsLoaded))
+		assert.Empty(t, client.DependencyScriptSha)
+		assert.Empty(t, client.ScriptsLoaded)
 
 		// Close
 		client.Close()
@@ -52,8 +52,8 @@ func TestConnect(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
-		assert.Equal(t, "", client.DependencyScriptSha)
-		assert.Equal(t, 0, len(client.ScriptsLoaded))
+		assert.Empty(t, client.DependencyScriptSha)
+		assert.Empty(t, client.ScriptsLoaded)
 
 		// Close
 		client.Close()
@@ -78,7 +78,7 @@ func TestConnect(t *testing.T) {
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
-		assert.Equal(t, 1, len(client.ScriptsLoaded))
+		assert.Len(t, client.ScriptsLoaded, 1)
 
 		// Close
 		client.Close()
@@ -101,8 +101,8 @@ func TestConnect(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
-		assert.Equal(t, "", client.DependencyScriptSha)
-		assert.Equal(t, 0, len(client.ScriptsLoaded))
+		assert.Empty(t, client.DependencyScriptSha)
+		assert.Empty(t, client.ScriptsLoaded)
 
 		// Close
 		client.Close()

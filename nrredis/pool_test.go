@@ -11,6 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Define static test errors
+var (
+	ErrConnectionError = errors.New("connection error")
+	ErrPoolClosed      = errors.New("pool closed")
+)
+
 // ---- Mock Definitions ----
 
 type mockPool struct {
@@ -66,7 +72,7 @@ func (d *dummyConn) Err() error { return nil }
 
 // Do will execute a command on the Redis server.
 func (d *dummyConn) Do(_ string, _ ...interface{}) (interface{}, error) {
-	return nil, nil
+	return nil, ErrPoolClosed
 }
 
 // Send sends a command to the Redis server.
@@ -81,7 +87,7 @@ func (d *dummyConn) Flush() error {
 
 // Receive receives a response from the Redis server.
 func (d *dummyConn) Receive() (interface{}, error) {
-	return nil, nil
+	return nil, ErrPoolClosed
 }
 
 // ---- Tests ----
@@ -140,7 +146,7 @@ func TestWrappedPool_GetContext_Error(t *testing.T) {
 	// Avoid asserting nil through interface conversion, use Run instead
 	mockP.On("GetContext", mock.Anything).Run(func(_ mock.Arguments) {
 		// No need to do anything in here; we simulate the call
-	}).Return((*dummyConn)(nil), errors.New("connection error")) // typed nil with a concrete type
+	}).Return((*dummyConn)(nil), ErrConnectionError) // typed nil with a concrete type
 
 	p := Wrap(mockP)
 	wrapped := p.(*wrappedPool)

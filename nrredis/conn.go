@@ -9,6 +9,7 @@ import (
 
 type wrappedConn struct {
 	redis.Conn
+
 	txn *newrelic.Transaction
 	cfg *Config
 }

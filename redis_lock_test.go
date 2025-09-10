@@ -33,7 +33,7 @@ func TestWriteLock(t *testing.T) {
 		var locked bool
 		locked, err = WriteLock(context.Background(), client, "d  `!$-()my-key", "d d d", int64(0))
 		require.Error(t, err)
-		assert.Equal(t, false, locked)
+		assert.False(t, locked)
 	})
 
 	t.Run("write lock - real redis", func(t *testing.T) {
@@ -55,7 +55,7 @@ func TestWriteLock(t *testing.T) {
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 	})
 
 	t.Run("re-lock - real redis", func(t *testing.T) {
@@ -77,12 +77,12 @@ func TestWriteLock(t *testing.T) {
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 
 		// Attempt to re-lock (should succeed)
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(5))
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 	})
 
 	t.Run("re-lock different secret - real redis", func(t *testing.T) {
@@ -104,12 +104,12 @@ func TestWriteLock(t *testing.T) {
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 
 		// Attempt to re-lock (should succeed)
 		locked, err = WriteLockRaw(conn, "my-key", "different-secret", int64(5))
 		require.Error(t, err)
-		assert.Equal(t, false, locked)
+		assert.False(t, locked)
 	})
 
 	t.Run("lock expired - real redis", func(t *testing.T) {
@@ -131,14 +131,14 @@ func TestWriteLock(t *testing.T) {
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(1))
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 
 		time.Sleep(2 * time.Second)
 
 		// Write new lock
 		locked, err = WriteLockRaw(conn, "my-key", "new-secret", int64(2))
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 	})
 }
 
@@ -180,12 +180,12 @@ func TestReleaseLock(t *testing.T) {
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 
 		// Release a lock
 		locked, err = ReleaseLockRaw(conn, "my-key", "the-secret")
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 	})
 
 	t.Run("release lock twice - real redis", func(t *testing.T) {
@@ -207,17 +207,17 @@ func TestReleaseLock(t *testing.T) {
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 
 		// Release a lock
 		locked, err = ReleaseLockRaw(conn, "my-key", "the-secret")
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 
 		// Release a lock (again)
 		locked, err = ReleaseLockRaw(conn, "my-key", "the-secret")
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 	})
 
 	t.Run("release lock - wrong secret - real redis", func(t *testing.T) {
@@ -239,12 +239,12 @@ func TestReleaseLock(t *testing.T) {
 		var locked bool
 		locked, err = WriteLockRaw(conn, "my-key", "the-secret", int64(10))
 		require.NoError(t, err)
-		assert.Equal(t, true, locked)
+		assert.True(t, locked)
 
 		// Release a lock
 		locked, err = ReleaseLockRaw(conn, "my-key", "wrong-secret")
 		require.Error(t, err)
-		assert.Equal(t, false, locked)
+		assert.False(t, locked)
 	})
 }
 

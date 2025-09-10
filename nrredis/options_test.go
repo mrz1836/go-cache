@@ -25,7 +25,7 @@ func TestWithHost(t *testing.T) {
 
 		c := createConfig([]Option{o})
 		assert.NotNil(t, c)
-		assert.Equal(t, "", c.Host)
+		assert.Empty(t, c.Host)
 	})
 }
 
@@ -48,7 +48,7 @@ func TestWithDBName(t *testing.T) {
 
 		c := createConfig([]Option{o})
 		assert.NotNil(t, c)
-		assert.Equal(t, "", c.DBName)
+		assert.Empty(t, c.DBName)
 	})
 }
 
@@ -71,6 +71,6 @@ func TestWithPortPathOrID(t *testing.T) {
 
 		c := createConfig([]Option{o})
 		assert.NotNil(t, c)
-		assert.Equal(t, "", c.PortPathOrID)
+		assert.Empty(t, c.PortPathOrID)
 	})
 }

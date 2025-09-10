@@ -9,6 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Define static test errors
+var (
+	ErrNotFound = errors.New("not found")
+	ErrTimeout  = errors.New("timeout occurred")
+)
+
 // ---- Mock Definitions ----
 
 type mockConn struct {
@@ -45,7 +51,7 @@ func (m *mockConn) Err() error { return nil }
 
 // DoWithTimeout executes a command with a timeout.
 func (m *mockConn) DoWithTimeout(_ int, _ string, _ ...interface{}) (interface{}, error) {
-	return nil, nil
+	return nil, ErrTimeout
 }
 
 // SendWithTimeout sends a command with a timeout.
@@ -131,7 +137,7 @@ func TestWrappedConn_Receive(t *testing.T) {
 // TestWrappedConn_Do_WithError tests the Do method of the wrapped connection with an error.
 func TestWrappedConn_Do_WithError(t *testing.T) {
 	mockRedis := new(mockConn)
-	mockRedis.On("Do", "GET", "missing").Return(nil, errors.New("not found"))
+	mockRedis.On("Do", "GET", "missing").Return(nil, ErrNotFound)
 
 	conn := wrapConn(mockRedis, testTxn(), testCfg())
 	result, err := conn.Do("GET", "missing")

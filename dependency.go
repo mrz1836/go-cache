@@ -54,7 +54,7 @@ func KillByDependency(ctx context.Context, client *Client, keys ...string) (int,
 func KillByDependencyRaw(conn redis.Conn, keys ...string) (total int, err error) {
 	// Do we have keys to kill?
 	if len(keys) == 0 {
-		return
+		return 0, nil
 	}
 
 	// Create the arguments
@@ -72,17 +72,17 @@ func KillByDependencyRaw(conn redis.Conn, keys ...string) (total int, err error)
 
 	// Run the script
 	if total, err = redis.Int(conn.Do(EvalCommand, args...)); err != nil {
-		return
+		return 0, err
 	}
 
 	// Fire the delete command
 	var deleted int
 	if deleted, err = redis.Int(conn.Do(DeleteCommand, deleteArgs...)); err != nil {
-		return
+		return total, err
 	}
 	total += deleted
 
-	return
+	return total, nil
 }
 
 // linkDependencies links any dependencies

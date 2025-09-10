@@ -29,15 +29,15 @@ func TestClient_RegisterScripts(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
-		assert.Equal(t, "", client.DependencyScriptSha)
-		assert.Equal(t, 0, len(client.ScriptsLoaded))
+		assert.Empty(t, client.DependencyScriptSha)
+		assert.Empty(t, client.ScriptsLoaded)
 		defer client.Close()
 
 		// Run register
 		err = client.RegisterScripts(context.Background())
 		require.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
-		assert.Equal(t, 1, len(client.ScriptsLoaded))
+		assert.Len(t, client.ScriptsLoaded, 1)
 	})
 
 	t.Run("valid client - run register 2 times", func(t *testing.T) {
@@ -58,21 +58,21 @@ func TestClient_RegisterScripts(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Pool)
-		assert.Equal(t, "", client.DependencyScriptSha)
-		assert.Equal(t, 0, len(client.ScriptsLoaded))
+		assert.Empty(t, client.DependencyScriptSha)
+		assert.Empty(t, client.ScriptsLoaded)
 		defer client.Close()
 
 		// Run register
 		err = client.RegisterScripts(context.Background())
 		require.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
-		assert.Equal(t, 1, len(client.ScriptsLoaded))
+		assert.Len(t, client.ScriptsLoaded, 1)
 
 		// Run again (should skip)
 		err = client.RegisterScripts(context.Background())
 		require.NoError(t, err)
 		assert.Equal(t, testKillDependencyHash, client.DependencyScriptSha)
-		assert.Equal(t, 1, len(client.ScriptsLoaded))
+		assert.Len(t, client.ScriptsLoaded, 1)
 	})
 }
 
@@ -118,7 +118,7 @@ func TestRegisterScript(t *testing.T) {
 
 				val, err := RegisterScriptRaw(client, conn, test.script)
 				require.NoError(t, err)
-				assert.Equal(t, true, setCmd.Called)
+				assert.True(t, setCmd.Called)
 				assert.Equal(t, test.expectedSha, val)
 			})
 		}
@@ -180,7 +180,7 @@ func TestRegisterScript(t *testing.T) {
 		var sha string
 		sha, err = RegisterScript(context.Background(), client, "invalid script")
 		require.Error(t, err)
-		assert.Equal(t, "", sha)
+		assert.Empty(t, sha)
 	})
 }
 

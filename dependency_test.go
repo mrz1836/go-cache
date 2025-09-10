@@ -204,12 +204,12 @@ func TestDependencyManagement(t *testing.T) {
 		var ok bool
 		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"dependent-1", "test-set-dep")
 		require.NoError(t, err)
-		assert.Equal(t, true, ok)
+		assert.True(t, ok)
 
 		// Test for dependent key 2
 		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"dependent-2", "test-set-dep")
 		require.NoError(t, err)
-		assert.Equal(t, true, ok)
+		assert.True(t, ok)
 
 		// Kill a dependent key
 		var total int
@@ -221,17 +221,17 @@ func TestDependencyManagement(t *testing.T) {
 		var found bool
 		found, err = ExistsRaw(conn, "test-set-dep")
 		require.NoError(t, err)
-		assert.Equal(t, false, found)
+		assert.False(t, found)
 
 		// Test for dependency relation
 		found, err = ExistsRaw(conn, DependencyPrefix+"dependent-1")
 		require.NoError(t, err)
-		assert.Equal(t, false, found)
+		assert.False(t, found)
 
 		// Test for dependency relation 2
 		found, err = SetIsMemberRaw(conn, DependencyPrefix+"dependent-2", "test-set-dep")
 		require.NoError(t, err)
-		assert.Equal(t, true, found)
+		assert.True(t, found)
 
 		// Kill all dependent keys
 		total, err = KillByDependencyRaw(conn, "dependent-1", "dependent-2")
@@ -241,12 +241,12 @@ func TestDependencyManagement(t *testing.T) {
 		// Test for dependency relation
 		found, err = ExistsRaw(conn, DependencyPrefix+"dependent-2")
 		require.NoError(t, err)
-		assert.Equal(t, false, found)
+		assert.False(t, found)
 
 		// Test for main key
 		found, err = ExistsRaw(conn, "test-set-dep")
 		require.NoError(t, err)
-		assert.Equal(t, false, found)
+		assert.False(t, found)
 	})
 }
 
@@ -290,18 +290,18 @@ func TestHashMapDependencyManagement(t *testing.T) {
 		var values []string
 		values, err = HashMapGetRaw(conn, "test-hash-map-dependency", "pair-1", "pair-2")
 		require.NoError(t, err)
-		assert.Equal(t, 2, len(values))
+		assert.Len(t, values, 2)
 
 		// Test for dependent key 1
 		var ok bool
 		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"test-hash-map-depend-1", "test-hash-map-dependency")
 		require.NoError(t, err)
-		assert.Equal(t, true, ok)
+		assert.True(t, ok)
 
 		// Test for dependent key 2
 		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"test-hash-map-depend-2", "test-hash-map-dependency")
 		require.NoError(t, err)
-		assert.Equal(t, true, ok)
+		assert.True(t, ok)
 
 		// Kill a dependent key
 		var total int
@@ -313,6 +313,6 @@ func TestHashMapDependencyManagement(t *testing.T) {
 		var found bool
 		found, err = ExistsRaw(conn, "test-hash-map-dependency")
 		require.NoError(t, err)
-		assert.Equal(t, false, found)
+		assert.False(t, found)
 	})
 }

@@ -55,7 +55,7 @@ const killByDependencySha = "a648f768f57e73e2497ccaa113d5ad9e731c5cd8"
 // killByDependencyLua is a script for kill related dependencies
 //
 // Editing this script requires a new SHA above
-var killByDependencyLua = `
+const killByDependencyLua = `
 --@begin=lua@
 redis.replicate_commands()
 local number_of_keys = table.getn(ARGV)

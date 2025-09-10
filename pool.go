@@ -130,7 +130,10 @@ func Connect(ctx context.Context, redisURL string,
 
 	// Register scripts if enabled
 	if dependencyMode {
-		err = client.RegisterScripts(ctx)
+		if err = client.RegisterScripts(ctx); err != nil {
+			client.Close()
+			return nil, err
+		}
 	}
 
 	return client, err

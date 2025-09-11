@@ -254,10 +254,10 @@ Edit `AGENTS.md` first when adjusting these policies, and keep the other files i
 
 <br/>
 
-## Maintainers
-| [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) | [<img src="https://github.com/kayleg.png" height="50" alt="kayleg" />](https://github.com/kayleg) |
-|:------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------:|
-|                                [MrZ](https://github.com/mrz1836)                                 |                                [kayleg](https://github.com/kayleg)                                |
+## 👥 Maintainers
+| [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
+|:------------------------------------------------------------------------------------------------:|
+|                                [MrZ](https://github.com/mrz1836)                                 |
 
 <br/>
 

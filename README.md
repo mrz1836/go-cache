@@ -99,8 +99,6 @@ go get github.com/mrz1836/go-cache
 ## Documentation
 View the generated [documentation](https://pkg.go.dev/github.com/mrz1836/go-cache)
 
-[![GoDoc](https://godoc.org/github.com/mrz1836/go-cache?status.svg&style=flat&v=2)](https://pkg.go.dev/github.com/mrz1836/go-cache)
-
 ### Features
 - Better Pool Management & Creation
 - Get Connection with Context

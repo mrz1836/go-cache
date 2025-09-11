@@ -1,4 +1,4 @@
-# go-cache
+# 📑 go-cache
 > Simple cache dependency system on-top of the famous [redigo](https://github.com/gomodule/redigo) package
 
 <table>
@@ -254,7 +254,7 @@ Edit `AGENTS.md` first when adjusting these policies, and keep the other files i
 
 <br/>
 
-## 👥 Maintainers
+## Maintainers
 | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
 |:------------------------------------------------------------------------------------------------:|
 |                                [MrZ](https://github.com/mrz1836)                                 |

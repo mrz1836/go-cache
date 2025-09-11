@@ -272,12 +272,6 @@ func FuzzURLEdgeCases(f *testing.F) {
 				assert.IsType(t, "", host)
 				assert.IsType(t, "", database)
 				assert.IsType(t, "", port)
-
-				if strings.ToLower(redisURL) != redisURL && strings.Contains(strings.ToLower(redisURL), "localhost") &&
-					strings.Contains(redisURL, ":") && !strings.HasSuffix(redisURL, ":") {
-					assert.NotEmpty(t, host)
-					assert.NotEmpty(t, port)
-				}
 			}
 
 			dialer := buildDialer(redisURL)

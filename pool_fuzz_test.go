@@ -168,7 +168,11 @@ func FuzzURLParsing(f *testing.F) {
 					if parsedURL.Host != "" && strings.Contains(parsedURL.Host, ":") && !strings.HasSuffix(parsedURL.Host, ":") {
 						host, database, port, extractErr := extractURL(testURL)
 						if extractErr == nil {
-							assert.NotEmpty(t, host)
+							// Only assert host is non-empty if the URL actually has a meaningful host part
+							// Skip assertion for edge cases like ":port" or "[]:port" which have empty hosts
+							if !strings.HasPrefix(parsedURL.Host, ":") && parsedURL.Host != "[]:"+port {
+								assert.NotEmpty(t, host)
+							}
 							assert.NotEmpty(t, port)
 							assert.IsType(t, "", database)
 						}

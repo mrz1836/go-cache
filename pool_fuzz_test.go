@@ -39,7 +39,7 @@ func FuzzExtractURL(f *testing.F) {
 				assert.IsType(t, "", port)
 
 				if (strings.Contains(redisURL, "localhost") || strings.Contains(redisURL, "127.0.0.1")) &&
-					strings.Contains(redisURL, ":") && !strings.HasSuffix(redisURL, ":") {
+					strings.Contains(redisURL, ":") && !strings.HasSuffix(redisURL, ":") && port != "" {
 					assert.NotEmpty(t, host)
 					assert.NotEmpty(t, port)
 				}

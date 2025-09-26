@@ -60,7 +60,7 @@ func SetAddManyRaw(conn redis.Conn, setName string, members ...interface{}) (err
 
 	// Fire the delete command
 	_, err = conn.Do(AddToSetCommand, args...)
-	return
+	return err
 }
 
 // SetIsMember returns if the member is part of the set
@@ -103,7 +103,7 @@ func SetRemoveMember(ctx context.Context, client *Client, set, member interface{
 // Spec: https://redis.io/commands/srem
 func SetRemoveMemberRaw(conn redis.Conn, set, member interface{}) (err error) {
 	_, err = conn.Do(RemoveMemberCommand, set, member)
-	return
+	return err
 }
 
 // SetMembers will fetch all members in the list

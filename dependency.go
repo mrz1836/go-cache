@@ -15,7 +15,7 @@ func Delete(ctx context.Context, client *Client, keys ...string) (total int, err
 	var conn redis.Conn
 	conn, err = client.GetConnectionWithContext(ctx)
 	if err != nil {
-		return
+		return total, err
 	}
 	defer client.CloseConnection(conn)
 	return DeleteRaw(conn, keys...)
@@ -94,18 +94,18 @@ func KillByDependencyRaw(conn redis.Conn, keys ...string) (total int, err error)
 func linkDependencies(conn redis.Conn, key interface{}, dependencies ...string) (err error) {
 	// No dependencies given
 	if len(dependencies) == 0 {
-		return
+		return err
 	}
 
 	// Send the multi command
 	if err = conn.Send(MultiCommand); err != nil {
-		return
+		return err
 	}
 
 	// Add all to the set
 	for _, dependency := range dependencies {
 		if err = conn.Send(AddToSetCommand, DependencyPrefix+dependency, key); err != nil {
-			return
+			return err
 		}
 	}
 
@@ -114,5 +114,5 @@ func linkDependencies(conn redis.Conn, key interface{}, dependencies ...string) 
 		// todo: test against live redis vs mock (is =nil needed)
 		err = nil
 	}
-	return
+	return err
 }

@@ -35,14 +35,14 @@ type wrappedPool struct {
 // GetContext will wrap and return a new connection
 func (p *wrappedPool) GetContext(ctx context.Context) (conn redis.Conn, err error) {
 	if conn, err = p.Pool.GetContext(ctx); err != nil {
-		return
+		return conn, err
 	}
 
 	if txn := newrelic.FromContext(ctx); txn != nil {
 		conn = wrapConn(conn, txn, p.cfg)
 	}
 
-	return
+	return conn, err
 }
 
 // Get will get a connection from the pool

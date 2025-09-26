@@ -109,12 +109,12 @@ func GetListRaw(conn redis.Conn, key string) (list []string, err error) {
 	// This command takes two parameters specifying the range: 0 start, -1 is the end of the list
 	var values []interface{}
 	if values, err = redis.Values(conn.Do(ListRangeCommand, key, 0, -1)); err != nil {
-		return
+		return list, err
 	}
 
 	// Scan slice by value, return with destination
 	err = redis.ScanSlice(values, &list)
-	return
+	return list, err
 }
 
 // SetList saves a slice as a redis list (appends)
@@ -146,7 +146,7 @@ func SetListRaw(conn redis.Conn, key string, slice []string) (err error) {
 
 	// Fire the set command
 	_, err = conn.Do(ListPushCommand, args...)
-	return
+	return err
 }
 
 // GetAllKeys returns a []string of keys
@@ -271,7 +271,7 @@ func Expire(ctx context.Context, client *Client, key string, duration time.Durat
 // Spec: https://redis.io/commands/expire
 func ExpireRaw(conn redis.Conn, key string, duration time.Duration) (err error) {
 	_, err = conn.Do(ExpireCommand, key, int64(duration.Seconds()))
-	return
+	return err
 }
 
 // DeleteWithoutDependency will remove keys without using dependency script
@@ -294,12 +294,12 @@ func DeleteWithoutDependency(ctx context.Context, client *Client, keys ...string
 func DeleteWithoutDependencyRaw(conn redis.Conn, keys ...string) (total int, err error) {
 	for _, key := range keys {
 		if _, err = conn.Do(DeleteCommand, key); err != nil {
-			return
+			return total, err
 		}
 		total++
 	}
 
-	return
+	return total, err
 }
 
 // DestroyCache will flush the entire redis server
@@ -323,7 +323,7 @@ func DestroyCache(ctx context.Context, client *Client) error {
 // Spec: https://redis.io/commands/flushall
 func DestroyCacheRaw(conn redis.Conn) (err error) {
 	_, err = conn.Do(FlushAllCommand)
-	return
+	return err
 }
 
 // SetToJSON stores the struct data (Struct->JSON) into redis under a key
@@ -350,14 +350,14 @@ func SetToJSONRaw(conn redis.Conn, keyName string, modelData interface{},
 ) (err error) {
 	var responseBytes []byte
 	if responseBytes, err = json.Marshal(&modelData); err != nil {
-		return
+		return err
 	}
 	if ttl > 0 {
 		err = SetExpRaw(conn, keyName, string(responseBytes), ttl, dependencies...)
 	} else {
 		err = SetRaw(conn, keyName, string(responseBytes), dependencies...)
 	}
-	return
+	return err
 }
 
 // Ping is a basic Ping->Pong method to determine connection
@@ -380,5 +380,5 @@ func Ping(ctx context.Context, client *Client) error {
 func PingRaw(conn redis.Conn) (err error) {
 	// "PONG" is returned on success
 	_, err = conn.Do(PingCommand)
-	return
+	return err
 }

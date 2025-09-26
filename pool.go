@@ -149,12 +149,12 @@ func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.
 	// Parse the URL
 	var redisURL *url.URL
 	if redisURL, err = url.Parse(connectToURL); err != nil {
-		return
+		return conn, err
 	}
 
 	// Create the connection
 	if conn, err = redis.Dial("tcp", redisURL.Host, options...); err != nil {
-		return
+		return conn, err
 	}
 
 	// Attempt authentication if needed
@@ -162,7 +162,7 @@ func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.
 		if password, ok := redisURL.User.Password(); ok {
 			if _, err = conn.Do(AuthCommand, password); err != nil {
 				conn = nil
-				return
+				return conn, err
 			}
 		}
 	}
@@ -172,7 +172,7 @@ func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.
 		_, err = conn.Do(SelectCommand, strings.TrimPrefix(redisURL.Path, "/"))
 	}
 
-	return
+	return conn, err
 }
 
 // buildDialer will build a redis connection from URL
@@ -202,15 +202,15 @@ func extractURL(redisURL string) (host, database, port string, err error) {
 	// Parse the URL
 	var u *url.URL
 	if u, err = url.Parse(redisURL); err != nil {
-		return
+		return host, database, port, err
 	}
 
 	// Split the host and port
 	if host, port, err = net.SplitHostPort(u.Host); err != nil {
-		return
+		return host, database, port, err
 	}
 
 	// Set the database
 	database = strings.ReplaceAll(u.RequestURI(), "/", "")
-	return
+	return host, database, port, err
 }

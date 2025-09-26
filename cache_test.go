@@ -50,7 +50,7 @@ func loadMockRedis() (client *Client, conn *redigomock.Conn) {
 		ScriptsLoaded: nil,
 	}
 
-	return
+	return client, conn
 }
 
 // loadRealRedis will load a real redis connection
@@ -66,11 +66,11 @@ func loadRealRedis() (client *Client, conn redis.Conn, err error) {
 		false,
 	)
 	if err != nil {
-		return
+		return client, conn, err
 	}
 
 	conn, err = client.GetConnectionWithContext(context.Background())
-	return
+	return client, conn, err
 }
 
 // loadRealRedisWithNewRelic will load a real redis connection (new relic enabled)
@@ -86,11 +86,11 @@ func loadRealRedisWithNewRelic() (client *Client, conn redis.Conn, err error) {
 		true,
 	)
 	if err != nil {
-		return
+		return client, conn, err
 	}
 
 	conn, err = client.GetConnectionWithContext(context.Background())
-	return
+	return client, conn, err
 }
 
 // clearRealRedis will clear a real redis db

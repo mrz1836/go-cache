@@ -21,7 +21,7 @@ func (c *Client) RegisterScripts(ctx context.Context) (err error) {
 	if len(c.DependencyScriptSha) == 0 {
 		c.DependencyScriptSha, err = RegisterScript(ctx, c, killByDependencyLua)
 	}
-	return
+	return err
 }
 
 // RegisterScript register a new script
@@ -43,10 +43,10 @@ func RegisterScript(ctx context.Context, client *Client, script string) (string,
 // Spec: https://redis.io/commands/script-load
 func RegisterScriptRaw(client *Client, conn redis.Conn, script string) (sha string, err error) {
 	if sha, err = redis.String(conn.Do(ScriptCommand, LoadCommand, script)); err != nil {
-		return
+		return sha, err
 	}
 	client.ScriptsLoaded = append(client.ScriptsLoaded, sha)
-	return
+	return sha, err
 }
 
 // killByDependencySha is the SHA of the below script

@@ -146,6 +146,11 @@
                 "min-len": 3,
                 "min-occurrences": 10
             },
+            "gomoddirectives": {
+                "replace-allow-list": [
+                    "golang.org/x/crypto"
+                ]
+            },
             "gocyclo": {
                 "min-complexity": 10
             },

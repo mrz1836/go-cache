@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
+
 	"github.com/mrz1836/go-cache/nrredis"
 )
 

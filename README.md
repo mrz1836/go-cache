@@ -96,6 +96,96 @@
 </table>
 <br/>
 
+<a href="https://github.com/mrz1836/go-cache/releases"><img src="https://img.shields.io/github/release-pre/mrz1836/go-cache?include_prereleases&style=flat-square&logo=github&color=black" alt="Release"></a>
+<a href="https://golang.org/"><img src="https://img.shields.io/github/go-mod/go-version/mrz1836/go-cache?style=flat-square&logo=go&color=00ADD8" alt="Go Version"></a>
+<a href="https://github.com/mrz1836/go-cache/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mrz1836/go-cache?style=flat-square&color=blue" alt="License"></a>
+
+<br/>
+
+<table align="center" border="0">
+  <tr>
+    <td align="right">
+       <code>CI / CD</code> &nbsp;&nbsp;
+    </td>
+    <td align="left">
+       <a href="https://github.com/mrz1836/go-cache/actions"><img src="https://img.shields.io/github/actions/workflow/status/mrz1836/go-cache/fortress.yml?branch=master&label=build&logo=github&style=flat-square" alt="Build"></a>
+       <a href="https://github.com/mrz1836/go-cache/actions"><img src="https://img.shields.io/github/last-commit/mrz1836/go-cache?style=flat-square&logo=git&logoColor=white&label=last%20update" alt="Last Commit"></a>
+    </td>
+    <td align="right">
+       &nbsp;&nbsp;&nbsp;&nbsp; <code>Quality</code> &nbsp;&nbsp;
+    </td>
+    <td align="left">
+       <a href="https://goreportcard.com/report/github.com/mrz1836/go-cache"><img src="https://goreportcard.com/badge/github.com/mrz1836/go-cache?style=flat-square" alt="Go Report"></a>
+       <a href="https://codecov.io/gh/mrz1836/go-cache"><img src="https://codecov.io/gh/mrz1836/go-cache/branch/master/graph/badge.svg?style=flat-square" alt="Coverage"></a>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right">
+       <code>Security</code> &nbsp;&nbsp;
+    </td>
+    <td align="left">
+       <a href="https://scorecard.dev/viewer/?uri=github.com/mrz1836/go-cache"><img src="https://api.scorecard.dev/projects/github.com/mrz1836/go-cache/badge?style=flat-square" alt="Scorecard"></a>
+       <a href=".github/SECURITY.md"><img src="https://img.shields.io/badge/policy-active-success?style=flat-square&logo=security&logoColor=white" alt="Security"></a>
+    </td>
+    <td align="right">
+       &nbsp;&nbsp;&nbsp;&nbsp; <code>Community</code> &nbsp;&nbsp;
+    </td>
+    <td align="left">
+       <a href="https://github.com/mrz1836/go-cache/graphs/contributors"><img src="https://img.shields.io/github/contributors/mrz1836/go-cache?style=flat-square&color=orange" alt="Contributors"></a>
+       <a href="https://mrz1818.com/?tab=tips&utm_source=github&utm_medium=sponsor-link&utm_campaign=go-cache&utm_term=go-cache&utm_content=go-cache"><img src="https://img.shields.io/badge/donate-bitcoin-ff9900?style=flat-square&logo=bitcoin" alt="Bitcoin"></a>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+<br/>
+<br/>
+
+<div align="center">
+
+### <code>Project Navigation</code>
+
+</div>
+
+<table align="center">
+  <tr>
+    <td align="center" width="33%">
+       🚀&nbsp;<a href="#installation"><code>Installation</code></a>
+    </td>
+    <td align="center" width="33%">
+       🧪&nbsp;<a href="#examples--tests"><code>Examples&nbsp;&&nbsp;Tests</code></a>
+    </td>
+    <td align="center" width="33%">
+       📚&nbsp;<a href="#documentation"><code>Documentation</code></a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+       🤝&nbsp;<a href="#contributing"><code>Contributing</code></a>
+    </td>
+    <td align="center">
+      🛠️&nbsp;<a href="#code-standards"><code>Code&nbsp;Standards</code></a>
+    </td>
+    <td align="center">
+      ⚡&nbsp;<a href="#benchmarks"><code>Benchmarks</code></a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      🤖&nbsp;<a href="#ai-compliance"><code>AI&nbsp;Compliance</code></a>
+    </td>
+    <td align="center">
+       ⚖️&nbsp;<a href="#license"><code>License</code></a>
+    </td>
+    <td align="center">
+       👥&nbsp;<a href="#maintainers"><code>Maintainers</code></a>
+    </td>
+  </tr>
+</table>
+<br/>
+
 
 ## Installation
 

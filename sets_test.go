@@ -130,7 +130,7 @@ func TestSetAddMany(t *testing.T) {
 			t.Run(test.testCase, func(t *testing.T) {
 				conn.Clear()
 
-				var commands []*redigomock.Cmd
+				commands := make([]*redigomock.Cmd, 0, 1)
 
 				// Create the arguments
 				args := make([]interface{}, len(test.members)+1)
@@ -222,7 +222,7 @@ func TestSetRemoveMember(t *testing.T) {
 			t.Run(test.testCase, func(t *testing.T) {
 				conn.Clear()
 
-				var commands []*redigomock.Cmd
+				commands := make([]*redigomock.Cmd, 0, 1)
 
 				// The main command to test
 				commands = append(commands, conn.Command(RemoveMemberCommand, test.setName, test.member))

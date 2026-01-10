@@ -1250,7 +1250,7 @@ func TestDeleteWithoutDependency(t *testing.T) {
 				conn.Clear()
 
 				// The main command to test
-				var commands []*redigomock.Cmd
+				commands := make([]*redigomock.Cmd, 0, len(test.keys))
 				for _, key := range test.keys {
 					cmd := conn.Command(DeleteCommand, key)
 					commands = append(commands, cmd)

@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -462,3 +463,48 @@ func TestToInterfaces(t *testing.T) {
 		assert.Equal(t, "only", result[0])
 	})
 }
+
+// Sentinel errors for TestIsNetTimeout — defined at package level to satisfy err113.
+var (
+	errRedigoReadTimeout  = errors.New("redigo: connection read timeout")
+	errRedigoWriteTimeout = errors.New("redigo: connection write timeout")
+	errSomeOtherError     = errors.New("some other error")
+)
+
+// TestIsNetTimeout tests all code paths of the isNetTimeout() error classifier
+func TestIsNetTimeout(t *testing.T) {
+	t.Parallel()
+
+	t.Run("nil error returns false", func(t *testing.T) {
+		assert.False(t, isNetTimeout(nil))
+	})
+
+	t.Run("redigo read timeout string returns true", func(t *testing.T) {
+		assert.True(t, isNetTimeout(errRedigoReadTimeout))
+	})
+
+	t.Run("net.Error with Timeout true returns true", func(t *testing.T) {
+		err := &mockTimeoutError{timeout: true}
+		assert.True(t, isNetTimeout(err))
+	})
+
+	t.Run("net.Error with Timeout false returns false", func(t *testing.T) {
+		err := &mockTimeoutError{timeout: false}
+		assert.False(t, isNetTimeout(err))
+	})
+
+	t.Run("plain non-net error returns false", func(t *testing.T) {
+		assert.False(t, isNetTimeout(errSomeOtherError))
+	})
+
+	t.Run("different redigo string does not match", func(t *testing.T) {
+		assert.False(t, isNetTimeout(errRedigoWriteTimeout))
+	})
+}
+
+// mockTimeoutError implements net.Error for testing isNetTimeout.
+type mockTimeoutError struct{ timeout bool }
+
+func (e *mockTimeoutError) Error() string   { return "mock net error" }
+func (e *mockTimeoutError) Timeout() bool   { return e.timeout }
+func (e *mockTimeoutError) Temporary() bool { return false }

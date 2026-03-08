@@ -785,6 +785,69 @@ func TestSortedSetCard(t *testing.T) {
 	})
 }
 
+// TestParseSortedSetWithScores tests the internal parseSortedSetWithScores() helper
+func TestParseSortedSetWithScores(t *testing.T) {
+	t.Parallel()
+
+	t.Run("nil input returns empty slice", func(t *testing.T) {
+		result, err := parseSortedSetWithScores(nil)
+		require.NoError(t, err)
+		assert.Empty(t, result)
+	})
+
+	t.Run("empty input returns empty slice", func(t *testing.T) {
+		result, err := parseSortedSetWithScores([]interface{}{})
+		require.NoError(t, err)
+		assert.Empty(t, result)
+	})
+
+	t.Run("odd-length input returns ErrNil", func(t *testing.T) {
+		_, err := parseSortedSetWithScores([]interface{}{[]byte("member")})
+		require.Error(t, err)
+		assert.ErrorIs(t, err, redis.ErrNil)
+	})
+
+	t.Run("valid single pair parsed correctly", func(t *testing.T) {
+		result, err := parseSortedSetWithScores([]interface{}{
+			[]byte("alpha"), []byte("1.5"),
+		})
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "alpha", result[0].Member)
+		assert.InDelta(t, 1.5, result[0].Score, 1e-9)
+	})
+
+	t.Run("valid multiple pairs parsed correctly", func(t *testing.T) {
+		result, err := parseSortedSetWithScores([]interface{}{
+			[]byte("a"), []byte("1.0"),
+			[]byte("b"), []byte("2.0"),
+			[]byte("c"), []byte("-3.5"),
+		})
+		require.NoError(t, err)
+		require.Len(t, result, 3)
+		assert.Equal(t, "a", result[0].Member)
+		assert.InDelta(t, 1.0, result[0].Score, 1e-9)
+		assert.Equal(t, "c", result[2].Member)
+		assert.InDelta(t, -3.5, result[2].Score, 1e-9)
+	})
+
+	t.Run("invalid score string returns error", func(t *testing.T) {
+		_, err := parseSortedSetWithScores([]interface{}{
+			[]byte("member"), []byte("not-a-float"),
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("special float values parsed correctly", func(t *testing.T) {
+		result, err := parseSortedSetWithScores([]interface{}{
+			[]byte("inf-member"), []byte("+inf"),
+		})
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.True(t, math.IsInf(result[0].Score, 1))
+	})
+}
+
 // TestSortedSetScore tests the method SortedSetScore()
 func TestSortedSetScore(t *testing.T) {
 	t.Run("sorted set score command using mocked redis", func(t *testing.T) {

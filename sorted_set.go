@@ -26,7 +26,7 @@ func parseSortedSetWithScores(values []interface{}) ([]SortedSetMember, error) {
 		if err != nil {
 			return nil, err
 		}
-		scoreStr, err := redis.String(values[i+1], nil)
+		scoreStr, err := redis.String(values[i+1], nil) //nolint:gosec // i+1 is always valid; even-length check above guarantees it
 		if err != nil {
 			return nil, err
 		}

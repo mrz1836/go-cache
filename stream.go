@@ -143,9 +143,16 @@ func StreamReadRaw(conn redis.Conn, key, startID string, count int64) ([]StreamE
 	return parseStreamEntries(values)
 }
 
+// connWithContext is satisfied by redigo network connections that support context-aware Do.
+// Using this avoids spawning a goroutine and eliminates the concurrent Close/Do race on
+// the pool's activeConn.state when context cancellation is needed.
+type connWithContext interface {
+	DoContext(ctx context.Context, commandName string, args ...interface{}) (interface{}, error)
+}
+
 // StreamReadBlock reads entries from a stream, blocking until data is available or blockMs elapses
-// Respects context cancellation by closing the connection to unblock the goroutine
-// Use blockMs=0 to block indefinitely
+// Respects context cancellation via DoContext when supported, or by closing the connection.
+// Use blockMs=0 to block indefinitely.
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: StreamReadBlockRaw()
@@ -155,14 +162,41 @@ func StreamReadBlock(ctx context.Context, client *Client, key, startID string, c
 		return nil, err
 	}
 
+	// Return immediately if context is already done — avoids spawning a goroutine
+	// that would race with a concurrent Close on the pool's activeConn.
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		client.CloseConnection(conn)
+		return nil, ctxErr
+	}
+
+	// Prefer DoContext: it handles cancellation via socket deadline from a single
+	// goroutine, avoiding the activeConn.state race entirely.
+	// activeConn exposes DoContext but delegates to the underlying conn; if the
+	// underlying conn does not implement ConnWithContext (e.g. mock connections),
+	// DoContext returns errContextNotSupported — detect and fall through.
+	if cwt, ok := conn.(connWithContext); ok {
+		values, doErr := redis.Values(cwt.DoContext(ctx, StreamReadCommand, "BLOCK", blockMs, "COUNT", count, "STREAMS", key, startID))
+		if doErr == nil || doErr.Error() != "redis: connection does not support ConnWithContext" {
+			// DoContext executed (success or a real Redis error) — we are done.
+			client.CloseConnection(conn)
+			if doErr != nil {
+				return nil, doErr
+			}
+			return parseStreamEntries(values)
+		}
+		// Fall through to goroutine path — DoContext is not actually supported.
+	}
+
+	// Fallback for connections that do not support DoContext (e.g. mock connections):
+	// spawn a goroutine and close the connection to unblock it on cancellation.
 	type result struct {
 		entries []StreamEntry
 		err     error
 	}
 	ch := make(chan result, 1)
 	go func() {
-		entries, err := StreamReadBlockRaw(conn, key, startID, count, blockMs)
-		ch <- result{entries, err}
+		entries, goroutineErr := StreamReadBlockRaw(conn, key, startID, count, blockMs)
+		ch <- result{entries, goroutineErr}
 	}()
 
 	select {

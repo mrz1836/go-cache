@@ -156,7 +156,7 @@ type connWithContext interface {
 // Creates a new connection and closes connection at end of function call
 //
 // Custom connections use method: StreamReadBlockRaw()
-func StreamReadBlock(ctx context.Context, client *Client, key, startID string, count int64, blockMs int64) ([]StreamEntry, error) {
+func StreamReadBlock(ctx context.Context, client *Client, key, startID string, count, blockMs int64) ([]StreamEntry, error) {
 	conn, err := client.GetConnectionWithContext(ctx)
 	if err != nil {
 		return nil, err
@@ -215,7 +215,7 @@ func StreamReadBlock(ctx context.Context, client *Client, key, startID string, c
 // Uses existing connection (does not close connection)
 //
 // Spec: https://redis.io/commands/xread
-func StreamReadBlockRaw(conn redis.Conn, key, startID string, count int64, blockMs int64) ([]StreamEntry, error) {
+func StreamReadBlockRaw(conn redis.Conn, key, startID string, count, blockMs int64) ([]StreamEntry, error) {
 	values, err := redis.Values(conn.Do(StreamReadCommand, "BLOCK", blockMs, "COUNT", count, "STREAMS", key, startID))
 	if err != nil {
 		return nil, err

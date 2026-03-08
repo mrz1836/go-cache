@@ -51,6 +51,10 @@ const (
 	SortedSetRangeCommand    string = "ZRANGE"
 	SortedSetRemCommand      string = "ZREM"
 	SortedSetScoreCommand    string = "ZSCORE"
+	StreamAddCommand         string = "XADD"
+	StreamLenCommand         string = "XLEN"
+	StreamReadCommand        string = "XREAD"
+	StreamTrimCommand        string = "XTRIM"
 )
 
 // Get gets a key from redis in string format

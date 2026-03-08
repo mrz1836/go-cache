@@ -55,6 +55,10 @@ const (
 	StreamLenCommand         string = "XLEN"
 	StreamReadCommand        string = "XREAD"
 	StreamTrimCommand        string = "XTRIM"
+	PublishCommand           string = "PUBLISH"
+	SubscribeCommand         string = "SUBSCRIBE"
+	PSubscribeCommand        string = "PSUBSCRIBE"
+	UnsubscribeCommand       string = "UNSUBSCRIBE"
 )
 
 // Get gets a key from redis in string format

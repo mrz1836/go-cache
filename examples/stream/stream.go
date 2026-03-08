@@ -31,9 +31,9 @@ func main() {
 
 	// Append entries to the stream (auto-generated IDs)
 	id1, err := cache.StreamAdd(ctx, client, streamKey, map[string]string{
-		"event":  "user.login",
-		"user":   "alice",
-		"ip":     "192.168.1.1",
+		"event": "user.login",
+		"user":  "alice",
+		"ip":    "192.168.1.1",
 	})
 	if err != nil {
 		log.Fatalf("StreamAdd error: %s", err.Error())

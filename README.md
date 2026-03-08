@@ -118,6 +118,9 @@ View the generated [documentation](https://pkg.go.dev/github.com/mrz1836/go-cach
 - Helper Methods (Get, Set, HashGet, etc)
 - Basic Lock/Release (from [bgentry lock.go](https://gist.github.com/bgentry/6105288))
 - Connect via URL (deprecated)
+- Sorted Sets (priority queues, leaderboards, ranked data)
+- Streams (append-only logs, event sourcing, time-series data)
+- Pub/Sub (real-time messaging with auto-reconnect)
 
 <details>
 <summary><strong><code>Development Setup (Getting Started)</code></strong></summary>
@@ -189,6 +192,110 @@ magex deps:update
 This command ensures all dependencies are brought up to date in a single step, including Go modules and any managed tools. It is the recommended way to keep your development environment and CI in sync with the latest versions.
 
 </details>
+
+<br/>
+
+### Sorted Sets
+
+Sorted sets store unique members each associated with a floating-point score. Ideal for priority queues, leaderboards, and ranked data.
+
+| Function | Description |
+|---|---|
+| `SortedSetAdd` | Add a single member with a score |
+| `SortedSetAddMany` | Add multiple members in one call |
+| `SortedSetRemove` | Remove a member |
+| `SortedSetRange` | Return members by index range (ascending) |
+| `SortedSetRangeWithScores` | Return members + scores by index range |
+| `SortedSetRangeByScore` | Return members within a score range |
+| `SortedSetRangeByScoreWithScores` | Return members + scores within a score range |
+| `SortedSetPopMin` | Atomically pop the lowest-score members |
+| `SortedSetCard` | Return the number of members |
+| `SortedSetScore` | Return the score of a specific member |
+
+```go
+// Priority queue: lower score = higher priority
+_ = cache.SortedSetAdd(ctx, client, "jobs", 1, "urgent-task")
+_ = cache.SortedSetAdd(ctx, client, "jobs", 5, "normal-task")
+_ = cache.SortedSetAdd(ctx, client, "jobs", 10, "low-priority-task")
+
+// Dequeue highest-priority item
+popped, _ := cache.SortedSetPopMin(ctx, client, "jobs", 1)
+fmt.Printf("processing: %s\n", popped[0].Member) // urgent-task
+
+// Leaderboard: get top 3 with scores
+members, _ := cache.SortedSetRangeWithScores(ctx, client, "leaderboard", 0, 2)
+for _, m := range members {
+    fmt.Printf("%s: %.0f pts\n", m.Member, m.Score)
+}
+```
+
+<br/>
+
+### Streams
+
+Streams are append-only logs of key-value entries. Perfect for event sourcing, audit logs, and time-series data.
+
+| Function | Description |
+|---|---|
+| `StreamAdd` | Append an entry with an auto-generated ID |
+| `StreamAddCapped` | Append an entry and cap the stream length |
+| `StreamRead` | Read entries from a given ID (non-blocking) |
+| `StreamReadBlock` | Read entries, blocking until new data arrives |
+| `StreamTrim` | Trim the stream to a maximum number of entries |
+| `StreamLen` | Return the number of entries in the stream |
+
+```go
+// Append audit log entries
+id, _ := cache.StreamAdd(ctx, client, "audit-log", map[string]string{
+    "event": "user.login",
+    "user":  "alice",
+})
+fmt.Printf("logged entry: %s\n", id)
+
+// Read all entries from the beginning
+entries, _ := cache.StreamRead(ctx, client, "audit-log", "0", 100)
+for _, e := range entries {
+    fmt.Printf("[%s] %v\n", e.ID, e.Fields)
+}
+
+// Keep stream bounded (drop oldest when over 1000 entries)
+_, _ = cache.StreamAddCapped(ctx, client, "events", 1000, map[string]string{
+    "type": "page.view",
+    "path": "/home",
+})
+```
+
+<br/>
+
+### Pub/Sub
+
+Pub/Sub enables real-time message delivery between producers and consumers. The `Subscription` type reconnects automatically on connection failure.
+
+| Function | Description |
+|---|---|
+| `Publish` | Send a message to a channel |
+| `Subscribe` | Subscribe to one or more channels by exact name |
+| `PSubscribe` | Subscribe to channels matching a glob pattern |
+| `(*Subscription).Close` | Unsubscribe and release resources |
+
+```go
+// Subscribe to a channel
+sub, _ := cache.Subscribe(ctx, client, "notifications")
+
+// Receive messages in a goroutine
+go func() {
+    for msg := range sub.Messages {
+        fmt.Printf("[%s] %s\n", msg.Channel, string(msg.Data))
+    }
+}()
+
+// Publish from anywhere
+n, _ := cache.Publish(ctx, client, "notifications", "hello world")
+fmt.Printf("delivered to %d subscriber(s)\n", n)
+
+// Clean shutdown
+_ = sub.Close()
+```
 
 <br/>
 

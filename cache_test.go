@@ -29,7 +29,10 @@ const (
 )
 
 // loadMockRedis will load a mocked redis connection
-func loadMockRedis() (client *Client, conn *redigomock.Conn) {
+func loadMockRedis(tb ...testing.TB) (client *Client, conn *redigomock.Conn) {
+	if len(tb) > 0 && tb[0] != nil {
+		tb[0].Helper()
+	}
 	conn = redigomock.NewConn()
 	client = &Client{
 		DependencyScriptSha: "",
@@ -54,7 +57,10 @@ func loadMockRedis() (client *Client, conn *redigomock.Conn) {
 }
 
 // loadRealRedis will load a real redis connection
-func loadRealRedis() (client *Client, conn redis.Conn, err error) {
+func loadRealRedis(tb ...testing.TB) (client *Client, conn redis.Conn, err error) {
+	if len(tb) > 0 && tb[0] != nil {
+		tb[0].Helper()
+	}
 	client, err = Connect(
 		context.Background(),
 		testLocalConnectionURL,
@@ -74,7 +80,10 @@ func loadRealRedis() (client *Client, conn redis.Conn, err error) {
 }
 
 // loadRealRedisWithNewRelic will load a real redis connection (new relic enabled)
-func loadRealRedisWithNewRelic() (client *Client, conn redis.Conn, err error) {
+func loadRealRedisWithNewRelic(tb ...testing.TB) (client *Client, conn redis.Conn, err error) {
+	if len(tb) > 0 && tb[0] != nil {
+		tb[0].Helper()
+	}
 	client, err = Connect(
 		context.Background(),
 		testLocalConnectionURL,
@@ -94,7 +103,10 @@ func loadRealRedisWithNewRelic() (client *Client, conn redis.Conn, err error) {
 }
 
 // clearRealRedis will clear a real redis db
-func clearRealRedis(conn redis.Conn) error {
+func clearRealRedis(conn redis.Conn, tb ...testing.TB) error {
+	if len(tb) > 0 && tb[0] != nil {
+		tb[0].Helper()
+	}
 	return DestroyCacheRaw(conn)
 }
 
@@ -106,7 +118,7 @@ func TestSet(t *testing.T) {
 		ctx := context.Background()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -160,7 +172,7 @@ func TestSet(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
@@ -181,7 +193,7 @@ func TestSet(t *testing.T) {
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
 				// Start with a fresh db
-				err = clearRealRedis(conn)
+				err = clearRealRedis(conn, t)
 				require.NoError(t, err)
 
 				// Run command
@@ -203,7 +215,7 @@ func TestSet(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedisWithNewRelic()
+		client, conn, err := loadRealRedisWithNewRelic(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
@@ -224,7 +236,7 @@ func TestSet(t *testing.T) {
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
 				// Start with a fresh db
-				err = clearRealRedis(conn)
+				err = clearRealRedis(conn, t)
 				require.NoError(t, err)
 
 				// Run command
@@ -244,11 +256,11 @@ func TestSet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		err := Set(context.TODO(), client, "key", "value")
+		err := Set(context.Background(), client, "key", "value")
 		require.Error(t, err)
 	})
 }
@@ -273,7 +285,7 @@ func TestSetExp(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -325,13 +337,13 @@ func TestSetExp(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -359,11 +371,11 @@ func TestSetExp(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		err := SetExp(context.TODO(), client, "key", "value", 10*time.Second)
+		err := SetExp(context.Background(), client, "key", "value", 10*time.Second)
 		require.Error(t, err)
 	})
 }
@@ -388,7 +400,7 @@ func TestGet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -424,13 +436,13 @@ func TestGet(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -450,13 +462,13 @@ func TestGet(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedisWithNewRelic()
+		client, conn, err := loadRealRedisWithNewRelic(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -474,11 +486,11 @@ func TestGet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		val, err := Get(context.TODO(), client, "123456")
+		val, err := Get(context.Background(), client, "123456")
 		require.Error(t, err)
 		assert.Empty(t, val)
 	})
@@ -507,7 +519,7 @@ func TestGetBytes(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -543,13 +555,13 @@ func TestGetBytes(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -569,13 +581,13 @@ func TestGetBytes(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedisWithNewRelic()
+		client, conn, err := loadRealRedisWithNewRelic(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -593,11 +605,11 @@ func TestGetBytes(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		val, err := GetBytes(context.TODO(), client, "123456")
+		val, err := GetBytes(context.Background(), client, "123456")
 		require.Error(t, err)
 		assert.Equal(t, []byte(nil), val)
 	})
@@ -626,7 +638,7 @@ func TestGetAllKeys(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -647,13 +659,13 @@ func TestGetAllKeys(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -673,13 +685,13 @@ func TestGetAllKeys(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedisWithNewRelic()
+		client, conn, err := loadRealRedisWithNewRelic(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -697,11 +709,11 @@ func TestGetAllKeys(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		val, err := GetAllKeys(context.TODO(), client)
+		val, err := GetAllKeys(context.Background(), client)
 		require.Error(t, err)
 		assert.Equal(t, []string(nil), val)
 	})
@@ -730,7 +742,7 @@ func TestExists(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -753,13 +765,13 @@ func TestExists(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -777,11 +789,11 @@ func TestExists(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		found, err := Exists(context.TODO(), client, "key")
+		found, err := Exists(context.Background(), client, "key")
 		require.Error(t, err)
 		assert.False(t, found)
 	})
@@ -810,7 +822,7 @@ func TestExpire(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -844,13 +856,13 @@ func TestExpire(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -884,11 +896,11 @@ func TestExpire(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		err := Expire(context.TODO(), client, "key", 10*time.Second)
+		err := Expire(context.Background(), client, "key", 10*time.Second)
 		require.Error(t, err)
 	})
 }
@@ -916,7 +928,7 @@ func TestDestroyCache(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -936,13 +948,13 @@ func TestDestroyCache(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -970,11 +982,11 @@ func TestDestroyCache(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		err := DestroyCache(context.TODO(), client)
+		err := DestroyCache(context.Background(), client)
 		require.Error(t, err)
 	})
 }
@@ -999,7 +1011,7 @@ func TestGetList(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -1053,13 +1065,13 @@ func TestGetList(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -1077,11 +1089,11 @@ func TestGetList(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		val, err := GetList(context.TODO(), client, "123456")
+		val, err := GetList(context.Background(), client, "123456")
 		require.Error(t, err)
 		assert.Equal(t, []string(nil), val)
 	})
@@ -1110,7 +1122,7 @@ func TestSetList(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -1164,13 +1176,13 @@ func TestSetList(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -1188,11 +1200,11 @@ func TestSetList(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		err := SetList(context.TODO(), client, "123456", []string{"test", "test1"})
+		err := SetList(context.Background(), client, "123456", []string{"test", "test1"})
 		require.Error(t, err)
 	})
 }
@@ -1220,7 +1232,7 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -1272,13 +1284,13 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Set a key
@@ -1303,11 +1315,11 @@ func TestDeleteWithoutDependency(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		total, err := DeleteWithoutDependency(context.TODO(), client, "key")
+		total, err := DeleteWithoutDependency(context.Background(), client, "key")
 		require.Error(t, err)
 		assert.Equal(t, 0, total)
 	})
@@ -1337,7 +1349,7 @@ func TestSetToJSON(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -1416,7 +1428,7 @@ func TestSetToJSON(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -1498,7 +1510,7 @@ func TestSetToJSON(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -1529,7 +1541,7 @@ func TestSetToJSON(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
@@ -1593,7 +1605,7 @@ func TestSetToJSON(t *testing.T) {
 		for i, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
 				// Start with a fresh db
-				err = clearRealRedis(conn)
+				err = clearRealRedis(conn, t)
 				require.NoError(t, err)
 
 				var responseBytes []byte
@@ -1617,11 +1629,11 @@ func TestSetToJSON(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		client.CloseAll(conn)
 
-		err := SetToJSON(context.TODO(), client, "123456", nil, 10*time.Second)
+		err := SetToJSON(context.Background(), client, "123456", nil, 10*time.Second)
 		require.Error(t, err)
 	})
 }
@@ -1632,7 +1644,7 @@ func TestPing(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -1652,13 +1664,13 @@ func TestPing(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command

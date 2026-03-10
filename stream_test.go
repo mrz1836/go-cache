@@ -45,7 +45,7 @@ func TestStreamAdd(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -98,13 +98,13 @@ func TestStreamAdd(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -141,7 +141,7 @@ func TestStreamAddCapped(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -193,13 +193,13 @@ func TestStreamAddCapped(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add several entries capped at 2
@@ -222,7 +222,7 @@ func TestStreamRead(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -311,13 +311,13 @@ func TestStreamRead(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add entries
@@ -343,7 +343,7 @@ func TestStreamReadBlock(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -364,7 +364,7 @@ func TestStreamReadBlock(t *testing.T) {
 		t.Parallel()
 
 		// Load redis — use a fresh client/conn pair to avoid sharing state with other tests
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -391,13 +391,13 @@ func TestStreamReadBlock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db (no entries — so XREAD BLOCK will actually block)
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Cancel the context immediately, then call StreamReadBlock;
@@ -417,13 +417,13 @@ func TestStreamReadBlock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add an entry first so the block returns immediately
@@ -445,7 +445,7 @@ func TestStreamTrim(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -488,13 +488,13 @@ func TestStreamTrim(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add 5 entries
@@ -523,7 +523,7 @@ func TestStreamLen(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -565,13 +565,13 @@ func TestStreamLen(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Empty stream has length 0

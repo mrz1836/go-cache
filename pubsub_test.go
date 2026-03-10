@@ -16,7 +16,7 @@ func TestPublishRaw(t *testing.T) {
 	t.Run("publish command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -51,7 +51,7 @@ func TestPublishRaw(t *testing.T) {
 	t.Run("publish returns error on failed connection", func(t *testing.T) {
 		t.Parallel()
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -69,7 +69,7 @@ func TestPublish(t *testing.T) {
 	t.Run("publish using mock client pool", func(t *testing.T) {
 		t.Parallel()
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -85,7 +85,7 @@ func TestPublish(t *testing.T) {
 			t.Skip("skipping live local redis tests")
 		}
 
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
@@ -102,11 +102,11 @@ func TestSubscribe(t *testing.T) {
 	t.Run("subscribe with no channels returns error", func(t *testing.T) {
 		t.Parallel()
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		sub, err := Subscribe(context.Background(), client)
+		sub, err := Subscribe(context.Background(), client, nil)
 		require.Error(t, err)
 		assert.Nil(t, sub)
 	})
@@ -117,11 +117,11 @@ func TestSubscribe(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		subClient, subConn, err := loadRealRedis()
+		subClient, subConn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer subClient.CloseAll(subConn)
 
-		pubClient, pubConn, err := loadRealRedis()
+		pubClient, pubConn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer pubClient.CloseAll(pubConn)
 
@@ -129,7 +129,7 @@ func TestSubscribe(t *testing.T) {
 		payload := "hello-from-publisher"
 
 		// Subscribe using the subscriber client
-		sub, err := Subscribe(ctx, subClient, channel)
+		sub, err := Subscribe(ctx, subClient, []string{channel})
 		require.NoError(t, err)
 		require.NotNil(t, sub)
 		defer func() { _ = sub.Close() }()
@@ -156,18 +156,18 @@ func TestSubscribe(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		subClient, subConn, err := loadRealRedis()
+		subClient, subConn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer subClient.CloseAll(subConn)
 
-		pubClient, pubConn, err := loadRealRedis()
+		pubClient, pubConn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer pubClient.CloseAll(pubConn)
 
 		ch1 := "test-multi-ch1"
 		ch2 := "test-multi-ch2"
 
-		sub, err := Subscribe(ctx, subClient, ch1, ch2)
+		sub, err := Subscribe(ctx, subClient, []string{ch1, ch2})
 		require.NoError(t, err)
 		require.NotNil(t, sub)
 		defer func() { _ = sub.Close() }()
@@ -198,11 +198,11 @@ func TestPSubscribe(t *testing.T) {
 	t.Run("psubscribe with no patterns returns error", func(t *testing.T) {
 		t.Parallel()
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
-		sub, err := PSubscribe(context.Background(), client)
+		sub, err := PSubscribe(context.Background(), client, nil)
 		require.Error(t, err)
 		assert.Nil(t, sub)
 	})
@@ -213,11 +213,11 @@ func TestPSubscribe(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		subClient, subConn, err := loadRealRedis()
+		subClient, subConn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer subClient.CloseAll(subConn)
 
-		pubClient, pubConn, err := loadRealRedis()
+		pubClient, pubConn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer pubClient.CloseAll(pubConn)
 
@@ -225,7 +225,7 @@ func TestPSubscribe(t *testing.T) {
 		targetChannel := "test-psubscribe-events"
 		payload := "pattern-matched-message"
 
-		sub, err := PSubscribe(ctx, subClient, pattern)
+		sub, err := PSubscribe(ctx, subClient, []string{pattern})
 		require.NoError(t, err)
 		require.NotNil(t, sub)
 		defer func() { _ = sub.Close() }()
@@ -250,17 +250,17 @@ func TestPSubscribe(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		subClient, subConn, err := loadRealRedis()
+		subClient, subConn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer subClient.CloseAll(subConn)
 
-		pubClient, pubConn, err := loadRealRedis()
+		pubClient, pubConn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer pubClient.CloseAll(pubConn)
 
 		pattern := "test-wild-*"
 
-		sub, err := PSubscribe(ctx, subClient, pattern)
+		sub, err := PSubscribe(ctx, subClient, []string{pattern})
 		require.NoError(t, err)
 		require.NotNil(t, sub)
 		defer func() { _ = sub.Close() }()
@@ -299,11 +299,11 @@ func TestSubscriptionClose(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
-		sub, err := Subscribe(ctx, client, "test-close-idempotent")
+		sub, err := Subscribe(ctx, client, []string{"test-close-idempotent"})
 		require.NoError(t, err)
 		require.NotNil(t, sub)
 
@@ -333,11 +333,11 @@ func TestSubscriptionClose(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
-		sub, err := Subscribe(ctx, client, "test-close-drains")
+		sub, err := Subscribe(ctx, client, []string{"test-close-drains"})
 		require.NoError(t, err)
 		require.NotNil(t, sub)
 
@@ -369,11 +369,11 @@ func TestSubscriptionContextCancellation(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
-		sub, err := Subscribe(ctx, client, "test-ctx-cancel")
+		sub, err := Subscribe(ctx, client, []string{"test-ctx-cancel"})
 		require.NoError(t, err)
 		require.NotNil(t, sub)
 
@@ -403,13 +403,63 @@ func TestSubscriptionContextCancellation(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel() // cancel immediately
 
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Subscribe with already-canceled context — expect a connection error
-		_, err = Subscribe(ctx, client, "test-pre-canceled")
+		_, err = Subscribe(ctx, client, []string{"test-pre-canceled"})
 		require.Error(t, err, "expected error when context is already canceled")
+	})
+}
+
+// TestSubscriptionErrorsField verifies that Subscription.Errors is wired to the internal errCh.
+func TestSubscriptionErrorsField(t *testing.T) {
+	t.Parallel()
+
+	client, conn := loadMockRedis(t)
+	defer client.CloseAll(conn)
+
+	psc := redis.PubSubConn{Conn: conn}
+	sub := newSubscription(client, conn, psc, []string{"ch"}, nil, pubSubMessageBufferSize)
+
+	assert.NotNil(t, sub.Errors, "Errors channel must not be nil")
+	assert.Equal(t, 16, cap(sub.Errors), "Errors channel capacity must be 16")
+}
+
+// TestWithMessageBuffer verifies that WithMessageBuffer correctly adjusts Messages channel capacity.
+func TestWithMessageBuffer(t *testing.T) {
+	t.Parallel()
+
+	client, conn := loadMockRedis(t)
+	defer client.CloseAll(conn)
+
+	psc := redis.PubSubConn{Conn: conn}
+
+	t.Run("default capacity is 100", func(t *testing.T) {
+		sub := newSubscription(client, conn, psc, []string{"ch"}, nil, pubSubMessageBufferSize)
+		assert.Equal(t, 100, cap(sub.Messages))
+	})
+
+	t.Run("WithMessageBuffer sets custom capacity", func(t *testing.T) {
+		o := defaultSubscriptionOptions()
+		WithMessageBuffer(50)(&o)
+		sub := newSubscription(client, conn, psc, []string{"ch"}, nil, o.messageBufferSize)
+		assert.Equal(t, 50, cap(sub.Messages))
+	})
+
+	t.Run("WithMessageBuffer(0) ignored — default used", func(t *testing.T) {
+		o := defaultSubscriptionOptions()
+		WithMessageBuffer(0)(&o)
+		sub := newSubscription(client, conn, psc, []string{"ch"}, nil, o.messageBufferSize)
+		assert.Equal(t, 100, cap(sub.Messages))
+	})
+
+	t.Run("WithMessageBuffer(-1) ignored — default used", func(t *testing.T) {
+		o := defaultSubscriptionOptions()
+		WithMessageBuffer(-1)(&o)
+		sub := newSubscription(client, conn, psc, []string{"ch"}, nil, o.messageBufferSize)
+		assert.Equal(t, 100, cap(sub.Messages))
 	})
 }
 

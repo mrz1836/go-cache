@@ -19,13 +19,13 @@ func TestDelete(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Test no keys
@@ -39,13 +39,13 @@ func TestDelete(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Test one key
@@ -61,13 +61,13 @@ func TestDelete(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Test multiple keys
@@ -104,13 +104,13 @@ func TestKillByDependency(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Test no keys
@@ -124,13 +124,13 @@ func TestKillByDependency(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Test one key
@@ -146,13 +146,13 @@ func TestKillByDependency(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Test multiple keys
@@ -187,13 +187,13 @@ func TestDependencyManagement(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Set a key with two dependent keys
@@ -250,6 +250,61 @@ func TestDependencyManagement(t *testing.T) {
 	})
 }
 
+// TestLinkDependencies tests linkDependencies() directly against real Redis
+func TestLinkDependencies(t *testing.T) {
+	t.Run("creates dependency sets - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, conn, err := loadRealRedis(t)
+		require.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		err = clearRealRedis(conn, t)
+		require.NoError(t, err)
+
+		err = linkDependencies(conn, "mykey", "dep-a", "dep-b")
+		require.NoError(t, err)
+
+		// mykey should appear in the set for dep-a
+		var ok bool
+		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"dep-a", "mykey")
+		require.NoError(t, err)
+		assert.True(t, ok)
+
+		// mykey should appear in the set for dep-b
+		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"dep-b", "mykey")
+		require.NoError(t, err)
+		assert.True(t, ok)
+	})
+
+	t.Run("idempotent re-link - real redis", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping live local redis tests")
+		}
+
+		client, conn, err := loadRealRedis(t)
+		require.NoError(t, err)
+		defer client.CloseAll(conn)
+
+		err = clearRealRedis(conn, t)
+		require.NoError(t, err)
+
+		err = linkDependencies(conn, "mykey", "dep-a")
+		require.NoError(t, err)
+
+		// Call again — SADD is idempotent; no error expected
+		err = linkDependencies(conn, "mykey", "dep-a")
+		require.NoError(t, err)
+
+		var ok bool
+		ok, err = SetIsMemberRaw(conn, DependencyPrefix+"dep-a", "mykey")
+		require.NoError(t, err)
+		assert.True(t, ok)
+	})
+}
+
 // TestHashMapDependencyManagement tests HASH map dependency functionality
 func TestHashMapDependencyManagement(t *testing.T) {
 	// todo: mock all scenarios
@@ -260,13 +315,13 @@ func TestHashMapDependencyManagement(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Create pairs

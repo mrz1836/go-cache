@@ -20,13 +20,13 @@ func TestWriteLock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Write a lock
@@ -42,13 +42,13 @@ func TestWriteLock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Write a lock
@@ -64,13 +64,13 @@ func TestWriteLock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Write a lock
@@ -91,13 +91,13 @@ func TestWriteLock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Write a lock
@@ -118,13 +118,13 @@ func TestWriteLock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Write a lock
@@ -167,13 +167,13 @@ func TestReleaseLock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Write a lock
@@ -194,13 +194,13 @@ func TestReleaseLock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Write a lock
@@ -226,13 +226,13 @@ func TestReleaseLock(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Write a lock

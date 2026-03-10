@@ -17,7 +17,7 @@ func TestHashSet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -75,13 +75,13 @@ func TestHashSet(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -116,7 +116,7 @@ func TestHashGet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -154,13 +154,13 @@ func TestHashGet(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -198,7 +198,7 @@ func TestHashMapSet(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -276,13 +276,13 @@ func TestHashMapSet(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Create pairs
@@ -344,7 +344,7 @@ func TestHashMapSetExp(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -425,13 +425,13 @@ func TestHashMapSetExp(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Create pairs

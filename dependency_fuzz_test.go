@@ -24,7 +24,7 @@ func FuzzKillByDependency(f *testing.F) {
 
 		keys := strings.Split(keysStr, ",")
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		args := make([]interface{}, len(keys)+2)
@@ -67,7 +67,7 @@ func FuzzDelete(f *testing.F) {
 
 		keys := strings.Split(keysStr, ",")
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		args := make([]interface{}, len(keys)+2)
@@ -109,7 +109,7 @@ func FuzzLinkDependencies(f *testing.F) {
 
 		dependencies := strings.Split(dependenciesStr, ",")
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(MultiCommand).Expect("QUEUED")
@@ -141,7 +141,7 @@ func FuzzKillByDependencyWithVariousInputs(f *testing.F) {
 			return
 		}
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		args := []interface{}{killByDependencySha, 0, DependencyPrefix + key}
@@ -174,7 +174,7 @@ func FuzzKillByDependencyRaw(f *testing.F) {
 
 		keys := strings.Split(keysStr, ",")
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		args := make([]interface{}, len(keys)+2)
@@ -215,7 +215,7 @@ func FuzzDependencyOperationsWithEdgeCases(f *testing.F) {
 			return
 		}
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(MultiCommand).Expect("QUEUED")
@@ -268,7 +268,7 @@ func FuzzEmptyKeyHandling(f *testing.F) {
 	f.Add(true)
 
 	f.Fuzz(func(t *testing.T, _ bool) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		ctx := context.Background()

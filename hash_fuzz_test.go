@@ -18,7 +18,7 @@ func FuzzHashSet(f *testing.F) {
 	f.Add("hash\x00\x01\x02", "key\x00\x01\x02", "value\x00\x01\x02", "dep\x00\x01\x02")
 
 	f.Fuzz(func(t *testing.T, hashName, hashKey, value, dependency string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(HashKeySetCommand, hashName, hashKey, value).Expect("OK")
@@ -45,7 +45,7 @@ func FuzzHashGet(f *testing.F) {
 	f.Add("hash\x00\x01\x02", "key\x00\x01\x02")
 
 	f.Fuzz(func(t *testing.T, hashName, hashKey string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		expectedValue := "test-value-for-" + hashKey
@@ -88,7 +88,7 @@ func FuzzHashMapSet(f *testing.F) {
 			args[2*i+2] = keyValue[1]
 		}
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(HashMapSetCommand, args...).Expect("OK")
@@ -118,7 +118,7 @@ func FuzzHashMapGet(f *testing.F) {
 
 		keys := strings.Split(keysStr, ",")
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		interfaceKeys := make([]interface{}, len(keys))
@@ -174,7 +174,7 @@ func FuzzHashMapSetExp(f *testing.F) {
 			ttlSeconds = 86400
 		}
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		ttl := time.Duration(ttlSeconds) * time.Second
@@ -207,7 +207,7 @@ func FuzzHashMapOperationsRoundTrip(f *testing.F) {
 			return
 		}
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		var pairs [][2]interface{}

@@ -18,7 +18,7 @@ func FuzzSetAdd(f *testing.F) {
 	f.Add(strings.Repeat("long-set-", 100), strings.Repeat("long-member-", 100), "dep")
 
 	f.Fuzz(func(t *testing.T, setName, member, dependency string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(AddToSetCommand, setName, member).Expect(int64(1))
@@ -51,7 +51,7 @@ func FuzzSetAddMany(f *testing.F) {
 
 		members := strings.Split(membersStr, ",")
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		args := make([]interface{}, len(members)+1)
@@ -81,7 +81,7 @@ func FuzzSetIsMember(f *testing.F) {
 	f.Add(strings.Repeat("long-set-", 50), strings.Repeat("long-member-", 50))
 
 	f.Fuzz(func(t *testing.T, setName, member string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(IsMemberCommand, setName, member).Expect(int64(1))
@@ -107,7 +107,7 @@ func FuzzSetRemoveMember(f *testing.F) {
 	f.Add(strings.Repeat("long-set-", 50), strings.Repeat("long-member-", 50))
 
 	f.Fuzz(func(t *testing.T, setName, member string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(RemoveMemberCommand, setName, member).Expect(int64(1))
@@ -133,7 +133,7 @@ func FuzzSetMembers(f *testing.F) {
 		if expectedMembersStr != "" {
 			expectedMembers = strings.Split(expectedMembersStr, ",")
 		}
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		expectedValues := make([]interface{}, len(expectedMembers))
@@ -167,7 +167,7 @@ func FuzzSetOperationsRoundTrip(f *testing.F) {
 			return
 		}
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		var members []string
@@ -234,7 +234,7 @@ func FuzzSetAddWithDependencies(f *testing.F) {
 	f.Add("unicode-set-🏠", "unicode-member-🔑", "unicode-dep1-🎯", "unicode-dep2-🚀")
 
 	f.Fuzz(func(t *testing.T, setName, member, dep1, dep2 string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(AddToSetCommand, setName, member).Expect(int64(1))

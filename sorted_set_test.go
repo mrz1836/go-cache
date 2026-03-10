@@ -12,13 +12,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// testFloatDelta is the tolerance used in all sorted-set float comparisons.
+const testFloatDelta = 0.0001
+
 // TestSortedSetAdd tests the method SortedSetAdd()
 func TestSortedSetAdd(t *testing.T) {
 	t.Run("sorted set add command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -62,13 +65,13 @@ func TestSortedSetAdd(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -103,7 +106,7 @@ func TestSortedSetAddMany(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -161,13 +164,13 @@ func TestSortedSetAddMany(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Fire the command
@@ -192,7 +195,7 @@ func TestSortedSetRemove(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -232,13 +235,13 @@ func TestSortedSetRemove(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add a member first
@@ -267,7 +270,7 @@ func TestSortedSetRange(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -312,13 +315,13 @@ func TestSortedSetRange(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add members
@@ -344,7 +347,7 @@ func TestSortedSetRangeWithScores(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -405,13 +408,13 @@ func TestSortedSetRangeWithScores(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add members
@@ -438,7 +441,7 @@ func TestSortedSetRangeByScore(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -483,13 +486,13 @@ func TestSortedSetRangeByScore(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add members
@@ -515,7 +518,7 @@ func TestSortedSetRangeByScoreWithScores(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -576,13 +579,13 @@ func TestSortedSetRangeByScoreWithScores(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add members
@@ -609,7 +612,7 @@ func TestSortedSetPopMin(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -682,13 +685,13 @@ func TestSortedSetPopMin(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Add members
@@ -715,7 +718,7 @@ func TestSortedSetCard(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -756,13 +759,13 @@ func TestSortedSetCard(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Empty set should have cardinality 0
@@ -814,7 +817,7 @@ func TestParseSortedSetWithScores(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, result, 1)
 		assert.Equal(t, "alpha", result[0].Member)
-		assert.InDelta(t, 1.5, result[0].Score, 1e-9)
+		assert.InDelta(t, 1.5, result[0].Score, testFloatDelta)
 	})
 
 	t.Run("valid multiple pairs parsed correctly", func(t *testing.T) {
@@ -826,9 +829,9 @@ func TestParseSortedSetWithScores(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, result, 3)
 		assert.Equal(t, "a", result[0].Member)
-		assert.InDelta(t, 1.0, result[0].Score, 1e-9)
+		assert.InDelta(t, 1.0, result[0].Score, testFloatDelta)
 		assert.Equal(t, "c", result[2].Member)
-		assert.InDelta(t, -3.5, result[2].Score, 1e-9)
+		assert.InDelta(t, -3.5, result[2].Score, testFloatDelta)
 	})
 
 	t.Run("invalid score string returns error", func(t *testing.T) {
@@ -854,7 +857,7 @@ func TestSortedSetScore(t *testing.T) {
 		t.Parallel()
 
 		// Load redis
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		assert.NotNil(t, client)
 		defer client.CloseAll(conn)
 
@@ -899,7 +902,7 @@ func TestSortedSetScore(t *testing.T) {
 		scoreResult, scoreFound, err := SortedSetScore(context.Background(), client, testKey, testStringValue)
 		require.NoError(t, err)
 		assert.True(t, scoreFound)
-		assert.InDelta(t, 3.14, scoreResult, 0.001)
+		assert.InDelta(t, 3.14, scoreResult, testFloatDelta)
 	})
 
 	t.Run("sorted set score command using real redis", func(t *testing.T) {
@@ -908,13 +911,13 @@ func TestSortedSetScore(t *testing.T) {
 		}
 
 		// Load redis
-		client, conn, err := loadRealRedis()
+		client, conn, err := loadRealRedis(t)
 		assert.NotNil(t, client)
 		require.NoError(t, err)
 		defer client.CloseAll(conn)
 
 		// Start with a fresh db
-		err = clearRealRedis(conn)
+		err = clearRealRedis(conn, t)
 		require.NoError(t, err)
 
 		// Member not found returns false, no error

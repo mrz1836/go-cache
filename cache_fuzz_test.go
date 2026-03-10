@@ -20,7 +20,7 @@ func FuzzSetAndGet(f *testing.F) {
 	f.Add("key\x00\x01\x02", "value\x00\x01\x02", "dep\x00\x01\x02", "")
 
 	f.Fuzz(func(t *testing.T, key, value, dep1, dep2 string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(SetCommand, key, value).Expect("OK")
@@ -68,7 +68,7 @@ func FuzzSetList(f *testing.F) {
 		if itemsStr != "" {
 			items = strings.Split(itemsStr, ",")
 		}
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		key := "test-list-key"
@@ -121,7 +121,7 @@ func FuzzSetToJSON(f *testing.F) {
 	f.Add("key\nwith\nnewlines", "name\nwith\nnewlines", 123)
 
 	f.Fuzz(func(t *testing.T, key, name string, value int) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		testData := TestStruct{
@@ -163,7 +163,7 @@ func FuzzSetExp(f *testing.F) {
 			ttlSeconds = 86400
 		}
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		ttl := time.Duration(ttlSeconds) * time.Second
@@ -193,7 +193,7 @@ func FuzzExists(f *testing.F) {
 	f.Add("key\x00\x01\x02")
 
 	f.Fuzz(func(t *testing.T, key string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(ExistsCommand, key).Expect(int64(1))
@@ -223,7 +223,7 @@ func FuzzExpire(f *testing.F) {
 			ttlSeconds = 86400
 		}
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		ttl := time.Duration(ttlSeconds) * time.Second
@@ -246,7 +246,7 @@ func FuzzGetBytes(f *testing.F) {
 	f.Add("binary-key", []byte{0x00, 0x01, 0x02, 0xFF})
 
 	f.Fuzz(func(t *testing.T, key string, value []byte) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(GetCommand, key).Expect(value)
@@ -276,7 +276,7 @@ func FuzzDeleteWithoutDependency(f *testing.F) {
 
 		keys := strings.Split(keysStr, ",")
 
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		for _, key := range keys {
@@ -299,7 +299,7 @@ func FuzzPing(f *testing.F) {
 	f.Add(true)
 
 	f.Fuzz(func(t *testing.T, _ bool) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(PingCommand).Expect("PONG")

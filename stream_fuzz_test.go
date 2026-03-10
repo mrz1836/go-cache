@@ -23,7 +23,7 @@ func FuzzStreamAdd(f *testing.F) {
 	f.Add("mystream", "0", "zero-start-id")
 
 	f.Fuzz(func(t *testing.T, key, fieldName, fieldValue string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		fields := map[string]string{fieldName: fieldValue}
@@ -58,7 +58,7 @@ func FuzzStreamRead(f *testing.F) {
 	f.Add("mystream", "*", int64(10))
 
 	f.Fuzz(func(t *testing.T, key, startID string, count int64) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		// Return empty result from the mock (nil → ErrNil from Redis, or an empty response)

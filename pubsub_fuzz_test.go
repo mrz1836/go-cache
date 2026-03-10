@@ -25,7 +25,7 @@ func FuzzPublishRaw(f *testing.F) {
 	f.Add(strings.Repeat("long-channel-", 50), strings.Repeat("long-message-", 50))
 
 	f.Fuzz(func(t *testing.T, channel, message string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(PublishCommand, channel, message).Expect(int64(0))
@@ -48,7 +48,7 @@ func FuzzPublish(f *testing.F) {
 	f.Add(strings.Repeat("ch-", 100), "v")
 
 	f.Fuzz(func(t *testing.T, channel, message string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(PublishCommand, channel, message).Expect(int64(1))

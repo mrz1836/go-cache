@@ -21,7 +21,7 @@ func FuzzSortedSetAdd(f *testing.F) {
 	f.Add("neg-score", "member", -9.99e99)
 
 	f.Fuzz(func(t *testing.T, key, member string, score float64) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(SortedSetAddCommand, key, score, member).Expect(int64(1))
@@ -47,7 +47,7 @@ func FuzzSortedSetRange(f *testing.F) {
 	f.Add(strings.Repeat("long-zset-", 50), int64(0), int64(999))
 
 	f.Fuzz(func(t *testing.T, key string, start, stop int64) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(SortedSetRangeCommand, key, start, stop).Expect([]interface{}{})
@@ -76,7 +76,7 @@ func FuzzSortedSetRangeByScore(f *testing.F) {
 	f.Add("binary-zset", "0.0", "0.0")
 
 	f.Fuzz(func(t *testing.T, key, minScore, maxScore string) {
-		client, conn := loadMockRedis()
+		client, conn := loadMockRedis(t)
 		defer client.Close()
 
 		conn.Command(SortedSetRangeByScoreCmd, key, minScore, maxScore).Expect([]interface{}{})

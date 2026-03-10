@@ -44,9 +44,6 @@ func main() {
 		}
 	}()
 
-	// Give the subscriber a moment to connect
-	time.Sleep(100 * time.Millisecond)
-
 	// Publish messages from the main goroutine
 	for _, payload := range []string{"hello", "world", "goodbye"} {
 		n, pubErr := cache.Publish(ctx, client, channel, payload)

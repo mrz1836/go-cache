@@ -134,9 +134,6 @@ func TestSubscribe(t *testing.T) {
 		require.NotNil(t, sub)
 		defer func() { _ = sub.Close() }()
 
-		// Give the subscription goroutine a moment to start receiving
-		time.Sleep(50 * time.Millisecond)
-
 		// Publish from the separate publisher connection
 		_, err = PublishRaw(pubConn, channel, payload)
 		require.NoError(t, err)
@@ -174,8 +171,6 @@ func TestSubscribe(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, sub)
 		defer func() { _ = sub.Close() }()
-
-		time.Sleep(50 * time.Millisecond)
 
 		_, err = PublishRaw(pubConn, ch1, "msg-ch1")
 		require.NoError(t, err)
@@ -234,8 +229,6 @@ func TestPSubscribe(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, sub)
 		defer func() { _ = sub.Close() }()
-
-		time.Sleep(50 * time.Millisecond)
 
 		_, err = PublishRaw(pubConn, targetChannel, payload)
 		require.NoError(t, err)

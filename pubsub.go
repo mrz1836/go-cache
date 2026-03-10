@@ -3,12 +3,15 @@ package cache
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
 )
+
+var errUnexpectedSubscribeType = errors.New("unexpected subscribe confirmation type")
 
 const (
 	// pubSubMessageBufferSize is the number of messages to buffer before blocking
@@ -97,6 +100,20 @@ func Subscribe(ctx context.Context, client *Client, channels ...string) (*Subscr
 		return nil, err
 	}
 
+	// Read one subscription confirmation per channel to guarantee the subscription
+	// is registered with Redis before returning. Without this, callers that publish
+	// immediately after Subscribe may lose messages.
+	for range channels {
+		v := psc.Receive()
+		if _, ok := v.(redis.Subscription); !ok {
+			_ = conn.Close()
+			if err, ok2 := v.(error); ok2 {
+				return nil, err
+			}
+			return nil, fmt.Errorf("%w: %T", errUnexpectedSubscribeType, v)
+		}
+	}
+
 	sub := newSubscription(client, conn, psc, channels, nil)
 	sub.start(ctx)
 	return sub, nil
@@ -124,6 +141,19 @@ func PSubscribe(ctx context.Context, client *Client, patterns ...string) (*Subsc
 	if err = psc.PSubscribe(toInterfaces(patterns)...); err != nil {
 		_ = conn.Close()
 		return nil, err
+	}
+
+	// Read one subscription confirmation per pattern to guarantee the subscription
+	// is registered with Redis before returning.
+	for range patterns {
+		v := psc.Receive()
+		if _, ok := v.(redis.Subscription); !ok {
+			_ = conn.Close()
+			if err, ok2 := v.(error); ok2 {
+				return nil, err
+			}
+			return nil, fmt.Errorf("%w: %T", errUnexpectedSubscribeType, v)
+		}
 	}
 
 	sub := newSubscription(client, conn, psc, nil, patterns)

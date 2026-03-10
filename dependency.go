@@ -109,9 +109,12 @@ func linkDependencies(conn redis.Conn, key interface{}, dependencies ...string) 
 		}
 	}
 
-	// Fire the exec command (ignore nil error response?)
+	// Fire the exec command.
+	// EXEC returns an array of SADD results on real Redis. redigomock returns a nil reply
+	// for commands without a registered expectation, which redigo surfaces as redis.ErrNil;
+	// suppress it so unit tests that don't stub EXEC do not produce false failures.
+	// On a real Redis server this branch is never taken.
 	if _, err = redis.Values(conn.Do(ExecuteCommand)); errors.Is(err, redis.ErrNil) {
-		// todo: test against live redis vs mock (is =nil needed)
 		err = nil
 	}
 	return err

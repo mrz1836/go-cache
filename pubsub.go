@@ -13,8 +13,29 @@ import (
 
 var errUnexpectedSubscribeType = errors.New("unexpected subscribe confirmation type")
 
+// SubscriptionOption configures a Subscription at creation time.
+type SubscriptionOption func(*subscriptionOptions)
+
+type subscriptionOptions struct {
+	messageBufferSize int
+}
+
+func defaultSubscriptionOptions() subscriptionOptions {
+	return subscriptionOptions{messageBufferSize: pubSubMessageBufferSize}
+}
+
+// WithMessageBuffer sets the capacity of the Messages channel.
+// Values less than 1 are ignored and the default (100) is used.
+func WithMessageBuffer(n int) SubscriptionOption {
+	return func(o *subscriptionOptions) {
+		if n >= 1 {
+			o.messageBufferSize = n
+		}
+	}
+}
+
 const (
-	// pubSubMessageBufferSize is the number of messages to buffer before blocking
+	// pubSubMessageBufferSize is the default number of messages to buffer before blocking
 	pubSubMessageBufferSize = 100
 
 	// pubSubReconnectMin is the initial backoff duration
@@ -39,7 +60,8 @@ type Message struct {
 // Subscription represents an active Redis pub/sub subscription.
 // Messages are delivered on the Messages channel; call Close() to unsubscribe and release resources.
 type Subscription struct {
-	Messages <-chan Message // Buffered (100) incoming messages; receive until closed
+	Messages <-chan Message // Buffered incoming messages; receive until closed
+	Errors   <-chan error   // Buffered reconnection errors; non-blocking — excess errors are dropped
 
 	client    *Client
 	conn      redis.Conn
@@ -49,6 +71,7 @@ type Subscription struct {
 	msgCh     chan Message
 	done      chan struct{}
 	closeOnce sync.Once
+	connOnce  sync.Once      // guards conn.Close(); separate from closeOnce to avoid deadlock
 	wg        sync.WaitGroup // tracks the readLoop goroutine; Wait() before conn.Close()
 	errCh     chan error     // internal; receives reconnection errors for visibility
 }
@@ -82,7 +105,7 @@ func PublishRaw(conn redis.Conn, channel string, message interface{}) (int64, er
 // Creates a dedicated connection (not from the pool command-cycle).
 //
 // Spec: https://redis.io/commands/subscribe
-func Subscribe(ctx context.Context, client *Client, channels ...string) (*Subscription, error) {
+func Subscribe(ctx context.Context, client *Client, channels []string, opts ...SubscriptionOption) (*Subscription, error) {
 	if len(channels) == 0 {
 		return nil, redis.ErrNil
 	}
@@ -114,7 +137,11 @@ func Subscribe(ctx context.Context, client *Client, channels ...string) (*Subscr
 		}
 	}
 
-	sub := newSubscription(client, conn, psc, channels, nil)
+	o := defaultSubscriptionOptions()
+	for _, opt := range opts {
+		opt(&o)
+	}
+	sub := newSubscription(client, conn, psc, channels, nil, o.messageBufferSize)
 	sub.start(ctx)
 	return sub, nil
 }
@@ -125,7 +152,7 @@ func Subscribe(ctx context.Context, client *Client, channels ...string) (*Subscr
 // Creates a dedicated connection (not from the pool command-cycle).
 //
 // Spec: https://redis.io/commands/psubscribe
-func PSubscribe(ctx context.Context, client *Client, patterns ...string) (*Subscription, error) {
+func PSubscribe(ctx context.Context, client *Client, patterns []string, opts ...SubscriptionOption) (*Subscription, error) {
 	if len(patterns) == 0 {
 		return nil, redis.ErrNil
 	}
@@ -156,7 +183,11 @@ func PSubscribe(ctx context.Context, client *Client, patterns ...string) (*Subsc
 		}
 	}
 
-	sub := newSubscription(client, conn, psc, nil, patterns)
+	o := defaultSubscriptionOptions()
+	for _, opt := range opts {
+		opt(&o)
+	}
+	sub := newSubscription(client, conn, psc, nil, patterns, o.messageBufferSize)
 	sub.start(ctx)
 	return sub, nil
 }
@@ -178,15 +209,22 @@ func (s *Subscription) Close() error {
 	// Wait for the readLoop goroutine to stop (it exits within
 	// pubSubReceivePollInterval after s.done is closed).
 	s.wg.Wait()
-	// Now it is safe to close the connection — no goroutine is calling Receive().
-	return s.conn.Close()
+	// Close the connection exactly once. connOnce guards against concurrent
+	// Close() calls (e.g. explicit caller + context-cancel inner goroutine).
+	var closeErr error
+	s.connOnce.Do(func() {
+		closeErr = s.conn.Close()
+	})
+	return closeErr
 }
 
 // newSubscription creates a Subscription struct (does not start the goroutine).
-func newSubscription(client *Client, conn redis.Conn, psc redis.PubSubConn, channels, patterns []string) *Subscription {
-	msgCh := make(chan Message, pubSubMessageBufferSize)
+func newSubscription(client *Client, conn redis.Conn, psc redis.PubSubConn, channels, patterns []string, bufSize int) *Subscription {
+	msgCh := make(chan Message, bufSize)
+	errCh := make(chan error, 16)
 	return &Subscription{
 		Messages: msgCh,
+		Errors:   errCh,
 		client:   client,
 		conn:     conn,
 		psc:      psc,
@@ -194,7 +232,7 @@ func newSubscription(client *Client, conn redis.Conn, psc redis.PubSubConn, chan
 		patterns: patterns,
 		msgCh:    msgCh,
 		done:     make(chan struct{}),
-		errCh:    make(chan error, 16),
+		errCh:    errCh,
 	}
 }
 

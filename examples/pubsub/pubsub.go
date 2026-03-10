@@ -30,7 +30,7 @@ func main() {
 	const channel = "notifications"
 
 	// Subscribe to the channel
-	sub, err := cache.Subscribe(ctx, client, channel)
+	sub, err := cache.Subscribe(ctx, client, []string{channel})
 	if err != nil {
 		log.Fatalf("Subscribe error: %s", err.Error())
 	}

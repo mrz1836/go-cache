@@ -143,6 +143,11 @@ func StreamReadRaw(conn redis.Conn, key, startID string, count int64) ([]StreamE
 	return parseStreamEntries(values)
 }
 
+// errConnNoContext is the error message returned by redigo's DoContext when the underlying
+// connection does not implement ConnWithContext (e.g. mock connections). Defined as a
+// constant so there is a single place to update if redigo ever changes this message.
+const errConnNoContext = "redis: connection does not support ConnWithContext"
+
 // connWithContext is satisfied by redigo network connections that support context-aware Do.
 // Using this avoids spawning a goroutine and eliminates the concurrent Close/Do race on
 // the pool's activeConn.state when context cancellation is needed.
@@ -176,7 +181,7 @@ func StreamReadBlock(ctx context.Context, client *Client, key, startID string, c
 	// DoContext returns errContextNotSupported — detect and fall through.
 	if cwt, ok := conn.(connWithContext); ok {
 		values, doErr := redis.Values(cwt.DoContext(ctx, StreamReadCommand, "BLOCK", blockMs, "COUNT", count, "STREAMS", key, startID))
-		if doErr == nil || doErr.Error() != "redis: connection does not support ConnWithContext" {
+		if doErr == nil || doErr.Error() != errConnNoContext {
 			// DoContext executed (success or a real Redis error) — we are done.
 			client.CloseConnection(conn)
 			if doErr != nil {
@@ -203,7 +208,7 @@ func StreamReadBlock(ctx context.Context, client *Client, key, startID string, c
 	case <-ctx.Done():
 		_ = conn.Close() // unblocks the goroutine; error intentionally ignored
 		<-ch             // wait for goroutine to exit
-		client.CloseConnection(conn)
+		// Do NOT call CloseConnection here — conn is already closed above.
 		return nil, ctx.Err()
 	case r := <-ch:
 		client.CloseConnection(conn)

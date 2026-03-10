@@ -5,10 +5,8 @@ import (
 	"errors"
 	"net"
 	"net/url"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
+	"sync"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -24,18 +22,20 @@ var (
 
 // Client is used to store the redis.Pool and additional fields/information
 type Client struct {
-	DependencyScriptSha string // Stored SHA of the script after loaded
-	// Pool                *redis.Pool // Redis pool for the client (get connections)
-	Pool          nrredis.Pool // Redis pool for the client (get connections)
-	ScriptsLoaded []string     // List of scripts that have been loaded
+	DependencyScriptSha string       // Stored SHA of the script after loaded
+	Pool                nrredis.Pool // Redis pool for the client (get connections)
+	ScriptsLoaded       []string     // List of scripts that have been loaded
+	mu                  sync.RWMutex // guards Pool and ScriptsLoaded
 }
 
 // Close closes the connection pool
 func (c *Client) Close() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if c.Pool != nil {
 		_ = c.Pool.Close()
+		c.Pool = nil
 	}
-	c.Pool = nil
 }
 
 // CloseAll closes the connection pool and given connection
@@ -54,6 +54,8 @@ func (c *Client) GetConnection() redis.Conn {
 // GetConnectionWithContext will return a connection from the pool. (convenience method)
 // The connection must be closed when you're finished
 func (c *Client) GetConnectionWithContext(ctx context.Context) (redis.Conn, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	if c.Pool != nil {
 		return c.Pool.GetContext(ctx)
 	}
@@ -126,9 +128,6 @@ func Connect(ctx context.Context, redisURL string,
 		}
 	}
 
-	// Cleanup
-	cleanUp(client.Pool)
-
 	// Register scripts if enabled
 	if dependencyMode {
 		if err = client.RegisterScripts(ctx); err != nil {
@@ -162,8 +161,8 @@ func ConnectToURL(connectToURL string, options ...redis.DialOption) (conn redis.
 	if redisURL.User != nil {
 		if password, ok := redisURL.User.Password(); ok {
 			if _, err = conn.Do(AuthCommand, password); err != nil {
-				conn = nil
-				return conn, err
+				_ = conn.Close()
+				return nil, err
 			}
 		}
 	}
@@ -181,21 +180,6 @@ func buildDialer(url string, options ...redis.DialOption) func() (redis.Conn, er
 	return func() (redis.Conn, error) {
 		return ConnectToURL(url, options...)
 	}
-}
-
-// cleanUp is fired after the pool is created
-// Source: https://github.com/pete911/examples-redigo
-// todo: is this really needed?
-func cleanUp(pool nrredis.Pool) {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
-	signal.Notify(c, syscall.SIGKILL) //nolint:staticcheck // ignore
-	go func(pool nrredis.Pool) {
-		<-c
-		_ = pool.Close()
-		os.Exit(0)
-	}(pool)
 }
 
 // extractURL will extract the parts of the redis url

@@ -45,7 +45,9 @@ func RegisterScriptRaw(client *Client, conn redis.Conn, script string) (sha stri
 	if sha, err = redis.String(conn.Do(ScriptCommand, LoadCommand, script)); err != nil {
 		return sha, err
 	}
+	client.mu.Lock()
 	client.ScriptsLoaded = append(client.ScriptsLoaded, sha)
+	client.mu.Unlock()
 	return sha, err
 }
 

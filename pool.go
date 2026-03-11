@@ -96,6 +96,7 @@ func Connect(ctx context.Context, redisURL string,
 		MaxActive:       maxActiveConnections,
 		MaxConnLifetime: maxConnLifetime,
 		MaxIdle:         idleConnections,
+		Wait:            true,
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if time.Since(t) < time.Minute {
 				return nil

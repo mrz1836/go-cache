@@ -7,8 +7,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gomodule/redigo/redis"
 	"github.com/stretchr/testify/assert"
 )
+
+// fuzzDialOptions returns short-timeout dial options used by fuzz tests
+// that invoke a real redis dial. Fuzz inputs may generate URLs that point
+// to slow/non-routable hosts; bounded timeouts keep per-iteration runtime
+// predictable and prevent the Go fuzz engine from reporting
+// "context deadline exceeded" when a worker gets stuck in net.Dial.
+func fuzzDialOptions() []redis.DialOption {
+	return []redis.DialOption{
+		redis.DialConnectTimeout(500 * time.Millisecond),
+		redis.DialReadTimeout(500 * time.Millisecond),
+		redis.DialWriteTimeout(500 * time.Millisecond),
+	}
+}
 
 func FuzzExtractURL(f *testing.F) {
 	f.Add("redis://localhost:6379")
@@ -64,7 +78,7 @@ func FuzzBuildDialer(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, redisURL string) {
 		assert.NotPanics(t, func() {
-			dialer := buildDialer(redisURL)
+			dialer := buildDialer(redisURL, fuzzDialOptions()...)
 			assert.NotNil(t, dialer)
 
 			if redisURL != "" {
@@ -116,7 +130,7 @@ func FuzzConnectParams(f *testing.F) {
 		idleTimeoutDuration := time.Duration(idleTimeout) * time.Second
 
 		assert.NotPanics(t, func() {
-			client, err := Connect(ctx, redisURL, maxActive, maxIdle, maxConnLifetimeDuration, idleTimeoutDuration, dependencyMode, newRelicEnabled)
+			client, err := Connect(ctx, redisURL, maxActive, maxIdle, maxConnLifetimeDuration, idleTimeoutDuration, dependencyMode, newRelicEnabled, fuzzDialOptions()...)
 			if err != nil {
 				assert.Nil(t, client)
 			} else {

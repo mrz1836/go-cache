@@ -43,11 +43,6 @@ const (
 
 	// pubSubReconnectMax is the maximum backoff duration
 	pubSubReconnectMax = 30 * time.Second
-
-	// pubSubReceivePollInterval is how long ReceiveWithTimeout waits before
-	// the readLoop re-checks the done channel. Kept short so Close() completes
-	// quickly, long enough to avoid unnecessary CPU spin.
-	pubSubReceivePollInterval = 100 * time.Millisecond
 )
 
 // Message represents a pub/sub message received from a Redis channel
@@ -195,27 +190,45 @@ func PSubscribe(ctx context.Context, client *Client, patterns []string, opts ...
 // Close unsubscribes and releases all resources held by the Subscription.
 // It is safe to call Close multiple times; subsequent calls are no-ops.
 //
-// Close signals the readLoop goroutine to stop, waits for it to exit, and
-// then closes the underlying connection. This ordering is critical: the
-// pool connection's Close() implementation drains pending responses by
-// calling Receive() internally. If the readLoop goroutine is still blocked
-// in Receive() when conn.Close() is called, both goroutines compete on the
-// same non-thread-safe connection, causing a deadlock. Waiting for the
-// goroutine (via s.wg) before calling conn.Close() eliminates this race.
+// Shutdown follows the canonical redigo pub/sub pattern:
+//  1. Close the done channel so the outer reconnect loop can exit on the
+//     next iteration.
+//  2. Send UNSUBSCRIBE / PUNSUBSCRIBE on the active PubSubConn. Redigo
+//     supports one concurrent reader and one concurrent writer on the
+//     same conn, so this Send is safe even while readLoop is blocked in
+//     Receive(). The server replies with Subscription{Count: 0}, which
+//     readLoop detects as its clean exit signal.
+//  3. Wait for the readLoop goroutine to exit before closing the pooled
+//     connection — redigo's conn.Close drains pending replies via
+//     Receive() and is not safe to call concurrently with another
+//     reader.
+//  4. Close the pooled connection to release the pool slot. Any cleanup
+//     error is intentionally ignored: the pool slot is released either
+//     way, and pub/sub conns can be left in a broken state after a
+//     reconnect-backoff window or a server-side disconnect, producing
+//     spurious "use of closed network connection" errors during the
+//     pool's UNSUBSCRIBE cleanup.
 func (s *Subscription) Close() error {
 	s.closeOnce.Do(func() {
 		close(s.done)
+		// Signal the readLoop to exit cleanly. Errors are ignored: if the
+		// conn is already broken, the readLoop's Receive() will return an
+		// error and the goroutine will exit on its own.
+		if len(s.channels) > 0 {
+			_ = s.psc.Unsubscribe()
+		}
+		if len(s.patterns) > 0 {
+			_ = s.psc.PUnsubscribe()
+		}
 	})
-	// Wait for the readLoop goroutine to stop (it exits within
-	// pubSubReceivePollInterval after s.done is closed).
+	// Wait for readLoop to finish before closing the underlying conn.
 	s.wg.Wait()
-	// Close the connection exactly once. connOnce guards against concurrent
-	// Close() calls (e.g. explicit caller + context-cancel inner goroutine).
-	var closeErr error
+	// Release the pool slot. Pool cleanup errors for pub/sub conns are not
+	// actionable — the slot is released regardless.
 	s.connOnce.Do(func() {
-		closeErr = s.conn.Close()
+		_ = s.conn.Close()
 	})
-	return closeErr
+	return nil
 }
 
 // newSubscription creates a Subscription struct (does not start the goroutine).
@@ -287,27 +300,21 @@ func (s *Subscription) start(ctx context.Context) {
 	}()
 }
 
-// readLoop reads from the current PubSubConn until it returns a real error or
-// s.done is closed.
+// readLoop blocks on PubSubConn.Receive() and delivers incoming messages to
+// the Subscription's Messages channel until one of the following:
+//   - Close() unsubscribes and the server replies with a zero-count
+//     Subscription message (clean shutdown signal).
+//   - The connection errors out (the outer loop will attempt a reconnect
+//     unless s.done is closed).
+//   - A message send to s.msgCh loses the race with s.done (late shutdown
+//     while delivery is in flight).
 //
-// To allow timely shutdown without blocking indefinitely in Receive(), the loop
-// uses PubSubConn.ReceiveWithTimeout with a short poll interval so that the
-// goroutine can check s.done between polls. On a timeout error the loop simply
-// re-checks s.done and retries; any other error exits so the caller can reconnect.
+// Using blocking Receive() avoids redigo's ReceiveWithTimeout, which treats
+// read-deadline expiry as fatal and closes the underlying net.Conn — the
+// root cause of the "use of closed network connection" error during Close().
 func (s *Subscription) readLoop() {
 	for {
-		select {
-		case <-s.done:
-			return
-		default:
-		}
-
-		// ReceiveWithTimeout returns the same typed values as Receive()
-		// (redis.Message, redis.Subscription, or error) but unblocks after the
-		// poll interval so we can check s.done without waiting indefinitely.
-		v := s.psc.ReceiveWithTimeout(pubSubReceivePollInterval)
-
-		switch msg := v.(type) {
+		switch msg := s.psc.Receive().(type) {
 		case redis.Message:
 			// Both regular (SUBSCRIBE) and pattern (PSUBSCRIBE) messages arrive as
 			// redis.Message; Pattern is non-empty only for pattern-matched messages.
@@ -318,13 +325,14 @@ func (s *Subscription) readLoop() {
 				return
 			}
 		case redis.Subscription:
-			// Subscription confirmation — no user-facing action needed.
-		case error:
-			// A timeout means we should re-check s.done; any other error exits so
-			// the caller can reconnect.
-			if isNetTimeout(msg) {
-				continue
+			// Count == 0 means every channel/pattern has been unsubscribed —
+			// this is the clean-exit signal sent by Close() via Unsubscribe /
+			// PUnsubscribe. Any other Count is just a subscribe-state update
+			// and is ignored.
+			if msg.Count == 0 {
+				return
 			}
+		case error:
 			return
 		}
 	}

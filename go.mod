@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/gomodule/redigo v1.9.3
-	github.com/newrelic/go-agent/v3 v3.43.1
+	github.com/newrelic/go-agent/v3 v3.43.2
 	github.com/rafaeljusto/redigomock v2.4.0+incompatible
 	github.com/stretchr/testify v1.11.1
 )

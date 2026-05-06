@@ -16,6 +16,7 @@ import (
 
 // Testing variables
 const (
+	testEmptyKey             = "empty key"
 	testDependantKey         = "test-dependant-key-name"
 	testHashName             = "test-hash-name"
 	testIdleTimeout          = 240 * time.Second

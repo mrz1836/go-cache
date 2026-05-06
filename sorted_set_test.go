@@ -36,7 +36,7 @@ func TestSortedSetAdd(t *testing.T) {
 			{"negative score", testKey, -1.0, testStringValue},
 			{"max float score", testKey, math.MaxFloat64, testStringValue},
 			{"smallest nonzero score", testKey, math.SmallestNonzeroFloat64, testStringValue},
-			{"empty key", "", 1.0, testStringValue},
+			{testEmptyKey, "", 1.0, testStringValue},
 			{"empty member", testKey, 1.0, ""},
 		}
 		for _, test := range tests {
@@ -127,7 +127,7 @@ func TestSortedSetAddMany(t *testing.T) {
 			},
 			{"zero score", testKey, []SortedSetMember{{Member: "m1", Score: 0.0}}},
 			{"negative score", testKey, []SortedSetMember{{Member: "m1", Score: -1.0}}},
-			{"empty key", "", []SortedSetMember{{Member: "m1", Score: 1.0}}},
+			{testEmptyKey, "", []SortedSetMember{{Member: "m1", Score: 1.0}}},
 			{"empty members", testKey, []SortedSetMember{}},
 		}
 		for _, test := range tests {
@@ -205,7 +205,7 @@ func TestSortedSetRemove(t *testing.T) {
 			member   interface{}
 		}{
 			{"basic remove", testKey, testStringValue},
-			{"empty key", "", testStringValue},
+			{testEmptyKey, "", testStringValue},
 			{"empty member", testKey, ""},
 			{"integer member", testKey, 42},
 		}
@@ -285,7 +285,7 @@ func TestSortedSetRange(t *testing.T) {
 			{"full range start=0 stop=-1", testKey, 0, -1, []interface{}{"m1", "m2", "m3"}, 3},
 			{"first element only", testKey, 0, 0, []interface{}{"m1"}, 1},
 			{"out of range", testKey, 5, 10, []interface{}{}, 0},
-			{"empty key", "", 0, -1, []interface{}{}, 0},
+			{testEmptyKey, "", 0, -1, []interface{}{}, 0},
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
@@ -456,7 +456,7 @@ func TestSortedSetRangeByScore(t *testing.T) {
 			{"neg-inf to pos-inf", testKey, "-inf", "+inf", []interface{}{"m1", "m2"}, 2},
 			{"specific range", testKey, "1", "3", []interface{}{"m1"}, 1},
 			{"empty result", testKey, "100", "200", []interface{}{}, 0},
-			{"empty key", "", "-inf", "+inf", []interface{}{}, 0},
+			{testEmptyKey, "", "-inf", "+inf", []interface{}{}, 0},
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
@@ -644,7 +644,7 @@ func TestSortedSetPopMin(t *testing.T) {
 				0, "", 0,
 			},
 			{
-				"empty key",
+				testEmptyKey,
 				"", 1,
 				[]interface{}{},
 				0, "", 0,
@@ -729,7 +729,7 @@ func TestSortedSetCard(t *testing.T) {
 		}{
 			{"non-empty set", testKey, 3},
 			{"empty set", testKey, 0},
-			{"empty key", "", 0},
+			{testEmptyKey, "", 0},
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
@@ -874,7 +874,7 @@ func TestSortedSetScore(t *testing.T) {
 			{"member not found", testKey, "missing", redis.ErrNil, true, false, 0},
 			{"zero score", testKey, "m1", []byte("0"), false, true, 0},
 			{"negative score", testKey, "m1", []byte("-1"), false, true, -1.0},
-			{"empty key", "", "m1", []byte("2.0"), false, true, 2.0},
+			{testEmptyKey, "", "m1", []byte("2.0"), false, true, 2.0},
 			{"empty member", testKey, "", []byte("0.5"), false, true, 0.5},
 		}
 		for _, test := range tests {

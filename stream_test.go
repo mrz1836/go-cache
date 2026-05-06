@@ -59,7 +59,7 @@ func TestStreamAdd(t *testing.T) {
 			// Multi-field coverage is provided by the real Redis integration test.
 			{"single field", testKey, map[string]string{"field1": "value1"}},
 			{"empty fields", testKey, map[string]string{}},
-			{"empty key", "", map[string]string{"field": "value"}},
+			{testEmptyKey, "", map[string]string{"field": "value"}},
 			{"empty field value", testKey, map[string]string{"field": ""}},
 		}
 		for _, test := range tests {
@@ -155,7 +155,7 @@ func TestStreamAddCapped(t *testing.T) {
 			{"cap at 100", testKey, 100, map[string]string{"field": "value"}},
 			{"cap at 1", testKey, 1, map[string]string{"f1": "v1"}},
 			{"cap at 0", testKey, 0, map[string]string{"f1": "v1"}},
-			{"empty key", "", 10, map[string]string{"field": "value"}},
+			{testEmptyKey, "", 10, map[string]string{"field": "value"}},
 		}
 		for _, test := range tests {
 			t.Run(test.testCase, func(t *testing.T) {
@@ -534,7 +534,7 @@ func TestStreamLen(t *testing.T) {
 		}{
 			{"non-empty stream", testKey, 5},
 			{"empty stream", testKey, 0},
-			{"empty key", "", 0},
+			{testEmptyKey, "", 0},
 			{"large stream", testKey, 1000000},
 		}
 		for _, test := range tests {

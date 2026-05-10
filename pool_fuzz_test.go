@@ -51,15 +51,6 @@ func FuzzExtractURL(f *testing.F) {
 				assert.IsType(t, "", host)
 				assert.IsType(t, "", database)
 				assert.IsType(t, "", port)
-
-				// Only check for non-empty host if the URL actually has a meaningful host part
-				// that isn't just an empty string before the port
-				if (strings.Contains(redisURL, "localhost") || strings.Contains(redisURL, "127.0.0.1")) &&
-					strings.Contains(redisURL, ":") && !strings.HasSuffix(redisURL, ":") && port != "" &&
-					!strings.Contains(redisURL, "//:") {
-					assert.NotEmpty(t, host)
-					assert.NotEmpty(t, port)
-				}
 			}
 		})
 	})

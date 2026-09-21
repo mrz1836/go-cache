@@ -12,6 +12,17 @@ import (
 
 // TestSetAdd test the method SetAdd()
 func TestSetAdd(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		err := SetAdd(context.Background(), client, testKey, testStringValue)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("set add command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -109,6 +120,17 @@ func ExampleSetAdd() {
 
 // TestSetAddMany test the method SetAddMany()
 func TestSetAddMany(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		err := SetAddMany(context.Background(), client, testKey, testStringValue)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("set add many command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -200,6 +222,17 @@ func ExampleSetAddMany() {
 
 // TestSetRemoveMember test the method SetRemoveMember()
 func TestSetRemoveMember(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		err := SetRemoveMember(context.Background(), client, testKey, testStringValue)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("set remove member command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -292,6 +325,17 @@ func ExampleSetRemoveMember() {
 
 // TestSetIsMember test the method SetIsMember()
 func TestSetIsMember(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := SetIsMember(context.Background(), client, testKey, testStringValue)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("set is member command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -371,6 +415,17 @@ func ExampleSetIsMember() {
 
 // TestSetMembers will test the method SetMembers()
 func TestSetMembers(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := SetMembers(context.Background(), client, testKey)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("get members using mocked redis", func(t *testing.T) {
 		t.Parallel()
 

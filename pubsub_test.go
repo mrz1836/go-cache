@@ -66,6 +66,17 @@ func TestPublishRaw(t *testing.T) {
 
 // TestPublish tests the Publish() managed function using a mock connection
 func TestPublish(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := Publish(context.Background(), client, "channel", testStringValue)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("publish using mock client pool", func(t *testing.T) {
 		t.Parallel()
 

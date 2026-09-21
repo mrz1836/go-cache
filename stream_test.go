@@ -41,6 +41,17 @@ func makeStreamMockResponse(key string, entries []streamMockEntry) []interface{}
 
 // TestStreamAdd tests the method StreamAdd()
 func TestStreamAdd(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := StreamAdd(context.Background(), client, testKey, map[string]string{"field": "value"})
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("stream add command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -137,6 +148,17 @@ func ExampleStreamAdd() {
 
 // TestStreamAddCapped tests the method StreamAddCapped()
 func TestStreamAddCapped(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := StreamAddCapped(context.Background(), client, testKey, 100, map[string]string{"field": "value"})
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("stream add capped command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -218,6 +240,17 @@ func TestStreamAddCapped(t *testing.T) {
 
 // TestStreamRead tests the method StreamRead()
 func TestStreamRead(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := StreamRead(context.Background(), client, testKey, "0", 10)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("stream read command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -339,6 +372,17 @@ func TestStreamRead(t *testing.T) {
 
 // TestStreamReadBlock tests the method StreamReadBlock()
 func TestStreamReadBlock(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := StreamReadBlock(context.Background(), client, testKey, "0", 10, 100)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("stream read block raw using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -441,6 +485,17 @@ func TestStreamReadBlock(t *testing.T) {
 
 // TestStreamTrim tests the method StreamTrim()
 func TestStreamTrim(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := StreamTrim(context.Background(), client, testKey, 100)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("stream trim command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -519,6 +574,17 @@ func TestStreamTrim(t *testing.T) {
 
 // TestStreamLen tests the method StreamLen()
 func TestStreamLen(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := StreamLen(context.Background(), client, testKey)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("stream len command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -640,5 +706,76 @@ func TestParseStreamEntries(t *testing.T) {
 		assert.Equal(t, "2", entries[0].Fields["b"])
 		assert.Equal(t, "4-0", entries[1].ID)
 		assert.Equal(t, "3", entries[1].Fields["c"])
+	})
+
+	t.Run("outer element not a list returns error", func(t *testing.T) {
+		_, err := parseStreamEntries([]interface{}{int64(5)})
+		require.Error(t, err)
+	})
+
+	t.Run("short outer pair is skipped without error", func(t *testing.T) {
+		entries, err := parseStreamEntries([]interface{}{
+			[]interface{}{"key"},
+		})
+		require.NoError(t, err)
+		assert.Empty(t, entries)
+	})
+
+	t.Run("entry list not a list returns error", func(t *testing.T) {
+		_, err := parseStreamEntries([]interface{}{
+			[]interface{}{"key", int64(5)},
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("entry element not a list returns error", func(t *testing.T) {
+		_, err := parseStreamEntries([]interface{}{
+			[]interface{}{"key", []interface{}{int64(5)}},
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("short entry pair is skipped without error", func(t *testing.T) {
+		entries, err := parseStreamEntries([]interface{}{
+			[]interface{}{"key", []interface{}{[]interface{}{"id"}}},
+		})
+		require.NoError(t, err)
+		assert.Empty(t, entries)
+	})
+
+	t.Run("entry id not a string returns error", func(t *testing.T) {
+		_, err := parseStreamEntries([]interface{}{
+			[]interface{}{"key", []interface{}{
+				[]interface{}{int64(5), []interface{}{"f", "v"}},
+			}},
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("field list not a list returns error", func(t *testing.T) {
+		_, err := parseStreamEntries([]interface{}{
+			[]interface{}{"key", []interface{}{
+				[]interface{}{"id", int64(5)},
+			}},
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("field key not a string returns error", func(t *testing.T) {
+		_, err := parseStreamEntries([]interface{}{
+			[]interface{}{"key", []interface{}{
+				[]interface{}{"id", []interface{}{int64(5), "v"}},
+			}},
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("field value not a string returns error", func(t *testing.T) {
+		_, err := parseStreamEntries([]interface{}{
+			[]interface{}{"key", []interface{}{
+				[]interface{}{"id", []interface{}{"k", int64(5)}},
+			}},
+		})
+		require.Error(t, err)
 	})
 }

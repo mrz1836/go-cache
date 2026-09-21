@@ -17,6 +17,17 @@ const testFloatDelta = 0.0001
 
 // TestSortedSetAdd tests the method SortedSetAdd()
 func TestSortedSetAdd(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		err := SortedSetAdd(context.Background(), client, testKey, 1.0, testStringValue)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set add command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -102,6 +113,17 @@ func ExampleSortedSetAdd() {
 
 // TestSortedSetAddMany tests the method SortedSetAddMany()
 func TestSortedSetAddMany(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		err := SortedSetAddMany(context.Background(), client, testKey, SortedSetMember{Member: testStringValue, Score: 1.0})
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set add many command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -191,6 +213,17 @@ func TestSortedSetAddMany(t *testing.T) {
 
 // TestSortedSetRemove tests the method SortedSetRemove()
 func TestSortedSetRemove(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		err := SortedSetRemove(context.Background(), client, testKey, testStringValue)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set remove command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -266,6 +299,17 @@ func TestSortedSetRemove(t *testing.T) {
 
 // TestSortedSetRange tests the method SortedSetRange()
 func TestSortedSetRange(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := SortedSetRange(context.Background(), client, testKey, 0, -1)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set range command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -343,6 +387,17 @@ func TestSortedSetRange(t *testing.T) {
 
 // TestSortedSetRangeWithScores tests the method SortedSetRangeWithScores()
 func TestSortedSetRangeWithScores(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := SortedSetRangeWithScores(context.Background(), client, testKey, 0, -1)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set range with scores command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -437,6 +492,17 @@ func TestSortedSetRangeWithScores(t *testing.T) {
 
 // TestSortedSetRangeByScore tests the method SortedSetRangeByScore()
 func TestSortedSetRangeByScore(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := SortedSetRangeByScore(context.Background(), client, testKey, "-inf", "+inf")
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set range by score command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -514,6 +580,17 @@ func TestSortedSetRangeByScore(t *testing.T) {
 
 // TestSortedSetRangeByScoreWithScores tests the method SortedSetRangeByScoreWithScores()
 func TestSortedSetRangeByScoreWithScores(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := SortedSetRangeByScoreWithScores(context.Background(), client, testKey, "-inf", "+inf")
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set range by score with scores command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -608,6 +685,17 @@ func TestSortedSetRangeByScoreWithScores(t *testing.T) {
 
 // TestSortedSetPopMin tests the method SortedSetPopMin()
 func TestSortedSetPopMin(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := SortedSetPopMin(context.Background(), client, testKey, 1)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set pop min command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -714,6 +802,17 @@ func TestSortedSetPopMin(t *testing.T) {
 
 // TestSortedSetCard tests the method SortedSetCard()
 func TestSortedSetCard(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := SortedSetCard(context.Background(), client, testKey)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set card command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -849,10 +948,35 @@ func TestParseSortedSetWithScores(t *testing.T) {
 		require.Len(t, result, 1)
 		assert.True(t, math.IsInf(result[0].Score, 1))
 	})
+
+	t.Run("member fails redis.Bytes conversion returns error", func(t *testing.T) {
+		_, err := parseSortedSetWithScores([]interface{}{
+			int64(5), []byte("1.0"),
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("score fails redis.String conversion returns error", func(t *testing.T) {
+		_, err := parseSortedSetWithScores([]interface{}{
+			[]byte("member"), int64(5),
+		})
+		require.Error(t, err)
+	})
 }
 
 // TestSortedSetScore tests the method SortedSetScore()
 func TestSortedSetScore(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, _, err := SortedSetScore(context.Background(), client, testKey, testStringValue)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("sorted set score command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 

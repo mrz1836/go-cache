@@ -13,6 +13,17 @@ import (
 
 // TestHashSet is testing the method HashSet()
 func TestHashSet(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		err := HashSet(context.Background(), client, testHashName, testKey, testStringValue)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("hash set command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -112,6 +123,17 @@ func ExampleHashSet() {
 
 // TestHashGet is testing the method HashGet() =
 func TestHashGet(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := HashGet(context.Background(), client, testHashName, testKey)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("hash get command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -192,8 +214,33 @@ func ExampleHashGet() {
 	// Output:got value: test-string-value
 }
 
+// TestHashMapGet is testing the method HashMapGet()
+func TestHashMapGet(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := HashMapGet(context.Background(), client, testHashName, testKey)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+}
+
 // TestHashMapSet is testing the method HashMapSet()
 func TestHashMapSet(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		err := HashMapSet(context.Background(), client, testHashName, [][2]interface{}{{"k", "v"}})
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("hash map set command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 
@@ -340,6 +387,17 @@ func ExampleHashMapSet() {
 
 // TestHashMapSetExp is testing the method HashMapSetExp()
 func TestHashMapSetExp(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		err := HashMapSetExp(context.Background(), client, testHashName, [][2]interface{}{{"k", "v"}}, testIdleTimeout)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("hash map set exp command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 

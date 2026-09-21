@@ -12,6 +12,7 @@
 package cache
 
 import (
+	"bytes"
 	"context"
 	"os/exec"
 	"strings"
@@ -51,14 +52,29 @@ func startEngineContainer(tb testing.TB, image string) string {
 	tb.Helper()
 	skipIfNoDocker(tb)
 
-	// Publish the container's 6379 to a random loopback host port
+	// Pull the image up front. Doing this separately keeps the `docker run`
+	// stdout limited to the container ID (pull progress is written to stderr and
+	// would otherwise have to be filtered out) and surfaces pull failures
+	// clearly rather than as a confusing downstream "docker port" error.
+	pullCtx, pullCancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer pullCancel()
+	if out, err := exec.CommandContext(pullCtx, "docker", "pull", image).CombinedOutput(); err != nil {
+		tb.Fatalf("docker pull %s failed: %v: %s", image, err, out)
+	}
+
+	// Publish the container's 6379 to a random loopback host port. stdout and
+	// stderr are captured separately so the container ID (stdout) is never
+	// polluted by warnings or progress written to stderr.
 	runCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	out, err := exec.CommandContext(runCtx, "docker", "run", "-d", "--rm",
-		"-p", "127.0.0.1::6379", image).CombinedOutput()
-	require.NoError(tb, err, "docker run failed: %s", out)
+	var stdout, stderr bytes.Buffer
+	runCmd := exec.CommandContext(runCtx, "docker", "run", "-d", "--rm",
+		"-p", "127.0.0.1::6379", image)
+	runCmd.Stdout = &stdout
+	runCmd.Stderr = &stderr
+	require.NoError(tb, runCmd.Run(), "docker run failed: %s", stderr.String())
 
-	id := strings.TrimSpace(string(out))
+	id := strings.TrimSpace(stdout.String())
 	tb.Cleanup(func() {
 		_ = exec.Command("docker", "rm", "-f", id).Run()
 	})

@@ -14,6 +14,17 @@ import (
 func TestWriteLock(t *testing.T) {
 	// todo: mock redis write
 
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := WriteLock(context.Background(), client, testKey, "secret", 10)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("write lock error - real redis", func(t *testing.T) {
 		if testing.Short() {
 			t.Skip("skipping live local redis tests")
@@ -160,6 +171,17 @@ func ExampleWriteLock() {
 // TestReleaseLock tests the method ReleaseLock()
 func TestReleaseLock(t *testing.T) {
 	// todo: mock redis unlock
+
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := ReleaseLock(context.Background(), client, testKey, "secret")
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
 
 	t.Run("release lock - real redis", func(t *testing.T) {
 		if testing.Short() {

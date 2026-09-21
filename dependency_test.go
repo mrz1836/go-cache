@@ -13,6 +13,17 @@ import (
 func TestDelete(t *testing.T) {
 	// todo: mock delete
 
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := Delete(context.Background(), client, testKey)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("no keys - real redis", func(t *testing.T) {
 		if testing.Short() {
 			t.Skip("skipping live local redis tests")
@@ -97,6 +108,17 @@ func ExampleDelete() {
 // TestKillByDependency tests the method KillByDependency()
 func TestKillByDependency(t *testing.T) {
 	// todo: mock kill by dependency
+
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := KillByDependency(context.Background(), client, testKey)
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
 
 	t.Run("no keys - real redis", func(t *testing.T) {
 		if testing.Short() {

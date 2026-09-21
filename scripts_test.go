@@ -93,6 +93,17 @@ func ExampleClient_RegisterScripts() {
 
 // TestRegisterScript is testing the method RegisterScript()
 func TestRegisterScript(t *testing.T) {
+	t.Run("connection error returns ErrRedisPoolNil", func(t *testing.T) {
+		t.Parallel()
+
+		client, conn := loadMockRedis(t)
+		assert.NotNil(t, client)
+		client.CloseAll(conn) // nil the pool so GetConnectionWithContext fails
+
+		_, err := RegisterScript(context.Background(), client, "return 1")
+		require.ErrorIs(t, err, ErrRedisPoolNil)
+	})
+
 	t.Run("register script command using mocked redis", func(t *testing.T) {
 		t.Parallel()
 

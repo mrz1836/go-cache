@@ -108,6 +108,9 @@ go get github.com/mrz1836/go-cache
 View the generated [documentation](https://pkg.go.dev/github.com/mrz1836/go-cache)
 
 ### Features
+- Redis **and Valkey** support (wire-compatible — same client, URL and config)
+- TLS via `rediss://` / `valkeys://` and AWS ElastiCache (RBAC/ACL username auth)
+- Options-based connection setup (`ConnectWithOptions`)
 - Better Pool Management & Creation
 - Get Connection with Context
 - Cache Dependencies Between Keys (toggle functionality)
@@ -191,6 +194,48 @@ magex deps:update
 This command ensures all dependencies are brought up to date in a single step, including Go modules and any managed tools. It is the recommended way to keep your development environment and CI in sync with the latest versions.
 
 </details>
+
+<br/>
+
+### Connecting to Redis or Valkey
+
+[Valkey](https://valkey.io) is a drop-in, wire-compatible fork of Redis, so this library talks to both engines with the same client, URL, and configuration — just point the URL at your instance. Supported URL schemes: `redis://`, `rediss://`, `valkey://`, `valkeys://` (the `s` variants enable TLS).
+
+Use `ConnectWithOptions` for full control over TLS and authentication. The older positional `Connect` remains for backward compatibility and simply forwards to it.
+
+```go
+// Plaintext, local (Redis or Valkey)
+client, err := cache.ConnectWithOptions(ctx, cache.PoolOptions{
+    URL:             "redis://localhost:6379", // or valkey://localhost:6379
+    IdleConnections: 10,
+})
+```
+
+#### AWS ElastiCache (TLS + RBAC / ACL)
+
+For ElastiCache (Redis OR Valkey) with in-transit encryption and RBAC, use a `rediss://` URL and supply the ACL username/password. When a username is set, a two-arg `AUTH username password` is issued (required by ElastiCache RBAC). Leave `TLSConfig.ServerName` empty and it defaults to the endpoint host — the correct SNI for ElastiCache.
+
+```go
+client, err := cache.ConnectWithOptions(ctx, cache.PoolOptions{
+    URL:             "rediss://my-cluster.abc123.use1.cache.amazonaws.com:6379",
+    IdleConnections: 10,
+    Username:        "app-user",       // ElastiCache RBAC / Redis ACL user
+    Password:        os.Getenv("REDIS_PASSWORD"),
+    TLSConfig:       &tls.Config{MinVersion: tls.VersionTLS12}, // optional; TLS is on via rediss://
+})
+```
+
+> Credentials may also be embedded in the URL (`rediss://user:pass@host:6379`), but supplying them via `Username`/`Password` keeps secrets out of logs and connection strings. Single-endpoint (cluster-mode-disabled) deployments are supported; sharded cluster mode is not yet implemented.
+
+#### Local testing with real Redis/Valkey
+
+Container-backed tests (real Redis **and** Valkey) live behind the `docker` build tag and require a running Docker daemon. They use the local Docker CLI directly (via `os/exec`) — no container libraries, so **no extra dependencies are added to the module**:
+
+```bash
+go test -tags=docker ./...
+```
+
+They skip automatically when Docker is unavailable, so normal `go test` / `magex test` runs stay fast and Docker-free.
 
 <br/>
 
@@ -299,7 +344,7 @@ _ = sub.Close()
 <br/>
 
 ## Examples & Tests
-All unit tests run via [GitHub Actions](https://github.com/mrz1836/go-template/actions) and use [Go version 1.25.x](https://go.dev/doc/go1.25). View the [configuration file](.github/workflows/fortress.yml).
+All unit tests run via [GitHub Actions](https://github.com/mrz1836/go-template/actions) and use [Go version 1.26.x](https://go.dev/doc/go1.26). View the [configuration file](.github/workflows/fortress.yml).
 
 Run all tests (fast):
 

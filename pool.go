@@ -2,9 +2,11 @@ package cache
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"net"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,6 +20,17 @@ import (
 var (
 	ErrRedisPoolNil    = errors.New("redis pool is nil")
 	ErrMissingRedisURL = errors.New("missing required parameter: redisURL")
+)
+
+// Connection defaults and URL schemes
+const (
+	// defaultRedisPort is used when a URL omits the port
+	defaultRedisPort = "6379"
+
+	// secureSchemeRedis and secureSchemeValkey are the TLS-enabling URL schemes.
+	// Both Redis and Valkey are wire-compatible; the "s" suffix requests TLS.
+	secureSchemeRedis  = "rediss"
+	secureSchemeValkey = "valkeys"
 )
 
 // Client is used to store the redis.Pool and additional fields/information
@@ -75,27 +88,96 @@ func CloseConnection(conn redis.Conn) redis.Conn {
 	return nil
 }
 
-// Connect creates a new connection pool connected to the specified url
+// PoolOptions configures a connection pool created by ConnectWithOptions.
+//
+// URL is required; every other field is optional and its zero value preserves
+// the historical behavior of Connect(). The struct is intended to grow
+// additively (for example, a future sharded-cluster backend), so callers and
+// wrappers can adopt new capabilities without a breaking signature change.
+type PoolOptions struct {
+	// URL is the connection string.
+	//
+	// Supported schemes: redis, rediss, valkey, valkeys. The "rediss" and
+	// "valkeys" schemes enable TLS automatically. Redis and Valkey are
+	// wire-compatible, so both engines use the same URL/config.
+	//
+	// Format: scheme://[user:password@]host:port[/db]
+	URL string
+
+	// Pool sizing (maps 1:1 to the positional parameters of Connect)
+	MaxActiveConnections int           // MaxActive (0 = unlimited)
+	IdleConnections      int           // MaxIdle
+	MaxConnLifetime      time.Duration // 0 = no limit
+	IdleTimeout          time.Duration // 0 = no limit
+
+	// Behavior
+	DependencyMode  bool // Register the dependency Lua script on connect
+	NewRelicEnabled bool // Wrap the pool with New Relic instrumentation
+
+	// TLSConfig, when non-nil, enables TLS and is used for the handshake
+	// (custom RootCAs, client certificates, ServerName, InsecureSkipVerify).
+	// Leave ServerName empty to let the client default it to the endpoint host
+	// — the correct SNI for managed services such as AWS ElastiCache.
+	TLSConfig *tls.Config
+
+	// Username and Password provide AUTH credentials. When Username is set a
+	// two-arg "AUTH username password" is issued (required by AWS ElastiCache
+	// RBAC / Redis ACL users); otherwise a single-arg "AUTH password" is used.
+	// These take precedence over any credentials embedded in URL.
+	Username string
+	Password string
+
+	// DialOptions are extra redigo dial options applied last, so a caller can
+	// override any option derived from the fields above.
+	DialOptions []redis.DialOption
+
+	// Reserved for a future sharded-cluster backend (additive; unused today):
+	//   ClusterMode bool
+	//   Addrs       []string
+}
+
+// Connect creates a new connection pool connected to the specified url.
 //
 // Format of URL: redis://localhost:6379
+//
+// Connect is preserved for backward compatibility and simply forwards to
+// ConnectWithOptions. New code should prefer ConnectWithOptions, which also
+// supports TLS configuration, ACL/RBAC credentials, and the rediss/valkey(s)
+// URL schemes.
 func Connect(ctx context.Context, redisURL string,
 	maxActiveConnections, idleConnections int,
 	maxConnLifetime, idleTimeout time.Duration,
 	dependencyMode, newRelicEnabled bool, options ...redis.DialOption,
-) (client *Client, err error) {
+) (*Client, error) {
+	return ConnectWithOptions(ctx, PoolOptions{
+		URL:                  redisURL,
+		MaxActiveConnections: maxActiveConnections,
+		IdleConnections:      idleConnections,
+		MaxConnLifetime:      maxConnLifetime,
+		IdleTimeout:          idleTimeout,
+		DependencyMode:       dependencyMode,
+		NewRelicEnabled:      newRelicEnabled,
+		DialOptions:          options,
+	})
+}
+
+// ConnectWithOptions creates a new connection pool from the given options.
+//
+// It is the preferred entry point for creating a pool. See PoolOptions for the
+// supported URL schemes, TLS and authentication behavior.
+func ConnectWithOptions(ctx context.Context, opts PoolOptions) (client *Client, err error) {
 	// Required param for dial
-	if len(redisURL) == 0 {
-		err = ErrMissingRedisURL
-		return nil, err
+	if len(opts.URL) == 0 {
+		return nil, ErrMissingRedisURL
 	}
 
 	// Create the pool
 	redisPool := redis.Pool{
-		Dial:            buildDialer(redisURL, options...),
-		IdleTimeout:     idleTimeout,
-		MaxActive:       maxActiveConnections,
-		MaxConnLifetime: maxConnLifetime,
-		MaxIdle:         idleConnections,
+		Dial:            dialFromOptions(opts),
+		IdleTimeout:     opts.IdleTimeout,
+		MaxActive:       opts.MaxActiveConnections,
+		MaxConnLifetime: opts.MaxConnLifetime,
+		MaxIdle:         opts.IdleConnections,
 		Wait:            true,
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if time.Since(t) < time.Minute {
@@ -107,9 +189,9 @@ func Connect(ctx context.Context, redisURL string,
 	}
 
 	// Wrap if NewRelic is enabled
-	if newRelicEnabled {
+	if opts.NewRelicEnabled {
 		var host, database, port string
-		if host, database, port, err = extractURL(redisURL); err != nil {
+		if host, database, port, err = extractURL(opts.URL); err != nil {
 			return nil, err
 		}
 
@@ -130,7 +212,7 @@ func Connect(ctx context.Context, redisURL string,
 	}
 
 	// Register scripts if enabled
-	if dependencyMode {
+	if opts.DependencyMode {
 		if err = client.RegisterScripts(ctx); err != nil {
 			client.Close()
 			return nil, err
@@ -138,6 +220,83 @@ func Connect(ctx context.Context, redisURL string,
 	}
 
 	return client, err
+}
+
+// dialFromOptions builds the pool's dial function from the given options.
+//
+// Connections are created through redigo's dial machinery so that URL schemes
+// (redis/rediss/valkey/valkeys), TLS, ACL/RBAC authentication and database
+// selection are handled consistently. Options are layered so callers always
+// win: URL-derived options first, then explicit Username/Password, then
+// opts.DialOptions last.
+//
+// The returned closure intentionally uses redis.Dial (background context)
+// rather than the connect-time ctx: the pool creates connections lazily and
+// may do so long after ConnectWithOptions returns, so binding a request-scoped
+// context here would break connection creation once that context is canceled.
+func dialFromOptions(opts PoolOptions) func() (redis.Conn, error) {
+	return func() (redis.Conn, error) {
+		u, err := url.Parse(opts.URL)
+		if err != nil {
+			return nil, err
+		}
+
+		// Resolve the dial address. Default the port only when a host is
+		// present; an empty host is left as-is so it fails as before rather
+		// than silently dialing localhost.
+		address := u.Host
+		if u.Hostname() != "" && u.Port() == "" {
+			address = net.JoinHostPort(u.Hostname(), defaultRedisPort)
+		}
+
+		var dopts []redis.DialOption
+
+		// TLS: enabled by a secure scheme or by supplying a TLS config. Leaving
+		// TLSConfig.ServerName empty lets redigo default it to the endpoint host
+		// (correct SNI for managed services like AWS ElastiCache).
+		if u.Scheme == secureSchemeRedis || u.Scheme == secureSchemeValkey || opts.TLSConfig != nil {
+			dopts = append(dopts, redis.DialUseTLS(true))
+			if opts.TLSConfig != nil {
+				dopts = append(dopts, redis.DialTLSConfig(opts.TLSConfig))
+			}
+		}
+
+		// AUTH from URL user-info (mirrors redigo's DialURL semantics):
+		//   scheme://user:pass@host -> AUTH user pass (two-arg, ACL/RBAC)
+		//   scheme://:pass@host     -> AUTH pass      (single-arg)
+		if u.User != nil {
+			username := u.User.Username()
+			if password, ok := u.User.Password(); ok {
+				if username != "" {
+					dopts = append(dopts, redis.DialUsername(username))
+				}
+				dopts = append(dopts, redis.DialPassword(password))
+			} else if username != "" {
+				// A lone user-info token is treated as the password (redis-cli compatible)
+				dopts = append(dopts, redis.DialPassword(username))
+			}
+		}
+
+		// Explicit credentials take precedence over anything in the URL
+		if opts.Username != "" {
+			dopts = append(dopts, redis.DialUsername(opts.Username))
+		}
+		if opts.Password != "" {
+			dopts = append(dopts, redis.DialPassword(opts.Password))
+		}
+
+		// SELECT database from the URL path (e.g. redis://host/2)
+		if db := strings.TrimPrefix(u.Path, "/"); db != "" {
+			if n, convErr := strconv.Atoi(db); convErr == nil && n != 0 {
+				dopts = append(dopts, redis.DialDatabase(n))
+			}
+		}
+
+		// Caller-supplied options are applied last so they can override
+		dopts = append(dopts, opts.DialOptions...)
+
+		return redis.Dial("tcp", address, dopts...)
+	}
 }
 
 // ConnectToURL connects via REDIS_URL and returns a single connection

@@ -38,8 +38,8 @@ const (
 	// pubSubMessageBufferSize is the default number of messages to buffer before blocking
 	pubSubMessageBufferSize = 100
 
-	// pubSubReconnectMin is the initial backoff duration
-	pubSubReconnectMin = 1 * time.Second
+	// pubSubReconnectInitial is the initial backoff duration
+	pubSubReconnectInitial = 1 * time.Second
 
 	// pubSubReconnectMax is the maximum backoff duration
 	pubSubReconnectMax = 30 * time.Second
@@ -266,7 +266,7 @@ func (s *Subscription) start(ctx context.Context) {
 			}
 		}()
 
-		backoff := pubSubReconnectMin
+		backoff := pubSubReconnectInitial
 		for {
 			s.readLoop() // blocks until error or done
 
@@ -295,7 +295,7 @@ func (s *Subscription) start(ctx context.Context) {
 			}
 
 			// Reconnected — reset backoff.
-			backoff = pubSubReconnectMin
+			backoff = pubSubReconnectInitial
 		}
 	}()
 }
